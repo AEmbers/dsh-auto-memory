@@ -54,7 +54,7 @@ jobs:
           node tools/run-smoke.mjs \
             --jobs=1 \
             --timeout=90000 \
-            --exclude=-live- \
+            --exclude=-live \
             --exclude=m79-feature-v2 \
             --exclude=m710-fv2-emit \
             --exclude=c4-fresh-install

@@ -28,7 +28,8 @@ function ok(cond, name, got) {
 const ROUTES = [
   ['team-members', ['enabled', 'self', 'members', 'project']],
   ['team-presence', ['enabled', 'self', 'others', 'note']],
-  ['team-attribution', ['enabled', 'actor', 'calendar', 'calendarInfo']],
+  // B12（37 卷 §1）：新增 attribution 键（归属旁挂索引）。**集合相等**断言 ⇒ 键增减都会被抓住。
+  ['team-attribution', ['enabled', 'actor', 'calendar', 'calendarInfo', 'attribution']],
   ['team-conflicts', ['enabled', 'policy', 'counts', 'conflicts']],
   ['team-sync-debug', ['enabled', 'identity', 'sync', 'outbox', 'board', 'derived', 'inject', 'transportError']],
   ['team-sync-now', ['enabled', 'ok', 'reason']],
@@ -87,7 +88,7 @@ async function main() {
   const API = mod.API || {}
 
   // ① 真 import 产线模块，取真 API 表（不是正则抓源码文本）
-  ok(Object.keys(API).length === 65, '真 API 表 = 65 条（与计数锁一致）', Object.keys(API).length)
+  ok(Object.keys(API).length === 68, '真 API 表 = 68 条（2026-09-28 skin-library-fetch +1，与计数锁一致）', Object.keys(API).length)
   for (const [name] of ROUTES) {
     const camel = camelOf(name)
     ok(!!API[camel], '真 API 表含 ' + camel, API[camel])

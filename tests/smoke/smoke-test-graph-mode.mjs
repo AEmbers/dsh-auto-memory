@@ -322,7 +322,7 @@ t('F4 前端渲染: 看板组件在场 + graph 档才渲染(legacy 逐字节不�
   assert(CLI_SRC.includes('function KanbanCard(props)'), 'KanbanCard 组件不在场')
   assert(CLI_SRC.includes('data-dam-kanban'), '看板容器标记不在场')
   assert(CLI_SRC.includes('apiGet(API.kanbanBoard, { sessionId: sid })'), '看板数据未拉取')
-  assert(CLI_SRC.includes('if (kbData) {'), '看板块必须**条件渲染**(legacy 下不出现)')
+  assert(/if \(kbData( && boardModeLocal !== 'graph')?\) \{/.test(CLI_SRC), '看板块必须**条件渲染**(legacy 下不出现; R40 起 graph 档走整页短路, 本块仅兜底瞬态)')
   assert(CLI_SRC.includes('setKbData(k && k.enabled ? k : null)'), 'legacy 档必须落回 null(不渲染)')
 })
 
@@ -457,7 +457,7 @@ t('F7 前端 v2 交互: 缩放(字号+列宽) + 布局切换 + 展开全文 + �
   assert(CLI_SRC.includes('function KanbanCard(props)'), 'KanbanCard 组件不在场')
   assert(CLI_SRC.includes('data-dam-kanban'), '看板容器标记不在场')
   assert(CLI_SRC.includes("apiGet(API.kanbanBoard, { sessionId: sid })"), '看板数据未拉取')
-  assert(CLI_SRC.includes('if (kbData) {'), '看板块必须**条件渲染**(legacy 下不出现)')
+  assert(/if \(kbData( && boardModeLocal !== 'graph')?\) \{/.test(CLI_SRC), '看板块必须**条件渲染**(legacy 下不出现; R40 起 graph 档走整页短路, 本块仅兜底瞬态)')
   assert(CLI_SRC.includes('setKbData(k && k.enabled ? k : null)'), 'legacy 档必须落回 null(不渲染)')
   // 缩放(P5/P6): 字号与列宽均可调且持久化
   assert(CLI_SRC.includes('KANBAN_ZOOM_KEY') && CLI_SRC.includes('KANBAN_COL_KEY'), '缩放/列宽偏好键不在场')

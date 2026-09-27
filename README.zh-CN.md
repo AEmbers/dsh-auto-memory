@@ -76,6 +76,8 @@
 <p align="center">
   <a href="docs/USER-GUIDE.zh-CN.md"><strong>📖 用户手册</strong></a> ·
   <a href="docs/USER-GUIDE.en.md"><strong>📖 User guide</strong></a> ·
+  <a href="docs/SKIN-GUIDE.md"><strong>🎨 皮肤白皮书</strong></a> ·
+  <a href="docs/TEAMWORK-GUIDE.md"><strong>👥 团队协作白皮书</strong></a> ·
   <a href="CHANGELOG.md">更新日志</a> ·
   <a href="https://htmlpreview.github.io/?https://github.com/Aik358/dsh-auto-memory/blob/main/docs/CONTRIBUTORS.html">贡献者与赞助</a> ·
   <a href="https://qm.qq.com/q/v7Asxn6vPa">QQ 交流群</a>
@@ -613,7 +615,7 @@ DeepSeek Harness (Node, 127.0.0.1:3080)
 |---|---|
 | [**白皮书**](docs/WHITEPAPER.md) | 「有哪些**不能违反**的约束、哪些已知边界」——文中每个默认值都经代码自核 |
 | [**前端共创计划**](docs/FRONTEND-CO-CREATION.md) | 外部贡献者能改什么、什么是禁区、怎么改——含完整组件/路由/插槽地图 |
-| [功能全量清单](docs/internal/FEATURE-INVENTORY.md) | 「有哪些功能、各住在哪」（39 条用户能力 / 19 工具 / 65 路由 / 135 配置键） |
+| [功能全量清单](docs/internal/FEATURE-INVENTORY.md) | 「有哪些功能、各住在哪」（39 条用户能力 / 19 工具 / 67 路由 / 138 配置键） |
 
 > **⚠️ 从 3.0 之前升级上来的用户请注意**：3.0.0 有一批默认值**被翻转**——
 > 其中最重要的是白板 + 账本从「默认关」改为 **「默认开」**。

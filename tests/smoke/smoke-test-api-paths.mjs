@@ -43,6 +43,11 @@ const HOST_ONLY_WHITELIST = [
   '/api/dsh-auto-memory/team-sync-now',
   '/api/dsh-auto-memory/team-handoffs',
   '/api/dsh-auto-memory/team-skills',
+  // ★G-F3/G-F5（2026-09-27）：/team-compliance —— 合规档位**只读明示**（loopback）。
+  //   消费者：①本仓合规取证（tests/smoke/smoke-test-team-compliance.mjs）②前端「团队」页签的
+  //   「合规」区块（B12 消费；在 B12 落地前暂无界面消费者，故暂列白名单）。
+  //   它**不是死端点**：客户环境要求「声明 E2E / 关闭上报」时，这是唯一可被读取的明示出口。
+  '/api/dsh-auto-memory/team-compliance',
 ]
 
 function parseHostTable(src) {

@@ -76,6 +76,8 @@
 <p align="center">
   <a href="docs/USER-GUIDE.en.md"><strong>📖 User guide</strong></a> ·
   <a href="docs/USER-GUIDE.zh-CN.md"><strong>📖 用户手册</strong></a> ·
+  <a href="docs/SKIN-GUIDE.md"><strong>🎨 Skin guide</strong></a> ·
+  <a href="docs/TEAMWORK-GUIDE.md"><strong>👥 Teamwork guide</strong></a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="https://htmlpreview.github.io/?https://github.com/Aik358/dsh-auto-memory/blob/main/docs/CONTRIBUTORS.html">Contributors &amp; Sponsors</a> ·
   <a href="https://qm.qq.com/q/v7Asxn6vPa">QQ group</a>
@@ -610,8 +612,10 @@ Papers were authored by the autonomous engineering agent (ZCode / GLM); all conc
 | Document | Answers |
 |---|---|
 | [**Whitepaper**](docs/WHITEPAPER.md) | What are the **invariants you must not break**, and what are the known limits? Every default value in it is code-verified. |
+| [**Skin guide**](docs/SKIN-GUIDE.md) | How to build a skin: the three key layers (tokens / anchors / assets), the full token table, the readings↔routes map, and the acceptance checklist. Contributors: submit skins to the [`skins/` library](skins/README.md) via PR. |
+| [**Teamwork guide**](docs/TEAMWORK-GUIDE.md) | Teamwork as it stands: every config key, the 10 team routes, the data-flow diagram (outbox → transport → merge → conflicts), standalone-mode behaviour, and the honest "not implemented" list. |
 | [**Frontend co-creation plan**](docs/FRONTEND-CO-CREATION.md) | What can outside contributors change, what is off-limits, and how to do it — complete component/route/slot map included. |
-| [Feature Inventory](docs/internal/FEATURE-INVENTORY.md) | What features exist and where each one lives (39 user capabilities / 19 tools / 65 routes / 135 config keys) |
+| [Feature Inventory](docs/internal/FEATURE-INVENTORY.md) | What features exist and where each one lives (39 user capabilities / 19 tools / 67 routes / 138 config keys) |
 
 > **⚠️ Upgrading from before 3.0?** A batch of default values was **flipped** in 3.0.0 —
 > most notably whiteboard + ledger went from `off` to **`on`**. Do not trust pre-3.0

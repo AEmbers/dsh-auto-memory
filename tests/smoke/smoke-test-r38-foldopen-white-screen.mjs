@@ -20,6 +20,38 @@
  */
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+
+// ★2026-09-28 多语言化：源码内联文案已改为 L(甲, 乙)。抽段进 vm 的套件需要同名桩。
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// ★locale 缺省对齐产品默认值 'zh'（源码 `var locale = 'zh'`）；否则未设 locale 的旧沙箱
+//   会被 L() 判成非中文 ⇒ 误回落英文、断言假红。
+function __mkI18nStub(self) {
+  if (!self.locale) self.locale = 'zh'
+  self.__L10N = self.__L10N || {}
+  self.L = function (a, b) {
+    if (self.locale === 'zh') return a
+    var m = self.__L10N[self.locale]
+    if (m && m[a] !== undefined && m[a] !== '') return m[a]
+    return b === undefined ? a : b
+  }
+  self.L3 = function (a, b, ja) {
+    if (self.locale === 'zh') return a
+    if (self.locale === 'ja' && ja !== undefined && ja !== null) return ja
+    return self.L(a, b)
+  }
+  self.normLocale = function (v) {
+    var s = String(v == null ? '' : v).toLowerCase()
+    if (!s) return ''
+    var all = ['zh', 'en', 'ja']
+    for (var i = 0; i < all.length; i++) {
+      if (s === all[i] || s.indexOf(all[i] + '-') === 0 || s.indexOf(all[i] + '_') === 0) return all[i]
+    }
+    return ''
+  }
+  return self
+}
+
 const src = readFileSync('lib/client.js', 'utf8');
 const start = src.indexOf('    function KanbanBoardRail(props) {');
 const end = src.indexOf('\n    function KanbanBoard(props) {');
@@ -43,6 +75,7 @@ function mkCtx() {
 }
 function render(segment) {
   const ctx = mkCtx();
+  __mkI18nStub(ctx);
   vm.createContext(ctx);
   vm.runInContext(segment + '\n;globalThis.__R = KanbanBoardRail;', ctx);
   return ctx.__R({ data: { stats: { fold: { days: 7 } }, lanes: [] }, zh: true, onOpen: function () {} });

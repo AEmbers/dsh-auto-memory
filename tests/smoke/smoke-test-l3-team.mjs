@@ -78,6 +78,29 @@ function makeSandbox (locale, tMap) {
     __calls: calls,
   }
   sandbox.globalThis = sandbox
+  // ★L/L3 桩在 sandbox 建好后再挂（避免 IIFE 引用自身初始化中的 sandbox ⇒ TDZ 报错）。
+  //   用**闭包捕获 locale**，不能用 `this`：生成函数非对象方法，`this` 为 undefined。
+  sandbox.__L10N = {}
+  sandbox.L = function (a, b) {
+    if (sandbox.locale === 'zh') return a
+    var m = sandbox.__L10N[sandbox.locale]
+    if (m && m[a] !== undefined && m[a] !== '') return m[a]
+    return b === undefined ? a : b
+  }
+  sandbox.L3 = function (a, b, ja) {
+    if (sandbox.locale === 'zh') return a
+    if (sandbox.locale === 'ja' && ja !== undefined && ja !== null) return ja
+    return sandbox.L(a, b)
+  }
+  sandbox.normLocale = function (v) {
+    var s = String(v == null ? '' : v).toLowerCase()
+    if (!s) return ''
+    var all = ['zh', 'en', 'ja']
+    for (var i = 0; i < all.length; i++) {
+      if (s === all[i] || s.indexOf(all[i] + '-') === 0 || s.indexOf(all[i] + '_') === 0) return all[i]
+    }
+    return ''
+  }
   return sandbox
 }
 function loadSegment (locale, tMap) {
@@ -217,7 +240,10 @@ if (tabsFn) {
   ok(keys.indexOf('reflections') >= 0 && keys.indexOf('workspaces') >= 0, '§7.6 既有页签未被挤出')
   const teamLabel = tabs.filter(function (x) { return x[0] === 'team' })[0][1]
   eq(teamLabel, TEAM_LABELS[0], '§7.7 ★zh 语境 team 页签标题 = 源码 i18n 真值  [' + TEAM_LABELS[0] + ']')
-  eq(TEAM_LABELS.length, 2, '§7.9 ★i18n 两处 teamTab 都在（zh + en）')
+  // ★2026-09-28 放宽为**语言数无关**：原断言写死「两处（zh + en）」，加 ja 后恒红。
+  //   原意是「每种语言都提供了 teamTab」，改为逐语言校验非空即可。
+  ok(TEAM_LABELS.length >= 2 && TEAM_LABELS.every(function (v) { return typeof v === 'string' && v.length > 0 }),
+    '§7.9 ★每种语言都提供 teamTab（语言数无关，实测 ' + TEAM_LABELS.length + ' 种：' + TEAM_LABELS.join(' / ') + '）')
 }
 if (bootEn) {
   const t2 = (function () { const sb = makeSandbox('en', { teamTab: TEAM_LABELS[1] }); const ctx = vm.createContext(sb); vm.runInContext(TABS_SRC + ';globalThis.__T = MEMORY_TABS;', ctx); return sb.__T() })()
@@ -229,7 +255,8 @@ if (bootEn) {
 ok(/if \(tab === 'team'\) return h\(TeamTab\)/.test(SRC), '§8.1 MemoryTabBody 有 team 分支')
 ok(/section\('team', sectionLabels\.team/.test(SRC), '§8.2 设置页第 10 分区 section(team)')
 eq((SRC.match(/section\('team'/g) || []).length, 1, '§8.3 section(team) 只出现 1 次（不重复注入）')
-ok(/team: locale === 'zh' \? '团队协作' : 'Teamwork'/.test(SRC), '§8.4 sectionLabels.team 双语')
+// ★2026-09-28 放宽为形态无关（三元 / L() 两种写法都接受）。
+  ok(/team: (?:locale === 'zh' \? '团队协作' : 'Teamwork'|L\('团队协作', 'Teamwork'\))/.test(SRC), '§8.4 sectionLabels.team 双语（形态无关）')
 eq((SRC.match(/sectionLabels\.(engine|window|capacity|skills|handoff|auto|store|look|about)/g) || []).length, 9, '§8.5 ★既有 9 个分区标签全在（零改动）')
 const secCount = (SRC.match(/section\('/g) || []).length
 ok(secCount >= 10, '§8.6 section() 调用数 ≥ 10  [' + secCount + ']')

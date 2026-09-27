@@ -10,6 +10,38 @@ import { createHash } from 'node:crypto'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+
+// ★2026-09-28 多语言化：源码内联文案已改为 L(甲, 乙)。抽段进 vm 的套件需要同名桩。
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// ★locale 缺省对齐产品默认值 'zh'（源码 `var locale = 'zh'`）；否则未设 locale 的旧沙箱
+//   会被 L() 判成非中文 ⇒ 误回落英文、断言假红。
+function __mkI18nStub(self) {
+  if (!self.locale) self.locale = 'zh'
+  self.__L10N = self.__L10N || {}
+  self.L = function (a, b) {
+    if (self.locale === 'zh') return a
+    var m = self.__L10N[self.locale]
+    if (m && m[a] !== undefined && m[a] !== '') return m[a]
+    return b === undefined ? a : b
+  }
+  self.L3 = function (a, b, ja) {
+    if (self.locale === 'zh') return a
+    if (self.locale === 'ja' && ja !== undefined && ja !== null) return ja
+    return self.L(a, b)
+  }
+  self.normLocale = function (v) {
+    var s = String(v == null ? '' : v).toLowerCase()
+    if (!s) return ''
+    var all = ['zh', 'en', 'ja']
+    for (var i = 0; i < all.length; i++) {
+      if (s === all[i] || s.indexOf(all[i] + '-') === 0 || s.indexOf(all[i] + '_') === 0) return all[i]
+    }
+    return ''
+  }
+  return self
+}
+
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '..')
 let pass = 0, fail = 0; const fails = [];
 function ok(c, m) { if (c) pass++; else { fail++; fails.push(m) } }
@@ -53,7 +85,8 @@ const sb = { console: console, h: h, locale: 'zh', Date: Date, useState: (v) => 
   useTick: () => [0, function () {}], useEffect: () => {}, apiGet: () => Promise.resolve(null), API: { state: '/state' }, t: (k) => k, fmtAgoShort: (ms) => (ms ? String(ms) : ''),
   TeamBadge: (p2) => h('span', { 'data-dam-team-badge': String((p2 && p2.name) || '') }) };
 sb.globalThis = sb;
-const ctx = vm.createContext(sb);
+const ctx = __mkI18nStub(sb)
+vm.createContext(sb);
 vm.runInContext(SEG + ';globalThis.__R = { TeamSyncStatusBar: TeamSyncStatusBar, TeamMembersScreen: TeamMembersScreen, TeamFilterBar: TeamFilterBar, TeamBadgeScoped: TeamBadgeScoped, TeamConflictScreen: TeamConflictScreen, TeamScreensR18: TeamScreensR18, teamPhaseOf: teamPhaseOf, TEAM_PHASE_ZH: TEAM_PHASE_ZH };', ctx, { filename: 'client.js#R18' });
 const R = sb.__R;
 ok(!!R, 'B3 R18 段在 vm 中真执行成功（无 Reference/ SyntaxError）');

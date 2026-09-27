@@ -1,0 +1,13 @@
+{
+ "counts": {
+  "zhKeys": 581,
+  "enKeys": 585,
+  "jaKeys": 583,
+  "l10nJa": 612,
+  "inlineUnique": 602,
+  "missDict": 0,
+  "missInline": 0
+ },
+ "missDict": [],
+ "missInline": []
+}

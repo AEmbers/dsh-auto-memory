@@ -393,7 +393,7 @@
 
   <!-- ══════════ 统计带 ══════════ -->
   <section class="stats">
-    <div class="stat"><b id="s-ppl" data-reel="19">19</b><span class="zh">外部贡献者</span><span class="en">contributors</span></div>
+    <div class="stat"><b id="s-ppl" data-reel="20">20</b><span class="zh">外部贡献者</span><span class="en">contributors</span></div>
     <div class="stat"><b id="s-pr" data-reel="41">41</b><span class="zh">已合并 Pull Request</span><span class="en">merged pull requests</span></div>
     <div class="stat"><b id="s-iss" data-reel="82">82</b><span class="zh">Issue</span><span class="en">issues</span></div>
     <div class="stat"><b>1</b><span class="zh">资源赞助方</span><span class="en">resource sponsor</span></div>
@@ -604,6 +604,20 @@
       <p class="desc zh">提交代码贡献。</p>
       <p class="desc en">Contributed code via pull request.</p>
       <div class="refs"><a class="pr" href="https://github.com/Aik358/dsh-auto-memory/pull/29">PR #29</a></div>
+    </div>
+    <div class="card">
+      <div class="top">
+        <img src="https://github.com/humou44.png?size=92" alt="humou44" loading="lazy">
+        <div class="who">
+          <a href="https://github.com/humou44" target="_blank" rel="noopener">@humou44</a>
+          <div class="tier"><span class="zh">1 PR（日文本地化）</span><span class="en">1 PR (Japanese localisation)</span></div>
+        </div>
+      </div>
+      <p class="desc zh">提出日文界面本地化（[PR #143]）。该 PR 虽被关闭，但内容已并入主线：在其基础上扩展为<b>字典查表式</b> i18n 层 —— 界面文案改用 <code>L(中文, English)</code> 两参调用、第三语言按中文原串查词典，覆盖 602 条内联文案 + 583 条词典条目。此后新增语言只需加一份词典，无需改动任何调用点。</p>
+      <p class="desc en">Proposed Japanese UI localisation ([PR #143]). The PR was closed, but its content landed in main and was extended into a <b>dictionary-driven</b> i18n layer — UI strings use <code>L(Chinese, English)</code> with the third language resolved from a Chinese-keyed dictionary, covering 602 inline strings + 583 dictionary keys. Adding a language now means adding one dictionary, with no call-site changes.</p>
+      <div class="refs">
+        <a href="https://github.com/Aik358/dsh-auto-memory/pull/143">PR #143</a>
+      </div>
     </div>
 
   </div>

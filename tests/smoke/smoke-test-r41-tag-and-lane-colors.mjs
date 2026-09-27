@@ -1,5 +1,37 @@
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+
+// ★2026-09-28 多语言化：源码内联文案已改为 L(甲, 乙)。抽段进 vm 的套件需要同名桩。
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// ★locale 缺省对齐产品默认值 'zh'（源码 `var locale = 'zh'`）；否则未设 locale 的旧沙箱
+//   会被 L() 判成非中文 ⇒ 误回落英文、断言假红。
+function __mkI18nStub(self) {
+  if (!self.locale) self.locale = 'zh'
+  self.__L10N = self.__L10N || {}
+  self.L = function (a, b) {
+    if (self.locale === 'zh') return a
+    var m = self.__L10N[self.locale]
+    if (m && m[a] !== undefined && m[a] !== '') return m[a]
+    return b === undefined ? a : b
+  }
+  self.L3 = function (a, b, ja) {
+    if (self.locale === 'zh') return a
+    if (self.locale === 'ja' && ja !== undefined && ja !== null) return ja
+    return self.L(a, b)
+  }
+  self.normLocale = function (v) {
+    var s = String(v == null ? '' : v).toLowerCase()
+    if (!s) return ''
+    var all = ['zh', 'en', 'ja']
+    for (var i = 0; i < all.length; i++) {
+      if (s === all[i] || s.indexOf(all[i] + '-') === 0 || s.indexOf(all[i] + '_') === 0) return all[i]
+    }
+    return ''
+  }
+  return self
+}
+
 const src = readFileSync('lib/client.js', 'utf8');
 function mkLane(n) { var f = function () { return arguments[0]; }; f.__name = n; return f; }
 function mkCtx() {
@@ -12,7 +44,8 @@ function mkCtx() {
 }
 const seg = src.slice(src.indexOf('    function DamTimelineCard(props) {'), src.indexOf('\n    function DamTimelineList(props) {'));
 console.log('DamTimelineCard 段行数 =', seg.split('\n').length);
-const c = mkCtx(); vm.createContext(c);
+const c = mkCtx(); __mkI18nStub(c)
+vm.createContext(c);
 vm.runInContext(seg + '\n;globalThis.__C = DamTimelineCard;', c);
 function walk(n, f, acc) { acc = acc || []; if (!n || typeof n !== 'object') return acc; if (n.props) f(n, acc); (n.kids || []).forEach(function (k) { if (Array.isArray(k)) { k.forEach(function (x) { walk(x, f, acc); }); } else { walk(k, f, acc); } }); return acc; }
 let err = null, tree = null;
@@ -36,7 +69,8 @@ if (!isBlue) process.exit(1);
 // ★负路径：把 tags 过滤打掉 ⇒ sec: 混入必现
 const mut = seg.replace(".filter(function (x) { return String(x || '').indexOf('sec:') !== 0 })", '');
 if (mut === seg) { console.log('✗ 变异未命中'); process.exit(1); }
-const c2 = mkCtx(); vm.createContext(c2);
+const c2 = mkCtx(); __mkI18nStub(c2)
+vm.createContext(c2);
 vm.runInContext(mut + '\n;globalThis.__C2 = DamTimelineCard;', c2);
 const t2 = c2.__C2({ card: card, laneKey: 'progress', laneLabel: 'x', zh: true });
 const tags2 = walk(t2, function (n, a) { if (n.props['data-dam-tag'] != null) a.push(n.props['data-dam-tag']); });

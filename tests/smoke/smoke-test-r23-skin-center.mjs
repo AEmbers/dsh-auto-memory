@@ -4,6 +4,38 @@ import { createHash } from 'node:crypto'
 import vm from 'node:vm'
 import { SKIN_ASSETS, SKIN_ASSET_KEYS, assetOf } from 'file:///D:/dsh-auto-memory/lib/skin-assets.js'
 import { resolveSkinTheme, composeSkinTheme, buildSkinSlots, skinCenterStatus, SKIN_TOKEN_KEYS, isCssSafe } from 'file:///D:/dsh-auto-memory/lib/skin-center.js'
+
+// ★2026-09-28 多语言化：源码内联文案已改为 L(甲, 乙)。抽段进 vm 的套件需要同名桩。
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// 注入到各 vm 沙箱：L / L3 / normLocale 桩（闭包捕获 self，不依赖 this）
+// ★locale 缺省对齐产品默认值 'zh'（源码 `var locale = 'zh'`）；否则未设 locale 的旧沙箱
+//   会被 L() 判成非中文 ⇒ 误回落英文、断言假红。
+function __mkI18nStub(self) {
+  if (!self.locale) self.locale = 'zh'
+  self.__L10N = self.__L10N || {}
+  self.L = function (a, b) {
+    if (self.locale === 'zh') return a
+    var m = self.__L10N[self.locale]
+    if (m && m[a] !== undefined && m[a] !== '') return m[a]
+    return b === undefined ? a : b
+  }
+  self.L3 = function (a, b, ja) {
+    if (self.locale === 'zh') return a
+    if (self.locale === 'ja' && ja !== undefined && ja !== null) return ja
+    return self.L(a, b)
+  }
+  self.normLocale = function (v) {
+    var s = String(v == null ? '' : v).toLowerCase()
+    if (!s) return ''
+    var all = ['zh', 'en', 'ja']
+    for (var i = 0; i < all.length; i++) {
+      if (s === all[i] || s.indexOf(all[i] + '-') === 0 || s.indexOf(all[i] + '_') === 0) return all[i]
+    }
+    return ''
+  }
+  return self
+}
+
 const SRC = readFileSync('D:/dsh-auto-memory/lib/client.js', 'utf8')
 const IX = readFileSync('D:/dsh-auto-memory/lib/index.js', 'utf8')
 let p = 0, f = 0; const fails = []
@@ -49,7 +81,8 @@ const R23SEG = SRC.slice(_iR, _iRend + 8)
 const SEG = S2SEG + '\r\n' + R23SEG
 const sandbox = { console, h, locale: 'zh', String, Object, Array, JSON, Date, useTick: () => [0, () => {}], apiGet: () => Promise.resolve(null), API: {}, useState: (v) => [typeof v === 'function' ? v() : v, () => {}], useEffect: () => {} }
 sandbox.globalThis = sandbox
-const ctx = vm.createContext(sandbox)
+const ctx = __mkI18nStub(sandbox)
+vm.createContext(sandbox)
 vm.runInContext(SEG + ';globalThis.__R = { SkinCenterPanel, SkinSlotRows, SkinSlot, SkinHero, SkinImg };', ctx, { filename: 'client.js#S2' })
 ok(!!(sandbox.__R && sandbox.__R.SkinCenterPanel), 'C1 ★S2 段含 R23 新段在 vm 中真执行')
 const el = sandbox.__R.SkinCenterPanel({})

@@ -74,11 +74,14 @@ for (const f of readdirSync(path.join(REL, 'lib'))) {
 }
 copyDirExcluding(path.join(DEV, 'tests'), path.join(REL, 'tests'), /(node_modules|bak)/i)
 copyDirExcluding(path.join(DEV, 'python'), path.join(REL, 'python'), /(__pycache__|\.pyc|bench|bak)/i)
+// ★2026-09-28(3.2.0) 补 skins：宿主路由 skin-library-fetch 与前端「皮肤选择中心」的默认仓库
+//   指向本仓库的 skins/ 目录 —— 若该目录不进发布包，GitHub 上就没有任何皮肤目录，「列出」必返空库，
+//   skins/README.md 里写着的内置皮肤表也会与仓库事实不符（真断链，与 CHANGELOG.md 当年漏拷同类）。
 for (const entry of ['cordis.patch.yml', 'README.md', 'README.zh-CN.md', 'LICENSE', 'notices.json', 'docs', 'social-preview.html', '.github',
   // ★2026-09-21 补 CHANGELOG.md：两份 README **各有 3 处**链接到 `CHANGELOG.md`（导航条 / 文末链接区，
   //   共 6 处），但此文件此前**从不在复制清单里**，REL 仓也从未有过它 ⇒ GitHub 上点「Changelog」
   //   一直是 **404**（`git log --all -- CHANGELOG.md` 为空可证）。发版脚本漏拷，属真断链。
-  'CHANGELOG.md']) {
+  'CHANGELOG.md', 'skins']) {
   const s = path.join(DEV, entry), d = path.join(REL, entry)
   if (existsSync(s)) cpSync(s, d, { recursive: true })
 }
@@ -367,7 +370,7 @@ const relPkg = {
   //   ② 原 `!docs/**/*.bak` 与 `!docs/**/*.bak-*` 两条**依赖 npm 的 glob 语义**，而 `docs/**`
   //      中途另起一段的写法在部分 npm 版本上不生效 ⇒ 统一用 `!**/*.bak*` 一条兜住所有层级
   //      （`.bak` 与 `.bak-*` 都被覆盖），再补一条 `!lib/*.m8b*bak` 覆盖上述无点形态。
-  files: ['lib', 'python', 'docs', 'cordis.patch.yml', '!python/bench', '!python/__pycache__', '!docs/internal', '!**/*.bak*', '!lib/*.m8b*bak*'],
+  files: ['lib', 'python', 'docs', 'skins', 'cordis.patch.yml', '!python/bench', '!python/__pycache__', '!docs/internal', '!**/*.bak*', '!lib/*.m8b*bak*'],
   dsh: {
     bundle: { patch: './cordis.patch.yml' },
     client: {

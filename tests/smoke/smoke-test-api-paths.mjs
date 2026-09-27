@@ -26,6 +26,28 @@ const clientSrc = readFileSync(path.join(root, 'lib', 'client.js'), 'utf8')
 const HOST_ONLY_WHITELIST = [
   '/api/dsh-auto-memory/activation-inbox',
   '/api/dsh-auto-memory/subagent-gc',
+  // ★B0（2026-09-25）：子代理契约探针 —— 消费者是本仓只读取证脚本（artifacts/_b0-probe-call.mjs），
+  //   界面侧零引用。**它不是死端点**：可复用子代理（B1）的架构决策依赖它产出的真实契约数据。
+  '/api/dsh-auto-memory/subagent-probe',
+  // ★Teamwork B10（2026-09-26）：/team-state 是**前端「团队」页签的数据源**（GET 只读、loopback）。
+  //   该页签属 B10 批次（改 client.js），数据源先落地 ⇒ 在此之前它暂无界面消费者，
+  //   故暂列白名单；B10 完成后应**移出白名单**（届时它不再是「宿主独有」）。其非界面消费者：无。
+  '/api/dsh-auto-memory/team-state',
+  // ★B11c（2026-09-26）：团队线 8 条路由 —— **已接上界面**（B10 前端团队页签的数据源；
+  //   A 档只读 / B 档本机动作）。此注即「界面消费者」标注。
+  '/api/dsh-auto-memory/team-members',
+  '/api/dsh-auto-memory/team-presence',
+  '/api/dsh-auto-memory/team-attribution',
+  '/api/dsh-auto-memory/team-conflicts',
+  '/api/dsh-auto-memory/team-sync-debug',
+  '/api/dsh-auto-memory/team-sync-now',
+  '/api/dsh-auto-memory/team-handoffs',
+  '/api/dsh-auto-memory/team-skills',
+  // ★G-F3/G-F5（2026-09-27）：/team-compliance —— 合规档位**只读明示**（loopback）。
+  //   消费者：①本仓合规取证（tests/smoke/smoke-test-team-compliance.mjs）②前端「团队」页签的
+  //   「合规」区块（B12 消费；在 B12 落地前暂无界面消费者，故暂列白名单）。
+  //   它**不是死端点**：客户环境要求「声明 E2E / 关闭上报」时，这是唯一可被读取的明示出口。
+  '/api/dsh-auto-memory/team-compliance',
 ]
 
 function parseHostTable(src) {

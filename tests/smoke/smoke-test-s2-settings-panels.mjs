@@ -141,7 +141,10 @@ console.log('[G3] 触发链路齐全')
 console.log('[G4] 根因前提：导航为滚动式 + 块的物理位置')
 {
   ok(SRC.includes("'data-dam-settings-content': ''"), 'G4a 设置内容容器存在')
-  ok(SRC.includes("h('nav', { 'data-dam-settings-nav'"), 'G4b 分区导航存在')
+  // L2（2026-09-27）契约更新：region 属性被注入到锚点**之前**，字面串前缀断言失效。
+  // 改为**顺序无关**断言，且比原判据更严：①导航由 h('nav',…) 创建 ②带 data-dam-settings-nav 锚点
+  // ③带 data-dam-region='settings'（L2 新增契约）。原断言只查②，新断言②+③。
+  ok(SRC.includes("h('nav', {") && SRC.includes("'data-dam-settings-nav'") && /'data-dam-region':\s*'settings'/.test(SRC), 'G4b 分区导航存在（含 L2 region 契约）')
   ok(SRC.includes("el.scrollIntoView({ behavior: 'smooth', block: 'start' })"), 'G4c 导航为 scrollIntoView（滚动式，非分页）')
   // 平铺渲染：engine 头之后仍能看到 window / capacity 头（说明不是按需渲染单分区）
   const engAt = SRC.indexOf("section('engine', sectionLabels.engine, [")

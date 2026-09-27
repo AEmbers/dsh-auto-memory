@@ -72,7 +72,8 @@ console.log('\n=== J4 引导末页样式 + QQ 群按钮 ===')
   ok(CL.includes('[data-dam-tour-link] {'), 'J4a ★补上了 data-dam-tour-link 的 CSS（v3.1.3 只有属性、无样式）')
   ok(CL.includes(':hover') && inWindow(CL, '[data-dam-tour-link] {', ':hover', 1200) > 0, 'J4b 有 hover 反馈（与既有 chip 体系一致）')
   ok(CL.includes('--dam-accent'), 'J4c 用主题色变量（不硬编码颜色，随主题走）')
-  ok(CL.includes('border-radius: 99px'), 'J4d 圆角胶囊（与页面既有 pill 同形）')
+  // B12 L1：字面量 99px 已 token 化为 var(--dam-radius-pill, 99px)；断言改为「token 存在且 fallback 仍是 99px」——比裸字面量更严（同时守住两者）。
+  ok(CL.includes('var(--dam-radius-pill, 99px)'), 'J4d 圆角胶囊（token 化后 fallback 仍为 99px，与既有 pill 同形）')
   ok(CL.includes("href: 'https://qm.qq.com/q/v7Asxn6vPa'"), 'J4e ★QQ 群按钮已加（链接与 README/CONTRIBUTORS 同源）')
   ok(CL.includes('QQ 交流群') || CL.includes('QQ group'), 'J4f QQ 按钮有中英文案')
   // 三个按钮并存，且仍不破坏原有结构（dots/foot 仍在）

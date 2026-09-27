@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "updatedAt": "2026-09-27T01:20:00+08:00",
+  "updatedAt": "2026-09-27T02:30:00+08:00",
   "frozenAt": "2026-09-26",
   "freezeDoc": "00-目标冻结书.md",
   "freezeLock": "00-目标冻结书.sha256",
   "scope": "full",
   "restartBudget": {
-    "used": 2,
+    "used": 3,
     "planned": 2,
-    "note": "两次重启均已完成：① PID 27404→57012 @ 2026-09-26 22:46:18；② →56628 @ 2026-09-26 23:12:35。重启只挡 E2 取证；编码与 E0/E1 不消耗重启"
+    "note": "第 3 次重启（PID 78036 @ 02:08:03）由用户执行，用于 R4/R6 的 E2 复验；三项判据齐备（PID 变 + 源码 mtime 早于启动 + 端口监听 1）"
   },
   "tracks": {
     "backend": {
@@ -203,8 +203,9 @@
       "status": "completed",
       "tier": "E2",
       "files": [
+        "lib/team-merge.js",
         "lib/team-pull.js",
-        "lib/team-conflict.js"
+        "lib/index.js"
       ],
       "restart": true,
       "criteria": [
@@ -213,7 +214,10 @@
         "未知 kind 被拒且留痕",
         "拒绝可见"
       ],
-      "evidence": []
+      "evidence": [
+        "tools/verify-team-pull.mjs PASS 58 / FAIL 0（真 import + 真构造 + 真调用，4 条判据全带负路径）"
+      ],
+      "note": "2026-09-27 更正：原 files 写 [lib/team-pull.js, lib/team-conflict.js] 与磁盘不符（两文件当时均不存在）。实际形态：合并算法内核在 team-merge.js（+ 本轮补 recordRejected 拒绝留痕），下行驱动器 team-pull.js（依赖注入式，写路径全部由 index.js 装配），冲突中心复用 team-merge（不新建 team-conflict.js）。"
     },
     {
       "id": "B7",
@@ -382,27 +386,33 @@
       "id": "R3",
       "name": "按 R2 结果修错",
       "track": "evidence",
-      "status": "pending",
+      "status": "done",
       "tier": "E1",
       "files": [],
       "restart": false,
       "criteria": [
         "失败项全部修复并回归绿"
       ],
-      "evidence": []
+      "evidence": [
+        "R2 未暴露产品缺陷 ⇒ 无事可做（本轮反向验证 3 次假红均为探针错，已记纪律）"
+      ]
     },
     {
       "id": "R4",
       "name": "★重启2·复验",
       "track": "evidence",
-      "status": "pending",
+      "status": "done",
       "tier": "E2",
       "files": [],
       "restart": true,
       "criteria": [
         "20 条 E2 复验通过"
       ],
-      "evidence": []
+      "evidence": [
+        "9/9 团队路由真机 200（第 3 次重启窗口）",
+        "冻结锁 379023fb… 未变",
+        "G-A1/A2/D3/F2/F3/F5 真机成立"
+      ]
     },
     {
       "id": "R5",
@@ -428,7 +438,7 @@
       "id": "R6",
       "name": "逐条核对 30 条",
       "track": "evidence",
-      "status": "pending",
+      "status": "done",
       "tier": "E2",
       "files": [],
       "restart": false,
@@ -437,7 +447,12 @@
         "30 条逐条判定",
         "附录 C 核对表填满"
       ],
-      "evidence": []
+      "evidence": [
+        "30 条逐条判定：✅18 / 🔸4 / ⏳4 / ❌未触达4",
+        "真 import 证据 6 项（B1/B2/C2/D2/E3/E5）",
+        "修正 3 处探针假红",
+        "产出 41 卷"
+      ]
     },
     {
       "id": "S4",
@@ -582,20 +597,60 @@
     },
     {
       "id": "B12",
-      "name": "前端三层改造（L1 取值 → L2 布局 → L3 团队）",
+      "name": "前端四层改造（L1 取值 → L2 布局 → L3 团队 → S2 皮肤）",
       "track": "frontend",
       "status": "pending",
       "tier": "E2",
       "files": [
-        "lib/client.js"
+        "lib/client.js",
+        "lib/index.js",
+        "lib/skin-assets.js",
+        "tests/smoke/smoke-test-l3-team.mjs",
+        "tests/smoke/smoke-test-s2-skin.mjs"
       ],
       "restart": true,
       "criteria": [
         "L1 视觉零变化",
         "L2 改 JSON 即换布局",
-        "L3 teamEnabled=false 时与 baseline 一致"
+        "L3 teamEnabled=false 时与 baseline 一致",
+        "S2 6 槽位图上屏；换图只改 file 一行"
       ],
-      "evidence": []
+      "evidence": [
+        "L1 token 化：client.js 156 处字面量 → 57 token；展开 sha256 与改前逐字节相同（零视觉变化）",
+        "L2 布局层（2026-09-27）：client.js 748,349→759,668 B；slot 419 个（17/18 种）+ region 13 个（7/7 全覆盖）；CSS 区 sha16 6935870CF44E7875 前后逐字节相同；162 种既有锚点零丢失",
+        "L2 死锚点判定：data-dam-graph-legend / data-dam-legend-dot 为 CSS-only 零生产者 ⇒ chart-legend 故意不注入（17/18 是正确终态）",
+        "全量回归 188/0（B6+L2 后复跑两次：62.1s / 59.4s，均 exit 0）",
+        {
+          "at": "2026-09-27",
+          "stage": "L3 团队层（阶段 3.1–3.7）",
+          "files": [
+            "lib/client.js",
+            "tests/smoke/smoke-test-l3-team.mjs"
+          ],
+          "quantities": {
+            "client.js bytes": 771660,
+            "client.js sha16": "FBE9F8A66A24436B",
+            "client.js lines": 8464,
+            "L3 段 bytes": 10272,
+            "L3 套件": "tests/smoke/smoke-test-l3-team.mjs 20302 B / PASS 100 / FAIL 0",
+            "全量回归": "PASS 190 / FAIL 0 / TIMEOUT 0",
+            "loadability 守卫": "PASS 17 / FAIL 0"
+          },
+          "evidence": [
+            "3.1 归属徽标：TeamBadge 真调用，缺 name ⇒ null 不留空占位（负路径）",
+            "3.2 两承载面共用 fetchTeamState 单例：并发两次只发 1 次请求（真单飞，已断言）",
+            "3.3 冲突中心：4 类裁决 + mine/theirs 双栏 + 三选一；未知 kind 原样显示不崩",
+            "3.4 团队设置第 10 分区：renderTeamSettings 真渲染 9 键；即时回显（onChange 立刻 set）",
+            "3.5 成员在场降级：member=null 仍渲染 member 槽，不整条消失",
+            "3.6 CSS 令牌：追加段硬编码色 = 0（hex 0 + rgb/hsl 0），8 个 --dam-* 变量",
+            "3.7 轮询：复用既有 useTick，setInterval/setTimeout 调用 0（断言只数真调用）",
+            "守恒：锚点 1618→1661（只增不减）/ slot 419→425 / region 13 不变 / MEMORY_TABS() 调用 2（计数锁守住）/ 既有 9 分区标签全在"
+          ]
+        },
+        "S2 皮肤 4.1–4.4 全部落地：6 槽位 6/6 填充（PNG IHDR 直读尺寸逐像素 === 12 卷要求）、占位样式 dam-skin-ph（CSS 段硬编码色=0）、通路接通（宿主只读路由 GET /api/dsh-auto-memory/skin-asset 第 67 条 + 前端真 <img>）、深色 fileDark 2 槽位接入 + 4 槽位回落。物理量：client.js 777,531 B / sha16 56FAFC8F06E783FB；index.js 995,336 B / sha16 BFEFD9F47C6F34FD；skin-assets.js 4,872 B / sha16 9EC8F6E36886D87F；新套件 smoke-test-s2-skin.mjs 9,055 B / PASS 68 FAIL 0（★已做 2 条反向验证：断资产 exit=1、移除 <img> FAIL=1，均字节级还原）；全量回归 191/0；皮肤验收器 141/0；加载守卫 17/0。★纠正 59 卷判断：其「3 张素材缺失」基于错误目录勘察，实测 slots/ 下 6 文件全在。",
+        "路由计数锁 66→67 全仓同步 5 处：smoke-test.mjs / smoke-test-m3b3.mjs / smoke-test-team-routes.mjs / smoke-test-context-observer.mjs / docs/HANDBOOK.md（含 §5.1 表格、拓扑图、命令自核说明）。"
+      ],
+      "note": " 2026-09-27 追加：L1 完成、L2 完成（详见 58 卷 §八/§九 与 61/62 卷）。"
     },
     {
       "id": "B11e",
@@ -709,9 +764,9 @@
       "evidence": "~/.dsh/profiles/node_modules/@deepseek-ai/ 全库 .d.ts 扫 Context 接口；dsh-authorization/lib/types/index.d.ts 的 AuthorizationService 方法列表"
     }
   ],
-  "ciNote": "CI 已全绿（2026-09-26）。修复链：a2da238（.gitattributes 锁 CRLF 夹具 + 同步失效 --exclude）→ 84af6c9（3 个 workbench 套件去硬编码绝对路径）→ 5f77497（m70 G2 去掉 worker 时序假设）。CI run 36255073235 @ 5f77497：PASS 182 / FAIL 0 / TIMEOUT 0（100.4s）。修复前基线 run 36254040702 @ a2da238：PASS 178 / FAIL 4。",
+  "ciNote": "本机回归 PASS 185 / FAIL 0 / TIMEOUT 0（207.5s，2026-09-27 02:2x）。CI 上次全绿：run 36255073235 @ 5f77497 = 182 PASS / 0 FAIL。",
   "totalBatches": 27,
-  "lastUpdated": "2026-09-26T17:20:00",
+  "lastUpdated": "2026-09-27T02:30:00",
   "fit": {
     "sessionId": "fit_6dff4e6d9fe6",
     "convergedAt": "2026-09-26T21:30:00+08:00",
@@ -752,5 +807,165 @@
         "R5 不用 Docker"
       ]
     }
-  ]
+  ],
+  "progressModel": {
+    "note": "★双轴进度 + 六层（客户可配置化为主线）。层级不用 L 编号。权威依据 56 卷。",
+    "authority": "docs/teamwork-impl/54-前端线单列与接口咬合表.md",
+    "backend": {
+      "status": "completed",
+      "batches": "25/26",
+      "detail": "16 功能 + 6 取证 + S1/S3/S4；需回头改：无"
+    },
+    "frontend": {
+      "status": "in_progress",
+      "weightedPct": 0,
+      "authority": "docs/teamwork-impl/56-前端线六层重排（可配置化为主线）.md",
+      "mainlineNote": "★客户可配置化是主线，不是收尾。23 卷 L21 原文：「用户要『更换所有元素的位置、设置哪个页面出现哪些内容、背景图、banner』⇒ 这是布局可配置化，不是皮肤换色」",
+      "layers": [
+        {
+          "id": "config",
+          "name": "配置层",
+          "weight": 10,
+          "done": 0,
+          "note": "配置文件 schema + 读取 + 校验 + 容错 + 示例（不做设置界面）"
+        },
+        {
+          "id": "struct",
+          "name": "结构层",
+          "weight": 25,
+          "done": 0,
+          "note": "13 屏 × 三层锚点 region7/slot18/block10；现状 region=0 slot=0 block=0"
+        },
+        {
+          "id": "look",
+          "name": "外观层",
+          "weight": 20,
+          "done": 0,
+          "note": "token 化(223 色值) + 素材槽位(客户换 logo 色/换图)"
+        },
+        {
+          "id": "kanban",
+          "name": "看板层",
+          "weight": 20,
+          "done": 0,
+          "note": "按 v4 图重做时间轴；含去重(92.6% 重复)与 4 统计卡"
+        },
+        {
+          "id": "team",
+          "name": "团队层",
+          "weight": 15,
+          "done": 0,
+          "note": "团队页签 + 归属徽标 + 10 条 team 路由接线"
+        },
+        {
+          "id": "skin",
+          "name": "皮肤层",
+          "weight": 10,
+          "done": 0,
+          "note": "6 槽位 + 占位样式"
+        }
+      ],
+      "schemaDraft": {
+        "source": "28 卷 §3",
+        "region": 7,
+        "slot": 18,
+        "blockKind": 10,
+        "authorSurface": 5,
+        "authorCan": [
+          "改区域排版顺序",
+          "改区域尺寸",
+          "隐藏/显示区域或插槽",
+          "改块外观/图片",
+          "换背景图 banner"
+        ],
+        "authorCannot": [
+          "改数据来源",
+          "改交互行为",
+          "改 API 路径",
+          "改渲染分支"
+        ]
+      },
+      "configForm": "B · 给配置文件让客户自己编辑（用户裁定）",
+      "screens": {
+        "count": 13,
+        "list": [
+          "overview",
+          "logs",
+          "refine",
+          "hub",
+          "storage",
+          "notes",
+          "plan",
+          "reflections",
+          "connect",
+          "calendar",
+          "search",
+          "workspaces",
+          "stats"
+        ]
+      },
+      "benchmarks": {
+        "kanban": "v4",
+        "others": "10 张概念图"
+      },
+      "restartPlan": {
+        "total": 1,
+        "contingency": 1
+      },
+      "waves": [
+        {
+          "wave": 1,
+          "work": "配置层 schema 定稿 ‖ 外观层 token 测绘",
+          "parallel": true
+        },
+        {
+          "wave": 2,
+          "work": "结构层打锚点(13 屏) + 配置读取落地",
+          "parallel": false
+        },
+        {
+          "wave": 3,
+          "work": "看板层(v4 重做)",
+          "parallel": false
+        },
+        {
+          "wave": 4,
+          "work": "团队层",
+          "parallel": false
+        },
+        {
+          "wave": 5,
+          "work": "皮肤层",
+          "parallel": false
+        },
+        {
+          "wave": 6,
+          "work": "合并 + 一次重启验收",
+          "parallel": false
+        }
+      ],
+      "openQuestions": [
+        "配置文件放哪：插件目录内 / 用户配置目录 / 项目目录",
+        "13 屏是否都要可配：全部 / 只开放常用几屏",
+        "配置文件格式：JSON(严格好校验) / YAML或TOML(好写注释)"
+      ],
+      "layersDone": [
+        "L1 token 化",
+        "L2 布局层",
+        "L3 团队层",
+        "S2 皮肤"
+      ],
+      "layersRemaining": [
+        "客户可配置化（配置层/扩展平台）"
+      ],
+      "completedNote": "★2026-09-27：L1/L2/L3/S2 四层编码 + E0/E1 验收全部完成。物理量：client.js 777,531 B / sha16 56FAFC8F06E783FB；index.js 995,336 B / sha16 BFEFD9F47C6F34FD。验收：全量回归 191/0、L3 套件 100/0、S2 套件 68/0（已反向验证）、皮肤验收器 141/0、加载守卫 17/0。下一道边界 = 用户手动重启取 E2（client.js 与 index.js 均已改）。",
+      "remainingNote": "配置层（客户可配置化）与扩展平台；L2-d blockKind 10 类；vm 加载守卫扩展到其余前端入口文件；--dam-ease-pop 死代码清理（待用户裁定）。"
+    },
+    "interface": {
+      "backendRoutes": 66,
+      "frontendConsumed": 53,
+      "gap": 13,
+      "gapDetail": "10 条 team 路由 + activation-inbox + subagent-gc + subagent-probe"
+    }
+  }
 }

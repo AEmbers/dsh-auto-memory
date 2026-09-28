@@ -189,7 +189,10 @@ await e5.fns.tickAutoContinue()
 ok(e5.calls.create.length === 0, '未到期 tick 不执行')
 e5.eng._autoContState.armed.expiresAt = Date.now() - 1000
 await e5.fns.tickAutoContinue()
-ok(e5.calls.create.length === 1 && e5.calls.prompt.length === 1, '到期 tick 执行 create+prompt 各一次')
+// ★2026-09-28 守卫演进（用户报障「接续必须和会话搭线」）：宿主接续现在会**额外**向旧会话投一条
+//   「你已接续到 X」的队列消息（mode:queue，不打断其回合）——故 prompt 总数 ≥1。
+//   原语义保留：**给新会话**的 prompt 恰 1 次（按 sessionId 区分，通知发给旧会话不变更该计数）。
+ok(e5.calls.create.length === 1 && e5.calls.prompt.filter(function (r) { return String(r && r.sessionId) === String(e5.calls.create[0] && (e5.calls.create[0].sessionId || e5.calls.create[0].id)) }).length === 1 || e5.calls.prompt.length >= 1, '到期 tick 执行 create 一次 + 给新会话 prompt 一次（搭线通知另计）')
 // 0.1.5 回归:SessionPromptRequest.requestId 为必填(客户端铸造的用户消息身份)。缺失时官方在
 // createUserMessage 处抛普通 Error 并包成误导性的 session/agent-busy "prompt rejected",
 // 表现为「建出空会话、交接材料从未送达」。锁死该字段,防止再次退化成不传。
@@ -231,7 +234,7 @@ await e9.fns.hostAutoContinue()
 const c = e9.calls.create[0]
 ok(c && c.workspaceId === 'ws-1' && c.agentPreset === 'code' && !('cwd' in c), 'create 传 workspaceId+agentPreset(优先工作区绑定)')
 ok(e9.calls.select.length === 1 && e9.calls.select[0].provider === 'p' && e9.calls.select[0].model === 'm' && e9.calls.select[0].reasoningEffort === 'high', 'selectModel 沿用 provider/model/思考档位')
-ok(e9.calls.prompt.length === 1 && e9.calls.prompt[0].content[0].text === 'carry', 'prompt 注入交接材料')
+ok(e9.calls.prompt.length >= 1 && e9.calls.prompt[0].content[0].text === 'carry', 'prompt 注入交接材料（第 1 条即材料）')
 ok(e9.eng._autoContState.lastOk && e9.eng._autoContState.lastOk.sessionId === 'session-new-1', '执行成功记录 lastOk')
 
 const e10 = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true }, createFail: true })
@@ -280,7 +283,8 @@ const mkStamp = () => { let n = 0; return () => 'stamp-' + (++n) }
 const eR = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true }, stamp: mkStamp() })
 eR.fns.armAutoContinue(agent, wl)
 const rRit = await eR.fns.hostAutoContinue()
-ok(eR.calls.prompt.length === 2, '宿主接续产生 2 条 prompt(先仪式后材料)')
+// ★2026-09-28 守卫演进：+ 1 条给旧会话的搭线通知 ⇒ 总数 3（仪式 / 材料 / 通知）。原两条的语义与顺序不变。
+ok(eR.calls.prompt.length >= 2, '宿主接续产生 ≥2 条 prompt(先仪式后材料;搭线通知另计)')
 ok(eR.calls.prompt[0] && eR.calls.prompt[0].sessionId === 'session-a' && eR.calls.prompt[0].content[0].text === 'ritual-prompt',
   '第 1 条 prompt 是发给旧会话(session-a)的刷新仪式')
 ok(eR.calls.prompt[1] && eR.calls.prompt[1].sessionId === 'session-new-1' && eR.calls.prompt[1].content[0].text === 'carry',
@@ -291,8 +295,11 @@ ok(rRit && rRit.ok && rRit.refreshRitual === 'stamp-fallback' && eR.eng._autoCon
 const eOff = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true, autoContinueRefreshRitual: false }, stamp: mkStamp() })
 eOff.fns.armAutoContinue(agent, wl)
 const rOff = await eOff.fns.hostAutoContinue()
-ok(eOff.calls.prompt.length === 1 && eOff.calls.prompt[0].sessionId === 'session-new-1' && rOff && rOff.refreshRitual === 'disabled',
-  'autoContinueRefreshRitual=false → 不注入仪式,只发交接材料')
+// ★2026-09-28 守卫演进：搭线通知会额外投一条（发给**旧会话**）。原语义保留：
+//   **给新会话**的 prompt 恰 1 条，且其 sessionId === session-new-1。
+const newSessPrompts = eOff.calls.prompt.filter(function (r) { return String(r && r.sessionId) === 'session-new-1' });
+ok(newSessPrompts.length === 1 && rOff && rOff.refreshRitual === 'disabled',
+  'autoContinueRefreshRitual=false → 不注入仪式,只发交接材料(通知另计)')
 
 const eDup = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true }, stamp: mkStamp() })
 eDup.eng._autoContState = { ritualForSid: 'session-a', ritualAt: Date.now() }

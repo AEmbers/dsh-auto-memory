@@ -105,6 +105,18 @@ for (const toolFile of 'run-smoke.mjs,release.mjs'.split(',')) {
   mkdirSync(path.join(REL, 'tools'), { recursive: true })
   cpSync(src, path.join(REL, 'tools', toolFile))
 }
+// ★2026-09-28（issue #144 附带发现 / Astra 反馈）：`tools/lib/` 此前不在任何拷贝清单里 ⇒
+//   发布树里**从来没有** tools/lib/appearance-scan.mjs，而同一次发布却带着引用它的两处：
+//   ① `tests/smoke/smoke-test-r15-left-rail.mjs` 第 8 行 `import { scanAppearance … }
+//      from '../../tools/lib/appearance-scan.mjs'` ⇒ 发布树里 r15 必然 ERR_MODULE_NOT_FOUND（CI 红）；
+//   ② `docs/SKIN-GUIDE.md` §10「验收纪律」第 1 步就是 `node tools/lib/appearance-scan.mjs`，
+//      而 docs/ 随包进 npm tarball（已实测 3.2.1 包内含 SKIN-GUIDE 但无 tools/lib）⇒
+//      第三方照白皮书执行第一步即断（Astra 反馈的原症状）。
+//   本目录是**共享度量模块**（扫描器与被测套件共用同一实现，杜绝两份实现漂移），属发布线必需。
+//   一次性递归拷贝（含未来同目录新增模块，避免同类漏网再次发生）。
+if (existsSync(path.join(DEV, 'tools', 'lib'))) {
+  cpSync(path.join(DEV, 'tools', 'lib'), path.join(REL, 'tools', 'lib'), { recursive: true })
+}
 
 // ---------- 3. pre → 正式 反转(精确替换;转换输入一律 _pre,禁止 _dev) ----------
 // lib 内部模块文件名重命名(xxx-pre.js → xxx.js;先文件后导入,m4-/m7- 前缀模块同步去前缀段内 -pre)

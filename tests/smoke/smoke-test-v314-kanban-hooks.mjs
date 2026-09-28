@@ -52,5 +52,43 @@ console.log('\n=== K2 全仓 hook 调用面：不得出现在条件表达式/JSX
 console.log('\n=== K3 同一 hook 的既有正确写法未被改坏 ===')
 ok(CL.includes('useCardFull(expanded ? c : null)'), 'K3 KanbanCard 仍是无条件调用 + 可空参数')
 
+// ★2026-09-28 追加 K4（issue #145 同族）：**组件级早退之后不得再有 hook 调用**。
+//   背景：宿主槽位边界报 React error #300（"rendered fewer hooks than expected"），
+//   根因是 GreetingCard 把 `if (!g) return null` 放在两个 useState 之前 —— 首渲染 g 为空
+//   （OverviewTab 的 state 初值 null，等 apiGet 回填）走早退（0 hook），数据到达后二次渲染
+//   执行 4 个 hook ⇒ 数量变化即抛 #300，该 overlay 条目整块不渲染。
+//   K2 守的是「条件表达式里调 hook」，K4 守的是**早退位置**——两族不同，都要拦。
+//   判据：对每个组件函数体，若组件体**顶层层级**（缩进 == 首语句缩进）存在 `if (...) return`，
+//   则其后不得再出现顶层层级的 `use*` 调用。仅看顶层 ⇒ 不误报 useEffect 回调内的 return。
+{
+  const HOOKS = ['useState', 'useEffect', 'useMemo', 'useRef', 'useCallback', 'useContext', 'useReducer', 'useLayoutEffect', 'useTick', 'useTeamTick', 'useDeepTheme', 'useSkinCenter']
+  const hookRe = new RegExp('\\b(' + HOOKS.join('|') + ')\\s*\\(')
+  const comps = []
+  lines.forEach((l, i) => { const m = /^(\s*)function\s+([A-Z][A-Za-z0-9_]*)\s*\(/.exec(l); if (m) comps.push({ name: m[2], start: i }) })
+  const offenses = []
+  for (const c of comps) {
+    // 花括号配平求函数体范围
+    let depth = 0, end = -1
+    for (let i = c.start; i < lines.length; i++) {
+      for (const ch of lines[i]) { if (ch === '{') depth++; else if (ch === '}') { depth--; if (depth === 0) { end = i; i = lines.length; break } } }
+    }
+    // 组件体首层缩进
+    let base = -1
+    for (let i = c.start + 1; i <= end; i++) { const t = lines[i].trim(); if (t && t !== '{' && !/^(\/\/|\*|\/\*)/.test(t)) { base = lines[i].match(/^\s*/)[0].length; break } }
+    if (base < 0) continue
+    let earlyLine = -1
+    for (let i = c.start + 1; i <= end; i++) {
+      const l = lines[i]
+      if (/^\s*(\/\/|\*|\/\*)/.test(l)) continue
+      if (l.match(/^\s*/)[0].length !== base) continue
+      if (earlyLine < 0 && /^\s*if\s*\(.*\)\s*return\b/.test(l)) { earlyLine = i; continue }
+      if (earlyLine >= 0 && hookRe.test(l) && !/^\s*function\s+use/.test(l)) {
+        offenses.push(c.name + ' @L' + (i + 1) + ': ' + l.trim().slice(0, 110) + '   (早退在 L' + (earlyLine + 1) + ')')
+      }
+    }
+  }
+  ok(offenses.length === 0, '★K4 无「组件级早退之后仍有 hook 调用」的组件（否则宿主槽位边界会报 React #300/#310）（实得 ' + offenses.length + ' 处）', offenses.join('\n           '))
+}
+
 console.log('\n[汇总] ' + pass + ' passed, ' + fail + ' failed')
 process.exit(fail ? 1 : 0)

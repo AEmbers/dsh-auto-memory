@@ -4,6 +4,40 @@ All notable changes to dsh-auto-memory.
 
 ---
 
+## [3.2.2] — 2026-09-28 · 子代理模型 provider 修复 + 适配 DSH 0.1.7 设置迁移
+
+> **本版是 3.2.1 的纯修复增量**：功能内容与 **3.2.1 完全一致**（逐字沿用，见下方 **[3.2.1]** 小节），本版**只修两处缺陷 + 一项仓库卫生**，无新功能、无行为变更。
+> **本版改动含宿主（`lib/index.js`）：需重启 dsh web 后生效**（只刷新页面不够）。
+
+### ★ 修复：子代理「跨 provider 选模型」必然失败（UNKNOWN_MODEL）
+
+- **现象**：在设置里把「子代理模型」选成**与当前会话不同 provider** 的模型（例如会话 provider 是 A，子代理模型属于 provider B），任何触发子代理的功能（**自动沉淀 / 时段总结 / 提炼**）都会失败，报 `pi-ai provider "..." has no configured model "..."`，并触发 **30 分钟熔断**。
+- **根因**：下发给子代理的 `agentOptions` 只带 `model` 与 `reasoningEffort`，**从不带 `provider`** ⇒ 宿主用**父会话的 provider** 去找这个模型，而该 provider 的模型目录里没有它。另有一处历史代码把「LLM provider 名」与「子代理实现名」（如 `spawn`）混在同一判断里，导致配置的 provider 从未生效。
+- **修复**：`agentOptions` 补上 `provider`；移除上述命名空间混用的判断（子代理实现名仍按原逻辑选择）。
+- **验证**：从源码抽函数体实跑 **10 项断言全过** —— 跨 provider 场景现正确下发 `{provider, model}`；只配 model 时不下发 provider（不误改路由默认）。**用户报告者（issue #144）的触发场景修复**。
+
+### ★ 修复：DSH 0.1.7 设置迁移后两处功能静默降级
+
+- **现象**：在 DSH 0.1.7（设置已从 `settings.yaml` 迁到 `profiles/<profile>/cordis.patch.yml`，旧文件改名为 `settings.yaml.imported`）上 —— ① 子代理的 UNKNOWN_MODEL **自保回退失效**（回退等于不存在）；② **上下文水位**感知解析不到模型窗口，回退保守值 **131072**，对 1M 上下文的模型会**过早**触发水位提醒与骨架账本。
+- **根因**：插件两处仍按老路径 `<dshHome>/settings.yaml` 读设置，读失败被 catch 静默吞掉。
+- **修复**：新增「**活设置文件定位器**」—— `profiles/<活跃 profile>/cordis.patch.yml` 优先（环境变量 `DSH_PROFILE` > profiles 下最近修改者），老 `settings.yaml` 兜底（未迁移环境完全兼容）；解析器同时兼容老的 block 格式与新文件里的列表项格式。
+- **验证**：真实 profile 解析出正确的 provider/model；新老两种格式回归全过。**同一份用户报告的另一项**。
+
+### 修复：仓库卫生
+
+- 外观扫描脚本 `tools/lib/appearance-scan.mjs`（皮肤白皮书 `docs/SKIN-GUIDE.md` 的验收纪律引用它）此前**从未入库**，第三方按白皮书执行第一步即失败；本版纳入版本控制。
+
+### 验证
+
+- 全量回归：**225 PASS / 0 FAIL / TIMEOUT 0**。
+- 新增/更新的守卫：`smoke-test-handoff.mjs` 新增「**活设置文件定位器**」专测（该套件 **59 / 0**）。
+
+### 内部重构 / 流程
+
+- 无（本版为纯修复）。
+- ★ 宿主 `lib/index.js` 有改动，**需重启 dsh web 生效**（只刷新页面不够）。
+
+---
 ## [3.2.1] — 2026-09-28 · 日文界面支持 + 修「一键接续落到别的工作区」（本版内容 = 3.2.0 全部内容 + 下列两项）
 
 > **本版是 3.2.0 的增量版**：功能内容与 **3.2.0 完全一致**（逐字沿用，见下方 **[3.2.0]** 小节），另加**日文界面支持**与**一个接续缺陷修复**。

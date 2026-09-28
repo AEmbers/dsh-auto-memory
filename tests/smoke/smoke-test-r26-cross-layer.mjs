@@ -64,7 +64,7 @@ ok(cnt(SRC, '\n') === cnt(SRC, '\r\n'), 'E2 纯 CRLF')
 // ★2026-09-28 基线演进 R47→R48：修「一键接续漂到别的工作区」——handoffPanelData 的刷新目标不再跨工作区
 //   磁盘回退（原 recentSessionIdFallback 会返回别的工作区的会话，致新会话落到错误 Workspace）。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'BB7C5A19A683604D', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R48 基线；R47→R48 放行 = 修「一键接续漂到别的工作区」宿主半边：handoffPanelData 不再跨工作区回退刷新目标，理由见上）')
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '378AF75BC5C6EA94', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R49 基线；R48→R49 放行 = 修 issue #144 两项：subAgentOptions 回填 provider（跨 provider 子代理 UNKNOWN_MODEL）+ 设置文件读取改走活布局定位器 profiles/<p>/cordis.patch.yml（0.1.7 迁移后两处静默降级），理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

@@ -138,6 +138,9 @@ settings = settings.replace("'tauHi 0.45 · tauLo 0.35 · deltaExp 0.03 · delta
 settings = replaceOnce(settings, "try { openDialog({ kind: 'welcomeTour' }) } catch (eTour) {}", "try { openManualWelcomeTourPre() } catch (eTour) {}")
 // Avoid global selector collisions with the classic settings surface.
 settings = settings.replaceAll("id: 'dam-settings-'", "id: 'i5-settings-section-'")
+// Instance-local tabs/sections avoid collisions when host and workbench settings coexist.
+settings = settings.replace('var i5Group = useState', "var i5SettingsId = useRef('i5-settings-' + (++iter5SettingsSequence)).current\n      var i5Group = useState")
+settings = settings.replaceAll("'i5-settings'", 'i5SettingsId').replaceAll("'i5-settings-panel'", "i5SettingsId + '-panel'").replaceAll("'i5-settings-tab-'", "i5SettingsId + '-tab-'").replaceAll("'i5-settings-section-'", "i5SettingsId + '-section-'")
 let storage = client.slice(client.indexOf('    function StorageTab(props) {'), client.indexOf('    function NotesTab() {'))
 storage = replaceOnce(storage, 'function StorageTab(props)', 'function Iter5Storage(props)')
 storage = storage.replaceAll(".then(function (r) { return r.json() })", ".then(function (r) { return r.json().then(function (j) { if (!r.ok || (j && j.error)) throw Error(j && (j.error || j.reason) || 'Request failed'); return j }) })")
@@ -175,19 +178,16 @@ skills = replaceOnce(skills, "return h('div', { 'data-dam-slot': 'timeline', 'da
           if (i5Filter[0] === 'active' && title.indexOf(L('技能审批队列', 'Skill approval queue')) === 0) return false
           return true
         })))`)
-const overlayRoots = '[data-dam-panel],[data-dam-tour],[data-dam-autocont]'
 const readSkin = name => readFileSync(path.join(root, 'skins/iter5', name), 'utf8').replace(/\r\n/g, '\n')
 const css = readSkin('skin.css').trim()
-  .replace('[data-iter5]{--i5-blue:', '[data-iter5],body:has([data-iter5]) :is(' + overlayRoots + '){--i5-blue:')
-  .replace('[data-iter5][data-deep=true]{--i5-blue:', '[data-iter5][data-deep=true],body:has([data-iter5][data-deep=true]) :is(' + overlayRoots + '){--i5-blue:')
-  .replaceAll('body:has([data-iter5])', 'html:has(#dam-skin-v4-style)')
-  .replaceAll('body:has([data-iter5][data-deep=true])', 'html:has(#dam-skin-v4-style):is([data-dsh-theme=dark],[data-theme=dark],.dark)')
-const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd()
+  .replace('[data-iter5]{--i5-blue:', '[data-iter5],[data-dam-theme]{--i5-blue:')
+  .replace('[data-iter5][data-deep=true]{--i5-blue:', '[data-iter5][data-deep=true],[data-dam-theme][data-deep=true],[data-dam-theme][data-deep=true] [data-iter5]{--i5-blue:')
+const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd()
 const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + settings + storage + skills + end + '\n'
 const seam = '    // ===================== dam-skin:end (v4) ====================='
 client = replaceOnce(client, seam, generated + seam)
 // Only the opt-in skin mount and its stylesheet gain the new implementation.
-client = client.replace("+ DAM_SKIN_V4_CSS + '\\n/* dam-skin:end (v4) */'", "+ DAM_SKIN_V4_CSS + '\\n' + ITER5_CSS + '\\n/* dam-skin:end (v4) */'")
+
 client = client.replace("h(DamSkinV4Page, { nonce: nonce, onExit:", "h(Iter5Page, { nonce: nonce, onExit:")
 client = client.replace('try { ensureStyle() } catch', "try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch")
 // Upstream welcome branch called a hook after its early return, causing React #310

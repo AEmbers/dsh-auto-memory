@@ -1,0 +1,32 @@
+# PR 146 UI 入口清单
+
+基线：ee9ef014b0f3cd28fccd2da44a379293d51757a0。入口盘点来自实际注册与渲染链路；验收状态默认未验证，不能以共享样式推定通过。
+
+| 入口 | 实际组件 | 样式/主题边界 | 状态与验收 |
+|---|---|---|---|
+| 首次启动 / 设置重看引导 | DialogHost / TOUR_STEPS | shell.overlay 独立挂载 | 9 步浅色桌面/深色390截图、Esc与焦点通过；首启自动触发、完成初始化及下载执行未验证 |
+| DSH 设置 → 记忆设置 | settings.section → Iter5HostSettings → Iter5Settings | 宿主设置容器 | 独立四组、取消离开、保存500/重试/还原、方向键通过；390px宿主侧栏挤压仍存在 |
+| 侧栏记忆按钮 → 轻面板 | SidebarButton → MemoryPanel | shell.overlay 独立挂载 | 独立打开、拖动、缩放、展开、关闭重开、返回工作台、浅深色/窄屏通过；固定持久性未复测 |
+| 会话 → 记忆 → 工作台 | MemoryPageView → Iter5Page → Iter5Home | data-iter5 | 实际工作台截图、最近记录、状态展示通过 |
+| 记忆库 → 浏览/检索/日志/反思 | Iter5Browse / SearchTab / Iter5History | data-iter5 | 实际数据、长文/无空格英文、来源、笔记写入/还原通过；检索模型执行未验证 |
+| 接续 | Iter5Handoff / ConnectTab / PlanTab | data-iter5 | 真实页面/未配置状态截图通过；付费生成和完整自动接续未执行 |
+| 日程 | Iter5Calendar | data-iter5 | 继承真实回归：新增/完成/删除、取消通过；全部编辑边界未覆盖 |
+| 技能 | Iter5Skills | data-iter5 | 实际页面与空数据截图通过；审批/弃用写入未执行 |
+| 唤起回顾 | Iter5Recall | data-iter5 | 实际页面与反馈回读回归通过；模型判定未执行 |
+| 工作区关系 | Iter5Workspaces | data-iter5 | 真实关系页面截图通过；跨工作区切换迟到响应仅自动测试 |
+| 存储维护 | Iter5Storage | data-iter5 | 真实状态页面截图通过；破坏性删除/迁移/修复写入未执行 |
+| 工作台设置 | Iter5Settings（生成） | data-iter5 | 四组、跨组草稿、即时模式、保存失败、取消、拒绝离开/刷新/经典切换通过 |
+| 团队 / 统计 | TeamTab / StatsTab（兼容入口） | 工作台与轻面板 | 两个实际页面均截图；单机未登录/空统计通过，团队联网及权限组合未验证 |
+| 会话 → 白板看板 | KanbanView | 独立 conversation.view | 真实 conversation.view 已打开并截图；启用图模式后的详情/数据操作未验证 |
+| 可选白板画布 | WhiteboardGraphView | localStorage 开关注册 | 默认隐藏：未启用、未验证；共享portal主题已接线 |
+| 诊断 / 模型安装 / 更新 / 工作台初始化 | DebugCenter / DialogHost | 独立浮层 | 真实宿主更新说明、诊断、模型未安装提示已截图；安装/更新/工作台初始化写入未执行 |
+| 笔记编辑 / 日程编辑 / 导入导出 / 删除 | 对应页内编辑器、DialogHost、浏览器确认 | 页面或浮层 | 笔记/日程回归通过；导入导出、危险确认及长预览未全覆盖 |
+| 自动接续确认 / 倒计时 | AutoContinueHost | 独立 shell.overlay | 主题已接入；确认/倒计时真实触发需要模型执行，未验证 |
+| 经典模式 / 渲染失败回退 | MemoryPageView / MemoryTabBody | 原布局 + 共享控件 | 真实切换经典、退出新皮肤通过；渲染故障回退未做宿主故障注入 |
+| 页头与消息栏 | 仓库注册入口检查 | 宿主负责布局 | 当前注册为 sidebar.footer.action，未发现独立消息工具栏注册，不适用 |
+
+共通矩阵：浅/深色、桌面/390px/实际窄容器、125%/150% 字号、键盘、关闭返回焦点、工作区切换、减少动效。未逐项测量的组合不得记为已通过。
+
+## 证据索引
+
+真实宿主截图与测试记录见 [验收报告](artifacts/pr146-full-ui/README.md)。所有未验证项目已明确列出；共享样式已接入不等于业务状态验收通过。

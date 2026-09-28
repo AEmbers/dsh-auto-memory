@@ -14,8 +14,8 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
   .replace("try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch')
   .replace('function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()', 'function DialogHost() {\n      var tickPair = useTick()')
   .replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })")
-assert.equal(createHash('sha256').update(classic).digest('hex'), '8fc8150132e09b9bd21763621a177f7d0dea018097ce9b7a747dd67bc84d3070', 'Classic bundle equals upstream after removing three opt-in seams and the documented tour hook fix')
-console.log('PASS classic source preserved except documented tour hook fix')
+assert.equal(createHash('sha256').update(classic).digest('hex'), '24ba168dfad0b22e2b08964f9b42b1c355fe0f7ef77226bab936ebeca2359487', 'Reviewed shared-entry baseline stays unchanged outside generated skin (PR146 root wrappers, welcome composition, compact panel)')
+console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
 for (const line of css.split('\n')) {
@@ -24,7 +24,7 @@ for (const line of css.split('\n')) {
 }
 assert(!source.includes('BData.'), 'No demo data shipped')
 const embeddedCss=JSON.parse(source.match(/var ITER5_CSS = (.+)\n/)[1])
-const sharedTokens=embeddedCss.match(/\[data-iter5\],html:has\(#dam-skin-v4-style\)[^{]+\{([^}]+)\}/)[1]
+const sharedTokens=embeddedCss.match(/\[data-iter5\],\[data-dam-theme\]\{([^}]+)\}/)[1]
 assert(sharedTokens.split(';').filter(Boolean).every(declaration=>declaration.startsWith('--')),'Overlay token sharing must not include page flex/height/position styles')
 console.log('PASS scoped token colors and no demo data')
 
@@ -50,6 +50,19 @@ vm.runInContext(source.replace('    return module.exports', `    exports._i5test
       transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
+// Execute the host theme reader against both current DSH and older host markers.
+const themeReader = vm.runInContext('(' + source.slice(source.indexOf('    function readHostDeep()'), source.indexOf('    function useDeepTheme()')) + ')', context)
+assert.equal(themeReader(), false)
+document.body = { hasAttribute: name => name === 'data-ds-dark-theme' }
+assert.equal(themeReader(), true, 'Current host body theme marker is recognized')
+document.body = { hasAttribute: () => false }
+document.documentElement.style.colorScheme = 'dark'
+assert.equal(themeReader(), true, 'Current host color-scheme is recognized')
+document.documentElement.style.colorScheme = 'light'
+assert.equal(themeReader(), false, 'Switching back to light clears dark theme')
+assert(!embeddedCss.includes('body:has([data-iter5])'), 'Independent roots never depend on a workbench being mounted')
+assert(!embeddedCss.includes('html:has(#dam-skin-v4-style)'), 'Shared overlays do not depend on opt-in stylesheet lifetime')
+console.log('PASS actual host theme markers and standalone entry styles')
 test.transport(async url => {
   if (url.includes('/config')) return { config: { ...config } }
   if (url.includes('/semantic-status')) return { loaded: true, ready: false, resolvedTier: 'c1', download: { phase: 'idle' } }
@@ -70,7 +83,7 @@ render(); let tree = await settle()
 assert.equal(field(tree, 'fNoteCap').props.value, 24000)
 assert.equal(field(tree, 'fUserCap').props.value, 24000)
 console.log('PASS generated settings preserve both upstream capacity defaults')
-const appearance=nodes(tree,n=>n.type==='section'&&n.props.id==='i5-settings-section-look')[0]
+const appearance=nodes(tree,n=>n.type==='section'&&n.props.id&&n.props.id.endsWith('-section-look'))[0]
 assert(button(appearance,test.t('tourReplay')),'Manual welcome entry stays in appearance group')
 console.log('PASS welcome replay is reachable under appearance settings')
 field(tree, 'fJsCooldown').props.onChange({ target: { value: '7' } })
@@ -175,7 +188,7 @@ try {
   for(const dir of ['lib','tools','skins/iter5'])mkdirSync(path.join(fixture,dir),{recursive:true})
   writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
   for(const newline of ['\n','\r\n']) {
-    for(const name of ['ui.js','views.js','skin.css']) {
+    for(const name of ['ui.js','views.js','surfaces.js','skin.css']) {
       const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
       writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
     }

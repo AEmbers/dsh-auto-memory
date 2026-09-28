@@ -13,7 +13,8 @@ import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const SRC = readFileSync(path.resolve(HERE, '..', '..', 'lib', 'index.js'), 'utf8')
-const CLI = readFileSync(path.resolve(HERE, '..', '..', 'lib', 'client.js'), 'utf8')
+// Preserve the classic two-input invariant; the generated skin is verified in its own suite.
+const CLI = readFileSync(path.resolve(HERE, '..', '..', 'lib', 'client.js'), 'utf8').replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ ITER5-GENERATED:END\r?\n/, '')
 let pass = 0, fail = 0
 const t = (name, fn) => { try { fn(); pass++; console.log('  ok - ' + name) } catch (e) { fail++; console.log('  FAIL - ' + name + ': ' + (e && e.message)) } }
 const assert = (c, m) => { if (!c) throw new Error(m || 'assertion failed') }

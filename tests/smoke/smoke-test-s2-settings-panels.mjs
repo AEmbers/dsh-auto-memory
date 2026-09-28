@@ -24,7 +24,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   - ' + m) } else { fa
 const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), m + '  (got ' + JSON.stringify(a) + ')')
 const cnt = (h, n) => { let c = 0, i = 0; for (;;) { const p = h.indexOf(n, i); if (p < 0) return c; c++; i = p + n.length } }
 
-const SRC = fs.readFileSync(path.join(ROOT, 'lib/client.js'), 'utf8')
+// This suite guards the classic scrolling settings; iter5 grouped settings are tested separately.
+const SRC = fs.readFileSync(path.join(ROOT, 'lib/client.js'), 'utf8').replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ ITER5-GENERATED:END\r?\n/, '')
 
 const KEYS = ['engine', 'window', 'capacity', 'skills', 'handoff', 'auto', 'store', 'look', 'about']
 const STORE_HEAD = "section('store', sectionLabels.store, ["

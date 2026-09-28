@@ -18,7 +18,8 @@ let fail = 0
 function ok (c, m) { if (c) { pass++; console.log('PASS  ' + m) } else { fail++; console.log('FAIL  ' + m) } }
 function eq (a, b, m) { ok(Object.is(a, b), m + '  [got=' + JSON.stringify(a) + ' want=' + JSON.stringify(b) + ']') }
 
-const SRC = readFileSync(CLIENT, 'utf8')
+// Count injection in the classic surface, not in the separately generated iter5 settings copy.
+const SRC = readFileSync(CLIENT, 'utf8').replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ ITER5-GENERATED:END\r?\n/, '')
 
 // ───────────────────────── §1 抽取真实源码（不是重写） ─────────────────────────
 const BEGIN = '// ===================== L3-team:begin ====================='

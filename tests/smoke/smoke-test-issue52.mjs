@@ -19,7 +19,8 @@ import assert from 'node:assert'
 import { test } from 'node:test'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const SRC = readFileSync(path.resolve(HERE, '..', '..', 'lib', 'client.js'), 'utf8').replace(/\r\n/g, '\n')
+// Classic regressions retain their original scope; the generated skin has its own behavioral suite.
+const SRC = readFileSync(path.resolve(HERE, '..', '..', 'lib', 'client.js'), 'utf8').replace(/\r\n/g, '\n').replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ ITER5-GENERATED:END\n/, '')
 
 // —— 抽取真实实现 ——
 const setLine = SRC.match(/\n {4}function set\(key, value\) \{[^\n]*\n/)

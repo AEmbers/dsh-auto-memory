@@ -24,6 +24,21 @@
 </p>
 <p align="center"><sub>Promo gallery · seven frames · click any thumbnail to view full size</sub></p>
 
+### New UI (`新款`) — rebuilt frontend · contributed by [@Minervaowl7](https://github.com/Minervaowl7)
+
+A reference-style memory workbench: nine-page navigation, list & detail views, four settings groups,
+focus view, dark mode and narrow-screen layouts. Switch to it from the memory panel header button —
+the classic skin is untouched and always one click away.
+
+<p align="center"><img width="640" alt="new UI workbench" src="docs/skin-figures/skin-home-zh.png"></p>
+
+<p align="center">
+  <img width="205" alt="memory library" src="docs/skin-figures/skin-library-zh.png">
+  <img width="205" alt="settings" src="docs/skin-figures/skin-settings-zh.png">
+  <img width="205" alt="dark mode" src="docs/skin-figures/skin-home-dark-zh.png">
+</p>
+<p align="center"><sub>All 24 real-host screenshots live in the <a href="docs/SKIN-GUIDE.md">Skin guide</a></sub></p>
+
 <details>
 <summary><b>Promo gallery, frame by frame</b> (expand and flip through)</summary>
 
@@ -517,6 +532,13 @@ Most of this release adds no new buttons. It changes *what makes a memory trustw
 
 ## UI gallery
 
+### New UI (`新款`) · rebuilt frontend, contributed by [@Minervaowl7](https://github.com/Minervaowl7)
+
+A reference-style memory workbench — nine-page navigation, list & detail views, four settings groups,
+focus view, dark mode and narrow-screen layouts. See the [Skin guide](docs/SKIN-GUIDE.md) for all 24
+screenshots; the skin source lives in [`skins/iter5/`](skins/iter5/README.md) and is embedded into
+`lib/client.js` by a generator.
+
 ### Memory panel · Overview (away greeting + AI period summaries)
 
 <img width="480" alt="overview" src="docs/screenshots/panel-overview.png">
@@ -638,7 +660,7 @@ Papers were authored by the autonomous engineering agent (ZCode / GLM); all conc
 
 Community contributors:
 
-- [@Minervaowl7](https://github.com/Minervaowl7) — the most prolific contributor: 15 PRs + 8 issues covering workspace-overview log-date anchoring, auto-continuation host hardening, and recovery-candidate lifecycle ([#16](https://github.com/Aik358/dsh-auto-memory/issues/16)–[#53](https://github.com/Aik358/dsh-auto-memory/pull/53))
+- [@Minervaowl7](https://github.com/Minervaowl7) — **responsible for the complete development of the new frontend (the dev-preview UI)**: a reference-style memory workbench (nine-page navigation, list & detail, four settings groups, focus view, dark mode, narrow-screen), integrated through a generator that derives new skin variants from the classic components and fails loudly on structural drift ([PR #146](https://github.com/Aik358/dsh-auto-memory/pull/146)). Also the most prolific contributor overall: 51 PRs + 57 issues covering workspace-overview log-date anchoring, auto-continuation host hardening, semantic-index self-healing, the python download chain and recovery-candidate lifecycle ([#16](https://github.com/Aik358/dsh-auto-memory/issues/16)–[#146](https://github.com/Aik358/dsh-auto-memory/pull/146))
 - [@JIE42393](https://github.com/JIE42393) — 7 issues on panel behaviour, recall quality and configuration edge cases ([#15](https://github.com/Aik358/dsh-auto-memory/issues/15), [#26](https://github.com/Aik358/dsh-auto-memory/issues/26), [#30](https://github.com/Aik358/dsh-auto-memory/issues/30), [#41](https://github.com/Aik358/dsh-auto-memory/issues/41)–[#43](https://github.com/Aik358/dsh-auto-memory/issues/43), [#45](https://github.com/Aik358/dsh-auto-memory/issues/45))
 - [@Fishsb](https://github.com/Fishsb) — 3 issues on memory recall and injection behaviour ([#18](https://github.com/Aik358/dsh-auto-memory/issues/18)–[#20](https://github.com/Aik358/dsh-auto-memory/issues/20))
 - [@messiahyl](https://github.com/messiahyl) — 2 issues ([#8](https://github.com/Aik358/dsh-auto-memory/issues/8), [#9](https://github.com/Aik358/dsh-auto-memory/issues/9))
@@ -667,8 +689,10 @@ Infrastructure and API-quota sponsors are listed on the **[Contributors & Sponso
 This project is built human-machine collaboratively. In addition to engineering and community contributions above:
 
 - **Aik358** — project owner: product direction, architecture, and engineering.
+- **[@Minervaowl7](https://github.com/Minervaowl7)** — **author of the new frontend (the skin system)**: independently built the complete new UI — a nine-page workbench, list/detail views, four settings groups, focus view, dark-mode adaptation and narrow-screen layouts. **This is the starting point and foundation of the plugin's skin system**: by integrating through a generator that derives new skin variants from the classic components, later contributors can keep re-skinning on top of it while the classic skin stays byte-for-byte unchanged. Also the project's most prolific community developer (51 PRs · 57 issues).
 - **ZCode (GLM, Z.ai)** — autonomous engineering agent: M-series semantic-engine implementation, benchmark research papers ([M7-RESEARCH-PAPER](docs/M7-RESEARCH-PAPER.md) / [Activation v2 report](docs/M7-ACTIVATION-V2-PAPER.md)), regression suites, and the landing-page design/build.
 - **Kimi K3 (Moonshot AI)** — frontend agent: contributed to the v0.1.30 welcome-tour interface assets and visual QA.
+- **DeepSeek Harness (DeepSeek V4)** — **the self-iteration environment and collaborator of this project**: most of the features contributed by the community author and the agents above were **grown inside DeepSeek Harness, self-evolving together with DeepSeek V4** — spotting a problem, locating the root cause, writing the patch, running the regression suite and opening the PR all happened within the same set of Harness sessions. This is itself an instance of a **harness iterating on, and developing, itself**: the project is used by humans and AI while it makes itself better in the very same environment. The plugin's own context-management capabilities (handoff ledgers / whiteboard / watermark sensing / auto-continuation) grew out of exactly this need — supporting long-running, cross-session self-iteration.
 
 AI agents are credited as authors of the research papers and parts of the implementation, under human review and direction.
 

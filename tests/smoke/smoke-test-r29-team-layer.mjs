@@ -1,8 +1,17 @@
 /** R29 · 团队层：08 卷 §四 8 点 + 37 卷两条必做项（真执行 + 负路径）。 */
 import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
-const SRC = readFileSync('D:/dsh-auto-memory/lib/client.js', 'utf8')
-const L = SRC.split('\r\n')
+import { fileURLToPath } from 'node:url'
+const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
+const SRC = readFileSync(damPath('lib/client.js'), 'utf8')
+/** 平台无关行尾守恒（★2026-09-28）：存在 CRLF 时不得有裸 LF；全 LF 合法（CI/Linux 检出态）。
+ *  原实现 `SRC.split('\r\n')` + 断言段数 === CRLF 数 + 1，等价于「必须全 CRLF」——Linux CI 必红。 */
+const damNoMixedEol = (s) => {
+  const crlf = (s.match(/\r\n/g) || []).length
+  const lf = (s.match(/\n/g) || []).length
+  if (crlf === 0) return true
+  return crlf === lf
+}
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }
 const eq = (a, b, m) => ok(Object.is(a, b), m + ' [got=' + JSON.stringify(a) + ' want=' + JSON.stringify(b) + ']')
@@ -70,7 +79,9 @@ eq(T({ config: { teamEnabled: true }, team: 'str' }).member, null, 'C18 ★负�
 ok(typeof T({ config: { teamEnabled: true }, team: { attribution: 'x' } }).attribution === 'object', 'C19 ★负路径：attribution 非对象 ⇒ 回退空对象（不是字符串）')
 
 /* ── D. 08 卷 §五 不可碰清单 ── */
-eq(L.length - 1, (SRC.match(/\r\n/g) || []).length, 'D1 ★纯 CRLF（裸 LF 0）')
+// ★2026-09-28：原判据 `L.length - 1 === (SRC.match(/\r\n/g)||[]).length`（"必须全 CRLF"）在
+//   Linux CI 必红——索引里是 LF，本机 core.autocrlf=true 才检出 CRLF。守的语义不变：文件不得混合行尾。
+eq(damNoMixedEol(SRC), true, 'D1 ★不混合行尾（有 CRLF 则裸 LF 为 0；全 LF 合法）')
 ok(cntRaw('data-dam-[a-z0-9-]+') >= 163, 'D2 ★data-dam-* 锚点 ≥163（08 卷 §五；实测 ' + cntRaw('data-dam-[a-z0-9-]+') + '）')
 eq(cntRaw('L3-team:begin'), 1, 'D3 L3-team:begin 恰 1（追加段标记在）')
 eq(cntRaw('L3-team:end'), 1, 'D4 L3-team:end 恰 1')

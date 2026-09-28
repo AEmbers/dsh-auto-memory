@@ -1,9 +1,26 @@
 /** R26 · 跨层对账审计：includeArchive 缺口收官（真 import + 真调用 + 负路径）。 */
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { foldCardsPre, buildByTagPre } from 'file:///D:/dsh-auto-memory/lib/wb-sidecar.js'
-const SRC = readFileSync('D:/dsh-auto-memory/lib/client.js', 'utf8')
-const IX = readFileSync('D:/dsh-auto-memory/lib/index.js', 'utf8')
+const { foldCardsPre, buildByTagPre } = await import(new URL('../../lib/wb-sidecar.js', import.meta.url).href)
+import { fileURLToPath } from 'node:url'
+import { stripGeneratedSkin } from '../lib/skin-bundle.mjs'
+
+/** 平台无关行尾守恒：存在 CRLF 时不得有裸 LF；全 LF 合法（CI/Linux 检出态）。
+ *  ★2026-09-28：原断言写作 cnt(NL)===cnt(CRNL)（即"必须全 CRLF"），在 Linux CI 上必红——
+ *  索引里是 LF，本机 core.autocrlf=true 才检出 CRLF。守的语义不变：文件不得混合行尾。 */
+const damNoMixedEol = (s) => {
+  const crlf = (s.match(/\r\n/g) || []).length
+  const lf = (s.match(/\n/g) || []).length
+  if (crlf === 0) return true      // 全 LF：合法（CI 检出态）
+  return crlf === lf               // 有 CRLF 则不得再有裸 LF
+}
+const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
+// ★2026-09-28（集成 iter5 皮肤）：本套件断言的是**经典档契约**（全仓计数/唯一性），
+//   而生成区把若干经典组件派生了一份新皮肤版本（SettingsPage→Iter5Settings 等）⇒ 计数翻倍假红。
+//   故此处剥离生成区再断言 —— 不是放宽判据，而是把作用域限定到它真正该守的经典档。
+//   皮肤自身由 smoke-test-iter5-skin.mjs 验收（含「剥离后与基线逐字节一致」的守恒断言）。
+const SRC = stripGeneratedSkin(readFileSync(damPath('lib/client.js'), 'utf8'))
+const IX = readFileSync(damPath('lib/index.js'), 'utf8')
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }
 const eq = (a, b, m) => ok(Object.is(a, b), m + ' [got=' + JSON.stringify(a) + ' want=' + JSON.stringify(b) + ']')
@@ -48,12 +65,12 @@ eq(SRC.split('apiGet(API.kanbanBoard').length - 1, 4, 'C4b 同源复核')
 ok(!/includeArchive/.test(SRC.slice(SRC.indexOf('function WhiteboardGraphView'), SRC.indexOf('function WhiteboardGraphView') + 3000)), 'C5 ★画布视图不传 includeArchive（口径不被扩散）')
 
 /* ── D. 与 46 卷 §四 B2 的判据对拍 ── */
-const V46 = readFileSync('D:/dsh-auto-memory/docs/teamwork-impl/46-看板排布优化prompt.md', 'utf8')
+const V46 = readFileSync(damPath('docs/teamwork-impl/46-看板排布优化prompt.md'), 'utf8')
 ok(/includeArchive/.test(V46) && /结构性死泳道|恒空/.test(V46), 'D1 ★权威卷 46 §四 B2 确以 includeArchive 定性该缺陷')
 
 /* ── E. 守恒 ── */
 eq((SRC.match(/(?<!function )MEMORY_TABS\(\)/g) || []).length, 2, 'E1 计数锁不变')
-ok(cnt(SRC, '\n') === cnt(SRC, '\r\n'), 'E2 纯 CRLF')
+ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 // ★修正（本轮自查）：原 E3 是 `eq(cnt(IX,X), cnt(IX,X))` —— **自比恒真哨兵**，等于没测。
 //   改为真断言：宿主**本轮零改动**（sha16 与基线一致）+ 路由数守恒。
 // ★基线演进（2026-09-28，用户点名「先加在旧版上」）：R25→R44 唯一有意变更 = index.js DEFAULT_CONFIG
@@ -64,7 +81,21 @@ ok(cnt(SRC, '\n') === cnt(SRC, '\r\n'), 'E2 纯 CRLF')
 // ★2026-09-28 基线演进 R47→R48：修「一键接续漂到别的工作区」——handoffPanelData 的刷新目标不再跨工作区
 //   磁盘回退（原 recentSessionIdFallback 会返回别的工作区的会话，致新会话落到错误 Workspace）。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'BB7C5A19A683604D', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R48 基线；R47→R48 放行 = 修「一键接续漂到别的工作区」宿主半边：handoffPanelData 不再跨工作区回退刷新目标，理由见上）')
+// ★2026-09-28 基线演进 R50→R51：修「工作目录不正确」（用户报障，2.2.1 起即错）——buildContinueCarry /
+//   buildPrevSessionPack 的材料读取与转写包落盘从 resolvePaths(undefined)（插件当前工作区）改为
+//   resolvePathsForSession（源会话工作区）。真机实证：aik 会话 f49ace38 的转写包落进
+//   --D--dsh-auto-memory-- 桶（包内「工作区:」与落盘桶自相矛盾）；回归守卫 = continue-host H10。
+//   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
+// ★2026-09-28 基线演进 R51→R52：宿主兜底接续补 create 三级回退（workspaceId 失效 → cwd → 裸
+//   agentPreset），与浏览器 executeContinue 同款（旧实现 create 一抛整单失败，无人值守无人可救）；
+//   lastOk 增 fromSid（被接续旧会话 id），前端把 sessions.open 收窄为只切「正看着旧会话」的窗口。
+//   回归守卫 = autocont-host 101 断言 + continue-chain G15。语义保留：除本条与 E4 计数外，
+//   index.js 任何其他改动仍会被本锁抓住。
+// ★2026-09-28 基线演进 R52→R53（去 pre 收官）：源码树不再有 pre 文件，发布退化为纯拷贝。
+//   本批 index.js 变更 = 策略工件路径改裸名（`*_pre_*.json` → `*_v*.json`）。旧代码两条候选路径
+//   全落空（包内只有裸名）⇒ `loadAndVerifyPolicy` 抛错被 catch 吞掉 ⇒ JS 语义臂静默拿不到策略
+//   （默认 auto 档也受影响）。语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'FFC77EB1A0D33BA2', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R54 基线；R53→R54 放行 = 修「AI 问候语生成成功但界面只显示兜底问候」：greetToday 写用户级而 greetingData 只读项目级 ⇒ 读取恒落空；现改为四级回退（用户级 .json → 用户级 .md → 项目级 .json → 项目级 .md），并给 globalPaths 补 greetPathLegacy，理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

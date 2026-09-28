@@ -16,6 +16,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { stripGeneratedSkin } from '../lib/skin-bundle.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, '../..')
@@ -24,7 +25,11 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   - ' + m) } else { fa
 const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), m + '  (got ' + JSON.stringify(a) + ')')
 const cnt = (h, n) => { let c = 0, i = 0; for (;;) { const p = h.indexOf(n, i); if (p < 0) return c; c++; i = p + n.length } }
 
-const SRC = fs.readFileSync(path.join(ROOT, 'lib/client.js'), 'utf8')
+// ★2026-09-28（集成 iter5 皮肤）：本套件断言的是**经典档契约**（全仓计数/唯一性），
+//   而生成区把若干经典组件派生了一份新皮肤版本（SettingsPage→Iter5Settings 等）⇒ 计数翻倍假红。
+//   故此处剥离生成区再断言 —— 不是放宽判据，而是把作用域限定到它真正该守的经典档。
+//   皮肤自身由 smoke-test-iter5-skin.mjs 验收（含「剥离后与基线逐字节一致」的守恒断言）。
+const SRC = stripGeneratedSkin(fs.readFileSync(path.join(ROOT, 'lib/client.js'), 'utf8'))
 
 const KEYS = ['engine', 'window', 'capacity', 'skills', 'handoff', 'auto', 'store', 'look', 'about']
 const STORE_HEAD = "section('store', sectionLabels.store, ["

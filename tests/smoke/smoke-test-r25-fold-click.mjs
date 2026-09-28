@@ -2,9 +2,21 @@
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import vm from 'node:vm'
-import { foldCardsPre } from 'file:///D:/dsh-auto-memory/lib/wb-sidecar.js'
-const SRC = readFileSync('D:/dsh-auto-memory/lib/client.js', 'utf8')
-const IX = readFileSync('D:/dsh-auto-memory/lib/index.js', 'utf8')
+const { foldCardsPre } = await import(new URL('../../lib/wb-sidecar.js', import.meta.url).href)
+import { fileURLToPath } from 'node:url'
+
+/** 平台无关行尾守恒：存在 CRLF 时不得有裸 LF；全 LF 合法（CI/Linux 检出态）。
+ *  ★2026-09-28：原断言写作 cnt(NL)===cnt(CRNL)（即"必须全 CRLF"），在 Linux CI 上必红——
+ *  索引里是 LF，本机 core.autocrlf=true 才检出 CRLF。守的语义不变：文件不得混合行尾。 */
+const damNoMixedEol = (s) => {
+  const crlf = (s.match(/\r\n/g) || []).length
+  const lf = (s.match(/\n/g) || []).length
+  if (crlf === 0) return true      // 全 LF：合法（CI 检出态）
+  return crlf === lf               // 有 CRLF 则不得再有裸 LF
+}
+const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
+const SRC = readFileSync(damPath('lib/client.js'), 'utf8')
+const IX = readFileSync(damPath('lib/index.js'), 'utf8')
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }
 const eq = (a, b, m) => ok(Object.is(a, b), m + ' [got=' + JSON.stringify(a) + ' want=' + JSON.stringify(b) + ']')
@@ -87,7 +99,7 @@ eq(pill2.props.onClick, undefined, 'D8 ★负路径：onExpand 非函数 ⇒ onC
 /* ── E. 守恒 ── */
 ok(cnt(SRC, 'setInterval') === 0 || true, 'E1 零新增定时器（人工核对：本轮未加）');
 eq((SRC.match(/(?<!function )MEMORY_TABS\(\)/g) || []).length, 2, 'E2 计数锁不变');
-ok(cnt(SRC, '\n') === cnt(SRC, '\r\n'), 'E3 纯 CRLF');
+ok(damNoMixedEol(SRC), 'E3 纯 CRLF');
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())
 console.log('PASS ' + p + ' / FAIL ' + f)
 fails.forEach((x) => console.log('  FAIL: ' + x))

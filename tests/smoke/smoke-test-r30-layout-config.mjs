@@ -1,9 +1,11 @@
 /** R30 · 配置层：56 卷 §三 4 条验收判据 + §二 5 项客户操作面（真 import 真调用）。 */
-import { LAYOUT_REGIONS, LAYOUT_SLOTS, LAYOUT_BLOCK_KINDS, AUTHOR_SURFACE_KEYS, LAYOUT_CONFIG_VERSION, LAYOUT_CONFIG_FILE } from 'file:///D:/dsh-auto-memory/lib/layout-config.js'
-import { defaultLayoutConfig, normalizeLayoutConfig, SLOT_REGION_OF } from 'file:///D:/dsh-auto-memory/lib/layout-config.js'
+const { LAYOUT_REGIONS, LAYOUT_SLOTS, LAYOUT_BLOCK_KINDS, AUTHOR_SURFACE_KEYS, LAYOUT_CONFIG_VERSION, LAYOUT_CONFIG_FILE } = await import(new URL('../../lib/layout-config.js', import.meta.url).href)
+const { defaultLayoutConfig, normalizeLayoutConfig, SLOT_REGION_OF } = await import(new URL('../../lib/layout-config.js', import.meta.url).href)
 import { readFileSync } from 'node:fs'
-const IX = readFileSync('D:/dsh-auto-memory/lib/index.js', 'utf8')
-const CL = readFileSync('D:/dsh-auto-memory/lib/client.js', 'utf8')
+import { fileURLToPath } from 'node:url'
+const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
+const IX = readFileSync(damPath('lib/index.js'), 'utf8')
+const CL = readFileSync(damPath('lib/client.js'), 'utf8')
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }
 const eq = (a, b, m) => ok(Object.is(a, b), m + ' [got=' + JSON.stringify(a) + ' want=' + JSON.stringify(b) + ']')

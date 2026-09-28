@@ -5,7 +5,7 @@
  * 判据（70 卷 L94 逐字）：大量卡时首屏不卡；**展开后计数守恒**。
  * 形态来源（44 卷 L83 / 46 卷 L124 逐字）：「展开更早的 21 天（1,341 条活动）」+ 向下箭头，圆角 999px。
  */
-import { foldCardsPre } from 'file:///D:/dsh-auto-memory/lib/wb-sidecar.js'
+const { foldCardsPre } = await import(new URL('../../lib/wb-sidecar.js', import.meta.url).href)
 
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }

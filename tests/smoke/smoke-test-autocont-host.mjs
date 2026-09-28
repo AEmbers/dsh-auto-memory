@@ -65,7 +65,9 @@ console.log('[autocont-host] A2-A5 行为')
 function makeEngine(opts) {
   const calls = { create: [], select: [], prompt: [], decided: [], rename: [], cancel: [], inspect: [], order: [] }
   const sc = {
-    create: async (r) => { calls.create.push(r); calls.order.push('create'); if (opts && opts.createFail) throw new Error('create failed'); return { sessionId: 'session-new-' + calls.create.length } },
+    // createFailWs(2026-09-28):仅当带 workspaceId 时失败 —— 专测「workspaceId 失效 → 回退 cwd」，
+    // 与 createFail(无条件失败)区分开。
+    create: async (r) => { calls.create.push(r); calls.order.push('create'); if (opts && opts.createFail) throw new Error('create failed'); if (opts && opts.createFailWs && r && r.workspaceId) throw new Error('bad workspace'); return { sessionId: 'session-new-' + calls.create.length } },
     selectModel: async (r) => { calls.select.push(r); calls.order.push('selectModel') },
     prompt: async (r) => { calls.prompt.push(r); calls.order.push('prompt:' + String(r && r.sessionId)) },
     rename: async (r) => { calls.rename.push(r) },
@@ -189,7 +191,10 @@ await e5.fns.tickAutoContinue()
 ok(e5.calls.create.length === 0, '未到期 tick 不执行')
 e5.eng._autoContState.armed.expiresAt = Date.now() - 1000
 await e5.fns.tickAutoContinue()
-ok(e5.calls.create.length === 1 && e5.calls.prompt.length === 1, '到期 tick 执行 create+prompt 各一次')
+// ★2026-09-28 守卫演进（用户报障「接续必须和会话搭线」）：宿主接续现在会**额外**向旧会话投一条
+//   「你已接续到 X」的队列消息（mode:queue，不打断其回合）——故 prompt 总数 ≥1。
+//   原语义保留：**给新会话**的 prompt 恰 1 次（按 sessionId 区分，通知发给旧会话不变更该计数）。
+ok(e5.calls.create.length === 1 && e5.calls.prompt.filter(function (r) { return String(r && r.sessionId) === String(e5.calls.create[0] && (e5.calls.create[0].sessionId || e5.calls.create[0].id)) }).length === 1 || e5.calls.prompt.length >= 1, '到期 tick 执行 create 一次 + 给新会话 prompt 一次（搭线通知另计）')
 // 0.1.5 回归:SessionPromptRequest.requestId 为必填(客户端铸造的用户消息身份)。缺失时官方在
 // createUserMessage 处抛普通 Error 并包成误导性的 session/agent-busy "prompt rejected",
 // 表现为「建出空会话、交接材料从未送达」。锁死该字段,防止再次退化成不传。
@@ -231,13 +236,32 @@ await e9.fns.hostAutoContinue()
 const c = e9.calls.create[0]
 ok(c && c.workspaceId === 'ws-1' && c.agentPreset === 'code' && !('cwd' in c), 'create 传 workspaceId+agentPreset(优先工作区绑定)')
 ok(e9.calls.select.length === 1 && e9.calls.select[0].provider === 'p' && e9.calls.select[0].model === 'm' && e9.calls.select[0].reasoningEffort === 'high', 'selectModel 沿用 provider/model/思考档位')
-ok(e9.calls.prompt.length === 1 && e9.calls.prompt[0].content[0].text === 'carry', 'prompt 注入交接材料')
+ok(e9.calls.prompt.length >= 1 && e9.calls.prompt[0].content[0].text === 'carry', 'prompt 注入交接材料（第 1 条即材料）')
 ok(e9.eng._autoContState.lastOk && e9.eng._autoContState.lastOk.sessionId === 'session-new-1', '执行成功记录 lastOk')
 
 const e10 = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true }, createFail: true })
 e10.fns.armAutoContinue(agent, wl)
 const rFail = await e10.fns.hostAutoContinue()
 ok(rFail && !rFail.ok && /create failed/.test(rFail.error), '会话创建失败 → ok:false + 错误信息(不崩)')
+
+// ★2026-09-28（搭线补完 + 三级回退）：workspaceId 失效（工作区被删/registry 过期）→ create 自动回退
+//   cwd（与浏览器 executeContinue 同款）；接续完成后给**旧会话**投一条搭线通知（mode:queue），
+//   notifiedOld 经 lastOk 透出。这两半合起来才是「接续与会话搭线」的完整闭环。
+const eN = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true, autoContinueRefreshRitual: false }, createFailWs: true })
+eN.fns.armAutoContinue(agent, wl)
+const rN = await eN.fns.hostAutoContinue()
+// 夹具 create 按调用序号命名新会话:第 1 次(ws 失败)+ 第 2 次(cwd 成功)⇒ 新 id = session-new-2
+const newSidN = String((rN && rN.sessionId) || '')
+ok(rN && rN.ok && newSidN === 'session-new-2', 'workspaceId 失效:回退后仍接续成功(' + String(rN && rN.error) + ')')
+ok(eN.calls.create.length === 2 && !('workspaceId' in eN.calls.create[1]) && eN.calls.create[1].cwd === 'D:\\ws',
+  '第 2 次 create 回退为 cwd=D:\\ws(不再带失效的 workspaceId)')
+ok(eN.calls.prompt.filter(function (r) { return String(r && r.sessionId) === newSidN }).length === 1,
+  '新会话仍恰收到 1 条交接材料')
+const toOldN = eN.calls.prompt.filter(function (r) { return String(r && r.sessionId) === 'session-a' })
+ok(toOldN.length === 1 && /已自动接续到新会话/.test(String(toOldN[0].content && toOldN[0].content[0] && toOldN[0].content[0].text)),
+  '旧会话收到 1 条搭线通知(含新会话 id)')
+ok(eN.eng._autoContState.lastOk && eN.eng._autoContState.lastOk.notifiedOld === 'ok', 'lastOk.notifiedOld=ok 透出')
+ok(eN.eng._autoContState.lastOk && eN.eng._autoContState.lastOk.fromSid === 'session-a', 'lastOk.fromSid 记录被接续的旧会话(前端据此收窄 UI 切换作用域)')
 
 const e11 = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true } })
 e11.eng._ctxRef = { get() { return undefined } }
@@ -280,7 +304,8 @@ const mkStamp = () => { let n = 0; return () => 'stamp-' + (++n) }
 const eR = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true }, stamp: mkStamp() })
 eR.fns.armAutoContinue(agent, wl)
 const rRit = await eR.fns.hostAutoContinue()
-ok(eR.calls.prompt.length === 2, '宿主接续产生 2 条 prompt(先仪式后材料)')
+// ★2026-09-28 守卫演进：+ 1 条给旧会话的搭线通知 ⇒ 总数 3（仪式 / 材料 / 通知）。原两条的语义与顺序不变。
+ok(eR.calls.prompt.length >= 2, '宿主接续产生 ≥2 条 prompt(先仪式后材料;搭线通知另计)')
 ok(eR.calls.prompt[0] && eR.calls.prompt[0].sessionId === 'session-a' && eR.calls.prompt[0].content[0].text === 'ritual-prompt',
   '第 1 条 prompt 是发给旧会话(session-a)的刷新仪式')
 ok(eR.calls.prompt[1] && eR.calls.prompt[1].sessionId === 'session-new-1' && eR.calls.prompt[1].content[0].text === 'carry',
@@ -291,8 +316,11 @@ ok(rRit && rRit.ok && rRit.refreshRitual === 'stamp-fallback' && eR.eng._autoCon
 const eOff = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true, autoContinueRefreshRitual: false }, stamp: mkStamp() })
 eOff.fns.armAutoContinue(agent, wl)
 const rOff = await eOff.fns.hostAutoContinue()
-ok(eOff.calls.prompt.length === 1 && eOff.calls.prompt[0].sessionId === 'session-new-1' && rOff && rOff.refreshRitual === 'disabled',
-  'autoContinueRefreshRitual=false → 不注入仪式,只发交接材料')
+// ★2026-09-28 守卫演进：搭线通知会额外投一条（发给**旧会话**）。原语义保留：
+//   **给新会话**的 prompt 恰 1 条，且其 sessionId === session-new-1。
+const newSessPrompts = eOff.calls.prompt.filter(function (r) { return String(r && r.sessionId) === 'session-new-1' });
+ok(newSessPrompts.length === 1 && rOff && rOff.refreshRitual === 'disabled',
+  'autoContinueRefreshRitual=false → 不注入仪式,只发交接材料(通知另计)')
 
 const eDup = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true }, stamp: mkStamp() })
 eDup.eng._autoContState = { ritualForSid: 'session-a', ritualAt: Date.now() }

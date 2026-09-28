@@ -176,12 +176,13 @@ skills = replaceOnce(skills, "return h('div', { 'data-dam-slot': 'timeline', 'da
           return true
         })))`)
 const overlayRoots = '[data-dam-panel],[data-dam-tour],[data-dam-autocont]'
-const css = readFileSync(path.join(root, 'skins/iter5/skin.css'), 'utf8').trim()
+const readSkin = name => readFileSync(path.join(root, 'skins/iter5', name), 'utf8').replace(/\r\n/g, '\n')
+const css = readSkin('skin.css').trim()
   .replace('[data-iter5]{--i5-blue:', '[data-iter5],body:has([data-iter5]) :is(' + overlayRoots + '){--i5-blue:')
   .replace('[data-iter5][data-deep=true]{--i5-blue:', '[data-iter5][data-deep=true],body:has([data-iter5][data-deep=true]) :is(' + overlayRoots + '){--i5-blue:')
   .replaceAll('body:has([data-iter5])', 'html:has(#dam-skin-v4-style)')
   .replaceAll('body:has([data-iter5][data-deep=true])', 'html:has(#dam-skin-v4-style):is([data-dsh-theme=dark],[data-theme=dark],.dark)')
-const ui = readFileSync(path.join(root, 'skins/iter5/ui.js'), 'utf8').trimEnd() + '\n' + readFileSync(path.join(root, 'skins/iter5/views.js'), 'utf8').trimEnd()
+const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd()
 const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + settings + storage + skills + end + '\n'
 const seam = '    // ===================== dam-skin:end (v4) ====================='
 client = replaceOnce(client, seam, generated + seam)

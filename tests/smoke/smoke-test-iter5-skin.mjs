@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
@@ -20,6 +23,9 @@ for (const line of css.split('\n')) {
   assert(!/#[0-9a-f]{3,8}\b|rgba?\(/i.test(consumers), 'Colors must use named tokens: ' + line)
 }
 assert(!source.includes('BData.'), 'No demo data shipped')
+const embeddedCss=JSON.parse(source.match(/var ITER5_CSS = (.+)\n/)[1])
+const sharedTokens=embeddedCss.match(/\[data-iter5\],html:has\(#dam-skin-v4-style\)[^{]+\{([^}]+)\}/)[1]
+assert(sharedTokens.split(';').filter(Boolean).every(declaration=>declaration.startsWith('--')),'Overlay token sharing must not include page flex/height/position styles')
 console.log('PASS scoped token colors and no demo data')
 
 // Execute the shipped factory with a small hook harness. No network, real memory,
@@ -40,8 +46,8 @@ const localStorage = { getItem: () => null, setItem() {}, removeItem() {}, lengt
 const document = { documentElement: { getAttribute: () => '', style: { setProperty() {} }, classList: { contains: () => false } }, querySelector: () => null, getElementById: () => null }
 const window = { localStorage, addEventListener() {}, removeEventListener() {}, confirm() { confirmCount++; return accept }, __ModuleLoader__: { load(def) { exposed = def.factory(name => { if (name === 'react') return React; throw Error('Test module unavailable: ' + name) }) } } }
 const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
-vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
-      transport: function (get, post) { apiGet = get; apiPost = post } }
+vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
+      transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
 test.transport(async url => {
@@ -124,3 +130,64 @@ assert.equal(cursor,hiddenHooks,'Hidden-to-visible welcome transition must not a
 cursor=0;test.setDialog(null);test.DialogHost()
 assert.equal(cursor,hiddenHooks,'Closing the welcome tour must not remove hooks')
 console.log('PASS real DialogHost hook count stable when opening and closing welcome tour')
+
+states=[];effects=[];cursor=0
+const firstLoad=()=>Promise.resolve({content:'File A'})
+test.useIter5Data(firstLoad,['a'])
+effects.splice(0).forEach(fn=>fn())
+await new Promise(resolve=>setTimeout(resolve,0))
+cursor=0
+assert.equal(test.useIter5Data(firstLoad,['a']).data.content,'File A')
+cursor=0
+const switched=test.useIter5Data(()=>Promise.resolve({content:'File B'}),['b'])
+assert.equal(switched.data,null,'Changing a file masks the previous result before effects run')
+assert.equal(switched.loading,true)
+effects.splice(0).forEach(fn=>fn())
+await new Promise(resolve=>setTimeout(resolve,0))
+cursor=0
+assert.equal(test.useIter5Data(()=>Promise.resolve(null),['b']).data.content,'File B')
+console.log('PASS file transitions cannot display stale content under a new title')
+
+states=[];effects=[];cursor=0
+const home=test.Iter5Home({nonce:0,onNav(){}})
+assert.equal(nodes(home,n=>n.props?.className==='i5-daily-card').length,1,'Home retains its real calendar section')
+assert.equal(nodes(home,n=>n.props?.className==='i5-activity').length,1,'Home retains recent records')
+console.log('PASS refined home retains recent records and calendar entry points')
+
+states=[];effects=[];cursor=0
+test.identity('session-a|workspace-a')
+let resolveOld
+test.useIter5Data(()=>new Promise(resolve=>{resolveOld=resolve}),[])
+effects.splice(0).forEach(fn=>fn())
+await Promise.resolve()
+test.identity('session-b|workspace-b');cursor=0
+assert.equal(test.useIter5Data(()=>Promise.resolve('workspace-b'),[]).data,null)
+effects.splice(0).forEach(fn=>fn())
+await new Promise(resolve=>setTimeout(resolve,0))
+resolveOld('workspace-a');await new Promise(resolve=>setTimeout(resolve,0));cursor=0
+assert.equal(test.useIter5Data(()=>Promise.resolve(null),[]).data,'workspace-b','Late prior-workspace data must not replace the active scope')
+console.log('PASS late results cannot cross session/workspace identity')
+
+// Git may check out skin sources as CRLF on Windows and LF on Linux.
+// Both must produce the same normalized bundle without doubled CR bytes.
+const fixture=mkdtempSync(path.join(tmpdir(),'iter5-generator-'))
+try {
+  for(const dir of ['lib','tools','skins/iter5'])mkdirSync(path.join(fixture,dir),{recursive:true})
+  writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
+  for(const newline of ['\n','\r\n']) {
+    for(const name of ['ui.js','views.js','skin.css']) {
+      const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
+      writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
+    }
+    writeFileSync(path.join(fixture,'lib/client.js'),source.replace(/\n/g,newline))
+    execFileSync(process.execPath,[path.join(fixture,'tools/build-iter5-skin.mjs')])
+    execFileSync(process.execPath,[path.join(fixture,'tools/build-iter5-skin.mjs'),'--check'])
+    const generated=readFileSync(path.join(fixture,'lib/client.js'),'utf8')
+    assert(!generated.includes('\r\r'),'No doubled carriage returns')
+    assert.equal(generated.replace(/\r\n/g,'\n'),source,'Line ending conversion does not alter bundle content')
+  }
+} finally {
+  assert(path.dirname(fixture)===path.resolve(tmpdir())&&path.basename(fixture).startsWith('iter5-generator-'))
+  rmSync(fixture,{recursive:true,force:true})
+}
+console.log('PASS generator is idempotent with LF and CRLF checkouts')

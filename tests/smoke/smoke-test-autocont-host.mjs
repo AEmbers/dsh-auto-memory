@@ -65,7 +65,9 @@ console.log('[autocont-host] A2-A5 行为')
 function makeEngine(opts) {
   const calls = { create: [], select: [], prompt: [], decided: [], rename: [], cancel: [], inspect: [], order: [] }
   const sc = {
-    create: async (r) => { calls.create.push(r); calls.order.push('create'); if (opts && opts.createFail) throw new Error('create failed'); return { sessionId: 'session-new-' + calls.create.length } },
+    // createFailWs(2026-09-28):仅当带 workspaceId 时失败 —— 专测「workspaceId 失效 → 回退 cwd」，
+    // 与 createFail(无条件失败)区分开。
+    create: async (r) => { calls.create.push(r); calls.order.push('create'); if (opts && opts.createFail) throw new Error('create failed'); if (opts && opts.createFailWs && r && r.workspaceId) throw new Error('bad workspace'); return { sessionId: 'session-new-' + calls.create.length } },
     selectModel: async (r) => { calls.select.push(r); calls.order.push('selectModel') },
     prompt: async (r) => { calls.prompt.push(r); calls.order.push('prompt:' + String(r && r.sessionId)) },
     rename: async (r) => { calls.rename.push(r) },
@@ -241,6 +243,25 @@ const e10 = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: tr
 e10.fns.armAutoContinue(agent, wl)
 const rFail = await e10.fns.hostAutoContinue()
 ok(rFail && !rFail.ok && /create failed/.test(rFail.error), '会话创建失败 → ok:false + 错误信息(不崩)')
+
+// ★2026-09-28（搭线补完 + 三级回退）：workspaceId 失效（工作区被删/registry 过期）→ create 自动回退
+//   cwd（与浏览器 executeContinue 同款）；接续完成后给**旧会话**投一条搭线通知（mode:queue），
+//   notifiedOld 经 lastOk 透出。这两半合起来才是「接续与会话搭线」的完整闭环。
+const eN = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true, autoContinueRefreshRitual: false }, createFailWs: true })
+eN.fns.armAutoContinue(agent, wl)
+const rN = await eN.fns.hostAutoContinue()
+// 夹具 create 按调用序号命名新会话:第 1 次(ws 失败)+ 第 2 次(cwd 成功)⇒ 新 id = session-new-2
+const newSidN = String((rN && rN.sessionId) || '')
+ok(rN && rN.ok && newSidN === 'session-new-2', 'workspaceId 失效:回退后仍接续成功(' + String(rN && rN.error) + ')')
+ok(eN.calls.create.length === 2 && !('workspaceId' in eN.calls.create[1]) && eN.calls.create[1].cwd === 'D:\\ws',
+  '第 2 次 create 回退为 cwd=D:\\ws(不再带失效的 workspaceId)')
+ok(eN.calls.prompt.filter(function (r) { return String(r && r.sessionId) === newSidN }).length === 1,
+  '新会话仍恰收到 1 条交接材料')
+const toOldN = eN.calls.prompt.filter(function (r) { return String(r && r.sessionId) === 'session-a' })
+ok(toOldN.length === 1 && /已自动接续到新会话/.test(String(toOldN[0].content && toOldN[0].content[0] && toOldN[0].content[0].text)),
+  '旧会话收到 1 条搭线通知(含新会话 id)')
+ok(eN.eng._autoContState.lastOk && eN.eng._autoContState.lastOk.notifiedOld === 'ok', 'lastOk.notifiedOld=ok 透出')
+ok(eN.eng._autoContState.lastOk && eN.eng._autoContState.lastOk.fromSid === 'session-a', 'lastOk.fromSid 记录被接续的旧会话(前端据此收窄 UI 切换作用域)')
 
 const e11 = makeEngine({ config: { autoContinueEnabled: true, handoffEnabled: true } })
 e11.eng._ctxRef = { get() { return undefined } }

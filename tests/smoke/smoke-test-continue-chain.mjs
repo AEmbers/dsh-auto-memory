@@ -163,6 +163,14 @@ ok(HSRC.includes("url.searchParams.get('sessionId')") && HSRC.includes('autoCont
 ok(/setAcConfirm\(\{ ratio: Number\(arm\.ratio\) \|\| 0[\s\S]{0,220}?wall: Number\(arm\.wall\) \|\| 0/.test(SRC),
   'G14 确认卡把双口径 ring/wall 拷进 acConfirm(宿主透出但这里丢了 → 那行永不渲染)')
 
+// —— G15(2026-09-28 修「接续必须搭线」):宿主兜底接续后,前端补 sessions.open 把发件人切到新会话 ——
+ok(/fromSidAc && sidQ === fromSidAc && doneSid !== acOpenedSidRef\.current[\s\S]{0,260}?sessions\.open\(doneSid\)/.test(SRC),
+  'G15 lastOk 命中时补 sessions.open(宿主兜底路径原本缺 UI 切换 → 发件人留在旧会话形成循环)')
+ok(SRC.includes("var fromSidAc = String((s.lastOk && s.lastOk.fromSid) || '')") && /sidQ === fromSidAc/.test(SRC),
+  'G15 只切「正看着旧会话」的窗口(fromSid 收窄;lastOk 全局透出,无差别 open 会拉走别的标签页)')
+ok(HSRC.includes('fromSid: oldSid') && HSRC.includes('fromSid: st.lastOk.fromSid'),
+  'G15 宿主 lastOk 带被接续的旧会话 id(fromSid),供前端收窄切换作用域')
+
 // —— G12(②③④):确认卡三分支(同意/拒绝交宿主,超时宿主执行)+ 刷新仪式 + 材料分层 ——
 ok(SRC.includes('autoContAgree') && SRC.includes('autoContReject') && SRC.includes('autoContTimeout'),
   'G12 confirm card has agree / reject / timeout labels')

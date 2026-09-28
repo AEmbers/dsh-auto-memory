@@ -69,7 +69,12 @@ ok(cnt(SRC, '\n') === cnt(SRC, '\r\n'), 'E2 纯 CRLF')
 //   resolvePathsForSession（源会话工作区）。真机实证：aik 会话 f49ace38 的转写包落进
 //   --D--dsh-auto-memory-- 桶（包内「工作区:」与落盘桶自相矛盾）；回归守卫 = continue-host H10。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'DEAB73B7D8F2B079', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R51 基线；R50→R51 放行 = 修「工作目录不正确」：接续材料与转写包按源会话工作区解析，理由见上与 continue-host H10）')
+// ★2026-09-28 基线演进 R51→R52：宿主兜底接续补 create 三级回退（workspaceId 失效 → cwd → 裸
+//   agentPreset），与浏览器 executeContinue 同款（旧实现 create 一抛整单失败，无人值守无人可救）；
+//   lastOk 增 fromSid（被接续旧会话 id），前端把 sessions.open 收窄为只切「正看着旧会话」的窗口。
+//   回归守卫 = autocont-host 101 断言 + continue-chain G15。语义保留：除本条与 E4 计数外，
+//   index.js 任何其他改动仍会被本锁抓住。
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '082FD130186B6844', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R52 基线；R51→R52 放行 = 宿主接续 create 补三级回退 + lastOk.fromSid + R51 工作目录修复，理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

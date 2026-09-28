@@ -14,7 +14,7 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
   .replace("try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch')
   .replace('function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()', 'function DialogHost() {\n      var tickPair = useTick()')
   .replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })")
-assert.equal(createHash('sha256').update(classic).digest('hex'), '24ba168dfad0b22e2b08964f9b42b1c355fe0f7ef77226bab936ebeca2359487', 'Reviewed shared-entry baseline stays unchanged outside generated skin (PR146 root wrappers, welcome composition, compact panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), 'ac0bea7a45643c9e0cda4f14862e3bbb1dff657284feaa71803b4c6e25b4e084', 'Reviewed shared-entry baseline stays unchanged outside generated skin (PR146 root wrappers, welcome composition, compact panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
@@ -111,6 +111,22 @@ assert.equal(field(tree, 'fJsCooldown').props.value, 7)
 assert.equal(tree.props['data-i5-dirty'], 'false')
 console.log('PASS failed save preserves draft and exposes error; cancel restores last saved config')
 
+// Host-driven unmount must not erase pending edits. Recovery remains in memory,
+// not localStorage, and must not write a stale patch without explicit save.
+field(tree, 'fJsCooldown').props.onChange({ target: { value: '11' } }); tree = render()
+const postsBeforeRemount = requests.length
+states = []; effects = []; cursor = 0
+tree = render(); tree = await settle()
+assert.equal(field(tree, 'fJsCooldown').props.value, 11)
+assert.equal(tree.props['data-i5-dirty'], 'true')
+assert.equal(requests.length, postsBeforeRemount, 'Recovery cannot auto-save')
+button(tree, '取消修改').props.onClick(); tree = render()
+states = []; effects = []; cursor = 0
+tree = render(); tree = await settle()
+assert.equal(field(tree, 'fJsCooldown').props.value, 7)
+assert.equal(tree.props['data-i5-dirty'], 'false', 'Discard removes recovery draft')
+console.log('PASS host remount restores unsaved edits without browser persistence or automatic writes')
+
 accept = false
 field(tree, 'fAssocEngine').props.onChange({ target: { checked: false } }); tree = render()
 assert.equal(field(tree, 'fAssocEngine').props.checked, true)
@@ -139,6 +155,9 @@ window['dsh-auto-memory.wizStatus']={loaded:true,ready:false,download:{phase:'id
 test.setDialog(null);test.DialogHost();const hiddenHooks=cursor
 cursor=0;test.setDialog({kind:'welcomeTour',manual:true});const tour=test.DialogHost()
 assert(tour,'Welcome tour renders')
+const welcomeToggles=window['dsh-auto-memory.TOUR_STEPS'].flatMap(step=>step.toggles||[])
+assert(welcomeToggles.some(t=>t.key==='workbenchEnabled'))
+assert(!welcomeToggles.some(t=>t.key==='workbenchRoot'),'Directory setting cannot be written as a boolean')
 assert.equal(cursor,hiddenHooks,'Hidden-to-visible welcome transition must not add hooks')
 cursor=0;test.setDialog(null);test.DialogHost()
 assert.equal(cursor,hiddenHooks,'Closing the welcome tour must not remove hooks')

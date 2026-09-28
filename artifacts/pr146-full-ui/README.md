@@ -1,5 +1,7 @@
 # PR146 全入口 UI 改造与验收
 
+> 后续限制项已补齐一批：以 [PR146 限制项补齐](../pr146-limits/README.md) 为当前状态，下文保留本轮历史记录。
+
 基线 `ee9ef014b0f3cd28fccd2da44a379293d51757a0`，2026-09-28。入口逐项结果见 [UI-INVENTORY](../../UI-INVENTORY.md)。本目录全部效果截图来自本机隔离 DSH web/profile/workspace 的真实组件与 API，不是 Demo。未使用或修改日常 profile。
 
 ## 交付

@@ -74,7 +74,9 @@ ck('S1 _workbenchCwd 读 config.workbenchRoot',
   /_workbenchCwd\(\) \{\r?\n\s+const raw = String\(this\.config\.workbenchRoot/.test(idx))
 ck('S1 路径收窄到 dshHome 之下（非法 ⇒ fail-soft 回默认）',
   /path\.relative\(dshHome\(\), p\)[\s\S]{0,200}?return fallback/.test(idx))
-ck('S1 设置页有「工作台工作区」路径项 + 搜索索引', /set\('workbenchRoot'/.test(cli) && /key: 'workbenchRoot'/.test(cli))
+ck('S1 设置页保留工作台目录的字符串输入', /set\('workbenchRoot'/.test(cli) && /value: \(cfg\.workbenchRoot \|\| ''\)/.test(cli))
+ck('S1 欢迎使用布尔总开关，不把目录路径当作布尔写入',
+  /key: 'workbenchEnabled'/.test(cli) && !cli.slice(cli.indexOf('var TOUR_STEPS ='), cli.indexOf("window['dsh-auto-memory.TOUR_STEPS']")).includes("key: 'workbenchRoot'"))
 ck('S1 目录选择器按调用方指定的键回填（不串改另一个设置）',
   /function openBrowser\(targetKey\)/.test(cli) && /set\(_targetKey, d\.dir\)/.test(cli) &&   /set\(browseKey \|\| 'memoryRoot', browsePath\)/.test(cli))
 ck('S1 设置页占位显示 aik_auto_memory_use（留空=自动）',

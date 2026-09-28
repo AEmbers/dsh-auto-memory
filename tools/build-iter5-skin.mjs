@@ -24,6 +24,7 @@ settings = replaceOnce(settings, '      var tickPair = useTick()', `      var ti
       var i5Groups = useRef({})
       var i5Alive = useRef(true)
       var i5Identity = iter5Identity()
+      var i5DraftKey = i5Identity + '|' + (props && props.draftScope || 'workbench')
       var i5GroupsDef = { engine: ['engine'], memory: ['window', 'capacity', 'skills'], appearance: ['store', 'look', 'skin'], behavior: ['handoff', 'auto', 'team', 'about'] }
       useEffect(function () {
         i5Alive.current = true
@@ -36,9 +37,20 @@ settings = replaceOnce(settings, '      var tickPair = useTick()', `      var ti
         if (JSON.stringify(value) === JSON.stringify((i5Base.current || {})[key])) { delete i5Draft.current[key]; delete i5Groups.current[key] }
         else { i5Draft.current[key] = value; i5Groups.current[key] = i5Group[0] }
         setDirty(Object.keys(i5Draft.current).length > 0)
+        if (Object.keys(i5Draft.current).length) iter5SettingsDrafts[i5DraftKey] = { patch: Object.assign({}, i5Draft.current), groups: Object.assign({}, i5Groups.current), base: Object.assign({}, i5Base.current) }
+        else delete iter5SettingsDrafts[i5DraftKey]
       }
-      function i5Cancel() { i5Draft.current = {}; i5Groups.current = {}; setCfg(Object.assign({}, i5Base.current)); setDirty(false); setErr(''); setMsg('') }`)
-settings = replaceOnce(settings, '          setCfg(d.config)', '          if (!i5Ok()) return\n          i5Base.current = configOf(d)\n          setCfg(configOf(d))')
+      function i5Cancel() { delete iter5SettingsDrafts[i5DraftKey]; i5Draft.current = {}; i5Groups.current = {}; setCfg(Object.assign({}, i5Base.current)); setDirty(false); setErr(''); setMsg('') }`)
+settings = replaceOnce(settings, '          setCfg(d.config)', `          if (!i5Ok()) return
+          i5Base.current = configOf(d)
+          var recovered = iter5SettingsDrafts[i5DraftKey]
+          if (recovered) {
+            i5Draft.current = Object.assign({}, recovered.patch); i5Groups.current = Object.assign({}, recovered.groups)
+            setCfg(Object.assign({}, configOf(d), recovered.patch)); setDirty(true)
+            setMsg(L('已恢复此会话未保存的修改，请核对后保存或取消。', 'Unsaved edits for this session were restored. Review before saving or discarding.'))
+            var conflict = Object.keys(recovered.patch).some(function (key) { return JSON.stringify(configOf(d)[key]) !== JSON.stringify(recovered.base[key]) })
+            if (conflict) setErr(L('部分设置已在其他入口变更；恢复的草稿尚未覆盖服务器，请核对。', 'Some settings changed elsewhere. Restored edits have not overwritten the server; review them.'))
+          } else setCfg(configOf(d))`)
 settings = replaceOnce(settings,
   'function set(key, value) { setCfg(function (prev) { var next = Object.assign({}, prev); next[key] = value; return next }); setDirty(true) }',
   `function set(key, value) {
@@ -58,6 +70,7 @@ settings = settings.slice(0, saveStart) + `      function save() {
           onSaved: function (d) {
             if (!i5Ok()) return
             i5Base.current = configOf(d)
+            delete iter5SettingsDrafts[i5DraftKey]
             i5Draft.current = {}; i5Groups.current = {}
             setCfg(configOf(d)); setDirty(false); setBusy(false); setMsg(t('saved'))
             if (configOf(d).locale) applyLocalePref(configOf(d).locale)

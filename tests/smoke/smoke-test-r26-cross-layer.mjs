@@ -95,7 +95,13 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   本批 index.js 变更 = 策略工件路径改裸名（`*_pre_*.json` → `*_v*.json`）。旧代码两条候选路径
 //   全落空（包内只有裸名）⇒ `loadAndVerifyPolicy` 抛错被 catch 吞掉 ⇒ JS 语义臂静默拿不到策略
 //   （默认 auto 档也受影响）。语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'FFC77EB1A0D33BA2', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R54 基线；R53→R54 放行 = 修「AI 问候语生成成功但界面只显示兜底问候」：greetToday 写用户级而 greetingData 只读项目级 ⇒ 读取恒落空；现改为四级回退（用户级 .json → 用户级 .md → 项目级 .json → 项目级 .md），并给 globalPaths 补 greetPathLegacy，理由见上）')
+// ★2026-09-29 基线演进 R54→R55（3.2.3 发版批，增量归因）：① sessions 检索兜底
+//   （searchSessionHistory 捕获宿主 SESSION_QUERY_PERSISTENCE_FAILED 后走词法兜底扫描
+//   lexicalSessionScanFallback——宿主迁移器只认 subagent/descriptor v3，39 个 8 月旧会话毒死整通道）；
+//   ② 写入门 P0：detectStutter 两层判据（CJK 语种盲区修复 + 周期性 verbatim 循环仍拦，
+//   捕获集 ⊆ 旧判据）+ writeGateRefusalTextPre 六入口按原因分派带触发证据 + 两道闸门挂 detail；
+//   ③ memory_rules 列表行字面 \n 修真换行。全量回归绿 + 全库 1342 文件实测零新增误报后放行。
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '572A49BEFE178358', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R55 基线；R54→R55 放行 = 3.2.3 发版批：sessions 检索兜底 + 写入门 CJK 盲区/文案分派 + rules 列表换行，理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

@@ -151,7 +151,7 @@ const grab = (name) => { // 逐行扫描+(){} 混合配平(兼容 Object.freeze 
   }
   return buf
 }
-const helpers = ['DEFAULT_PROMPT_LAYERS', 'neutralizePromptTemplateVars', 'truncateHead', 'truncateLinesBounded', 'stripSensitiveSections', 'sanitizeForInjection', 'scrubJunkLines', 'reflectionDigest', 'mojibakeDensity', 'MOJIBAKE_RE', 'hasStutter', 'BASE64_LINE', 'todayStr']
+const helpers = ['DEFAULT_PROMPT_LAYERS', 'neutralizePromptTemplateVars', 'truncateHead', 'truncateLinesBounded', 'stripSensitiveSections', 'sanitizeForInjection', 'scrubJunkLines', 'reflectionDigest', 'mojibakeDensity', 'MOJIBAKE_RE', 'detectStutter', 'hasStutter', 'BASE64_LINE', 'todayStr'] // ★2026-09-29 hasStutter 改调 detectStutter(P0-2 语种盲区修复),抽取清单同步补符号,否则 eval 沙箱 ReferenceError
 // ★T7-a（2026-09-20 · 上游 #86-4）：水位/接续默认值已抽为**模块级常量**，本套件同样是
 //   "源码抽取 + new Function"执行 `renderMemoryDynamic`，故必须显式注入这两个自由变量，
 //   否则抛 `ReferenceError: DEFAULT_WATER_LEVEL_THRESHOLD is not defined`（实测已发生）。

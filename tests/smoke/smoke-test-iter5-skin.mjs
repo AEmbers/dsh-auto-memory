@@ -14,7 +14,7 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
   .replace("try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch')
   .replace('function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()', 'function DialogHost() {\n      var tickPair = useTick()')
   .replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })")
-assert.equal(createHash('sha256').update(classic).digest('hex'), '577966448d5e526278d02d6f9ba030bb63d2d57d9b27e5fb39fb2dcbdb417d05', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), '3668e9e63af4e42698c1905335ec27192094cb94b145077af5af54e1ca3e135b', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
@@ -46,7 +46,7 @@ const localStorage = { getItem: () => null, setItem() {}, removeItem() {}, lengt
 const document = { documentElement: { getAttribute: () => '', style: { setProperty() {} }, classList: { contains: () => false } }, querySelector: () => null, getElementById: () => null }
 const window = { localStorage, addEventListener() {}, removeEventListener() {}, confirm() { confirmCount++; return accept }, __ModuleLoader__: { load(def) { exposed = def.factory(name => { if (name === 'react') return React; throw Error('Test module unavailable: ' + name) }) } } }
 const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, requestAnimationFrame: fn=>fn(), setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
-vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { iter5WorkspaceLayout: iter5WorkspaceLayout, iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
+vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { Iter5Storage: Iter5Storage, Iter5Migration: Iter5Migration, Iter5DeleteConfirmation: Iter5DeleteConfirmation, iter5WorkspaceLayout: iter5WorkspaceLayout, iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
       transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
@@ -268,6 +268,42 @@ for (const count of [1,2,5]) {
 }
 console.log('PASS native graph retains all topics and bounds every node inside its canvas')
 
+// Replanning must follow the selected policy; changing packs invalidates the preview.
+resetNative()
+const storageCalls=[],migrationCalls=[]
+context.fetch=async(url,opts)=>{if(opts?.body)storageCalls.push(JSON.parse(opts.body));return {ok:true,json:async()=>({ok:true,sources:[{file:'fixture/MEMORY.md',sourceRef:'notes:MEMORY.md',status:'ok'}],counts:{total:1,ok:1,stale:0,unrepairable:0}})}}
+test.transport(async()=>({}),async(url,body)=>{migrationCalls.push({url,body});return {ok:true,plan:{onConflict:body.onConflict,additions:[],overwrites:[],stats:{willWrite:0}}}})
+let storageTree=renderNative(test.Iter5Storage,{nonce:0})
+await new Promise(resolve=>setTimeout(resolve,0))
+storageTree=renderNative(test.Iter5Storage,{nonce:0})
+const migrationProps=()=>nodes(storageTree,n=>n.type===test.Iter5Migration)[0].props
+migrationProps().setPack('fixture/backup.dam-pack')
+storageTree=renderNative(test.Iter5Storage,{nonce:0});migrationProps().onPreview()
+await new Promise(resolve=>setTimeout(resolve,0));storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(migrationCalls.at(-1).body.onConflict,'keep')
+migrationProps().setConflict('overwrite')
+await new Promise(resolve=>setTimeout(resolve,0));storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(migrationCalls.at(-1).body.onConflict,'overwrite','Changing policy obtains a new host plan')
+assert.equal(migrationProps().plan.onConflict,'overwrite')
+migrationProps().setPack('fixture/another.dam-pack');storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(migrationProps().plan,null,'A new pack cannot reuse the previous pack preview')
+const selects=nodes(storageTree,n=>n.type==='select')
+selects[0].props.onChange({target:{value:'fixture/MEMORY.md'}})
+nodes(storageTree,n=>n.type==='input'&&String(n.props.placeholder).startsWith('mem_'))[0].props.onChange({target:{value:'memory-fixture'}})
+storageTree=renderNative(test.Iter5Storage,{nonce:0});button(storageTree,'删除').props.onClick()
+storageTree=renderNative(test.Iter5Storage,{nonce:0})
+let confirmNode=nodes(storageTree,n=>n.type===test.Iter5DeleteConfirmation)[0]
+assert.equal(confirmNode.props.payload.memoryId,'memory-fixture')
+assert.equal(storageCalls.length,0,'Opening confirmation is read-only')
+confirmNode.props.onClose();storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(nodes(storageTree,n=>n.type===test.Iter5DeleteConfirmation).length,0)
+assert.equal(storageCalls.length,0,'Canceling cannot delete')
+button(storageTree,'删除').props.onClick();storageTree=renderNative(test.Iter5Storage,{nonce:0})
+nodes(storageTree,n=>n.type===test.Iter5DeleteConfirmation)[0].props.onConfirm()
+await new Promise(resolve=>setTimeout(resolve,0))
+assert.equal(storageCalls.length,1)
+assert.equal(storageCalls[0].memoryId,'memory-fixture')
+console.log('PASS migration policy replans, pack changes invalidate preview, and deletion requires explicit confirmation')
 
 resetNative();test.setDialog({kind:'notice',notice:{title:'Host notice',message:'Actual message'}})
 const notice=renderNative(test.DialogHost,{})

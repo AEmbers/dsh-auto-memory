@@ -38,7 +38,7 @@
       var deep = useDeepTheme()
       useEffect(function () {
         var before = document.activeElement
-        var node = ref.current && ref.current.querySelector('input,button,textarea,select')
+        var node = ref.current && (ref.current.querySelector('input:not(:disabled),textarea:not(:disabled),select:not(:disabled)') || ref.current.querySelector('button'))
         if (node) node.focus()
         return function () { if (before && before.isConnected && before.focus) before.focus() }
       }, [])
@@ -46,7 +46,7 @@
         h('section', { ref: ref, className: 'i5-dialog', role: 'dialog', 'aria-modal': true, 'aria-label': props.title, onKeyDown: function (e) {
           if (e.key === 'Escape') { e.stopPropagation(); props.onClose() }
           if (e.key !== 'Tab') return
-          var all = Array.from(e.currentTarget.querySelectorAll('button:not(:disabled),input:not(:disabled),textarea,select,[tabindex="0"]'))
+          var all = Array.from(e.currentTarget.querySelectorAll('button:not(:disabled),input:not(:disabled),textarea:not(:disabled),select:not(:disabled),[tabindex="0"]')).filter(function (node) { return node.offsetParent !== null })
           if (!all.length) return
           if (e.shiftKey && document.activeElement === all[0]) { e.preventDefault(); all[all.length - 1].focus() }
           else if (!e.shiftKey && document.activeElement === all[all.length - 1]) { e.preventDefault(); all[0].focus() }
@@ -93,7 +93,7 @@
         h('details', { className: 'i5-card i5-secondary-details' }, h('summary', null, L('日程统计', 'Schedule statistics')), h('div', { className: 'i5-stats i5-stats-four' }, [
           ['calendar','blue',L('待办事项','Pending'),counts[0],L('所有未完成日程','All unfinished events')], ['timeline','orange',L('今日待办','Due today'),counts[1],L('今天需要关注的事项','Items to focus on today')], ['check','green',L('已完成','Completed'),counts[2],L('已标记完成的日程','Events marked complete')], ['calendar','purple',L('本月日程','This month'),counts[3],monthPrefix],
         ].map(function (a) { return h(Iter5Stat, { key:a[2],icon:a[0],hue:a[1],label:a[2],value:a[3],hint:a[4] }) }))),
-        draft[0]?h(Iter5Dialog,{title:L('添加日程','Add event'),onClose:closeDraft},h('form',{onSubmit:function(e){e.preventDefault();if(!draft[0].title.trim())return;var v=draft[0];act({date:v.date,time:v.time,quadrant:v.quadrant,title:v.title.trim(),note:[v.location?L('地点: ','Location: ')+v.location:'',v.reminder?L('提醒: ','Reminder: ')+v.reminder:'',v.note].filter(Boolean).join(' | ')},true)}},
+        draft[0]?h(Iter5Dialog,{title:L('添加日程','Add event'),onClose:closeDraft},h('form',{className:'i5-calendar-form',onSubmit:function(e){e.preventDefault();if(!draft[0].title.trim())return;var v=draft[0];act({date:v.date,time:v.time,quadrant:v.quadrant,title:v.title.trim(),note:[v.location?L('地点: ','Location: ')+v.location:'',v.reminder?L('提醒: ','Reminder: ')+v.reminder:'',v.note].filter(Boolean).join(' | ')},true)}},
           [['title',L('标题','Title'),'text'],['date',L('日期','Date'),'date'],['time',L('时间','Time'),'time'],['location',L('地点','Location'),'text'],['reminder',L('提醒说明','Reminder note'),'text']].map(function(f){return h('label',{key:f[0],className:'i5-form-field'},f[1],h('input',{required:f[0]==='title'||f[0]==='date',type:f[2],value:draft[0][f[0]],onChange:function(e){setField(f[0],e.target.value)}}))}),
           h('label',{className:'i5-form-field'},L('优先级','Priority'),h('select',{value:draft[0].quadrant,onChange:function(e){setField('quadrant',e.target.value)}},['重要紧急','重要不紧急','不重要紧急','不重要不紧急','未分类'].map(function(q){return h('option',{value:q,key:q},q)}))),
           h('label',{className:'i5-form-field'},L('备注','Notes'),h('textarea',{rows:3,value:draft[0].note,onChange:function(e){setField('note',e.target.value)}})),error[0]?h(Iter5Error,{error:error[0]}):null,h('div',{className:'i5-dialog-footer'},h('button',{type:'button',disabled:busy[0],onClick:closeDraft},L('取消','Cancel')),h('button',{className:'i5-primary',type:'submit',disabled:busy[0]},busy[0]?L('保存中…','Saving…'):L('添加日程','Add event'))))):null)
@@ -217,7 +217,7 @@ status[0]?h('p',{className:'i5-muted',role:'status'},status[0]):null,failure[0]?
         busy[1](true);error[1]('');message[1]('')
         apiPost(API.note,{content:draft[0].trim()}).then(function(r){if(!alive.current||identity!==iter5Identity())return;if(r&&(r.ok===false||r.error))throw Error(r.error||r.reason);if(draftKey)delete iter5NoteDrafts[draftKey];draft[1]('');message[1](r.result||L('已追加到项目笔记','Appended to project notes'));if(props.onSaved)props.onSaved()}).catch(function(e){if(alive.current&&identity===iter5Identity())error[1](e.message)}).finally(function(){if(alive.current)busy[1](false)})
       }
-      return h('form',{onSubmit:save,'data-i5-dirty':draft[0].trim()?'true':'false',className:'i5-note-form'},h('label',{className:'i5-form-field'},L('值得记住的内容','Something worth remembering'),h('textarea',{'aria-label':L('追加项目笔记','Append project note'),rows:5,value:draft[0],disabled:busy[0],placeholder:L('写下决定、发现，或下一次需要记住的细节…','A decision, a discovery, or a detail for next time…'),onChange:function(e){draft[1](e.target.value);if(draftKey){if(e.target.value)iter5NoteDrafts[draftKey]=e.target.value;else delete iter5NoteDrafts[draftKey]}}})),h('div',{className:'i5-toolbar'},h('button',{type:'submit',className:'i5-primary',disabled:busy[0]||!draft[0].trim()},busy[0]?L('保存中…','Saving…'):L('追加','Append')),h('small',null,L('以追加方式保存，不覆盖已有笔记。','Appends without overwriting existing notes.'))),message[0]?h('p',{className:'i5-success',role:'status'},message[0]):null,error[0]?h(Iter5Error,{error:error[0]}):null)
+      return h('form',{onSubmit:save,'data-i5-dirty':draft[0].trim()?'true':'false',className:'i5-note-form'},props.source?h('div',{className:'i5-note-destination'},h(Iter5Icon,{name:'note'}),h('div',null,h('strong',null,L('项目笔记','Project notes')),h('small',null,props.source))):null,h('label',{className:'i5-form-field'},L('值得记住的内容','Something worth remembering'),h('textarea',{'aria-label':L('追加项目笔记','Append project note'),rows:5,value:draft[0],disabled:busy[0],placeholder:L('写下决定、发现，或下一次需要记住的细节…','A decision, a discovery, or a detail for next time…'),onChange:function(e){draft[1](e.target.value);if(draftKey){if(e.target.value)iter5NoteDrafts[draftKey]=e.target.value;else delete iter5NoteDrafts[draftKey]}}})),h('div',{className:'i5-toolbar i5-note-footer'},props.onClose?h('button',{type:'button',disabled:busy[0],onClick:function(){if(draft[0].trim()&&!window.confirm(L('放弃尚未保存的笔记？','Discard this unsaved note?')))return;props.onClose()}},L('取消','Cancel')):null,h('button',{type:'submit',className:'i5-primary',disabled:busy[0]||!draft[0].trim()},busy[0]?L('保存中…','Saving…'):L('追加','Append')),h('small',null,L('以追加方式保存，不覆盖已有笔记。','Appends without overwriting existing notes.'))),message[0]?h('p',{className:'i5-success',role:'status'},message[0]):null,error[0]?h(Iter5Error,{error:error[0]}):null)
     }
     function Iter5History(props) {
       var busy=useState(false),error=useState(''),message=useState(''),revision=useState(0)

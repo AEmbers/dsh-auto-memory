@@ -155,6 +155,17 @@ settings = replaceOnce(settings, "apiPost(API.semanticEmit, { mode: m }).then(fu
 settings = settings.replace("'tauHi 0.45 · tauLo 0.35 · deltaExp 0.03 · deltaPro 0.05'", "L('阈值由宿主校准策略管理；当前接口未提供有效数值', 'Thresholds are managed by the host policy; current values are unavailable')")
 settings = replaceOnce(settings, "try { openDialog({ kind: 'welcomeTour' }) } catch (eTour) {}", "try { openManualWelcomeTourPre() } catch (eTour) {}")
 // Avoid global selector collisions with the classic settings surface.
+settings = replaceOnce(settings, "return h('div', { style: panelStyle }, kids)", `return h(Iter5Dialog, { title: L('子代理模型与思考强度', 'Subagent model and reasoning'), onClose: function () { setMdlOpen(false) } },
+          h('div', { 'data-native-model-picker': '' }, kids.slice(1)),
+          h('p', { className: 'i5-muted' }, L('选择会保留在设置草稿中，保存更改后生效。', 'Selections stay in the settings draft until you save changes.')))`)
+settings = replaceOnce(settings, "key: '__default__', 'data-dam-slot'", "key: '__default__', 'aria-pressed': !cfg.subagentModel, 'data-dam-slot'")
+settings = replaceOnce(settings, "key: p.id + '/' + m.id, 'data-dam-slot'", "key: p.id + '/' + m.id, 'aria-pressed': cfg.subagentModel === m.id && cfg.subagentProvider === p.id, 'data-dam-slot'")
+settings = replaceOnce(settings, "key: 'eff-' + row[0] + '-' + (o[0] || 'def'), 'data-dam-slot'", "key: 'eff-' + row[0] + '-' + (o[0] || 'def'), 'aria-pressed': cur === o[0], 'data-dam-slot'")
+settings = replaceOnce(settings, "key: '__manual__', 'data-dam-slot'", "key: '__manual__', 'aria-label': L('手动输入模型', 'Manual model ID'), 'data-dam-slot'")
+settings = replaceOnce(settings, "browseOpen ? h('div', { style:", "browseOpen ? h(Iter5Dialog, { title: L('选择记忆目录', 'Choose memory directory'), onClose: function () { setBrowseOpen(false) } }, h('div', { 'data-native-path-browser': '', style:")
+settings = replaceOnce(settings, "onClick: function () { setBrowseOpen(false) } }, t('close'))))\n            : null", "onClick: function () { setBrowseOpen(false) } }, t('close')))))\n            : null")
+settings = replaceOnce(settings, "}, '📁 ' + d.name)", "}, h(Iter5Icon, { name: 'folder' }), d.name)")
+settings = replaceOnce(settings, "return h('div', { style: { border: '1px solid color-mix(in srgb, var(--dam-accent, #2456c4) 40%, transparent)'", "return h('div', { 'data-native-engine-guide': guide, style: { border: '1px solid color-mix(in srgb, var(--dam-accent, #2456c4) 40%, transparent)'")
 settings = settings.replaceAll("id: 'dam-settings-'", "id: 'i5-settings-section-'")
 // Instance-local tabs/sections avoid collisions when host and workbench settings coexist.
 settings = settings.replace('var i5Group = useState', "var i5SettingsId = useRef('i5-settings-' + (++iter5SettingsSequence)).current\n      var i5Group = useState")
@@ -162,8 +173,9 @@ settings = settings.replaceAll("'i5-settings'", 'i5SettingsId').replaceAll("'i5-
 let storage = client.slice(client.indexOf('    function StorageTab(props) {'), client.indexOf('    function NotesTab() {'))
 storage = replaceOnce(storage, 'function StorageTab(props)', 'function Iter5Storage(props)')
 storage = storage.replaceAll(".then(function (r) { return r.json() })", ".then(function (r) { return r.json().then(function (j) { if (!r.ok || (j && j.error)) throw Error(j && (j.error || j.reason) || 'Request failed'); return j }) })")
-storage = replaceOnce(storage, "      function act(action, payload, onDone) {\n        setMsg('')", `      function act(action, payload, onDone) {
-        if (action === 'delete' && !window.confirm(L('确认删除记忆？正文将删除，在途唤起包将清理，派生事实将撤销；已产生的 seen 证据不改写。此操作不能撤销。', 'Delete this memory and revoke derived facts and pending packets? Existing seen evidence is preserved. This cannot be undone.') + '\\n' + payload.filePath + '\\n' + payload.memoryId)) return
+storage = replaceOnce(storage, "      var delPair = useState('')", "      var deleteRequest = useState(null)\n      var delPair = useState('')")
+storage = replaceOnce(storage, "      function act(action, payload, onDone) {\n        setMsg('')", `      function act(action, payload, onDone, confirmed) {
+        if (action === 'delete' && !confirmed) { deleteRequest[1]({ payload: payload, onDone: onDone }); return }
         if (action === 'repair' && !window.confirm(L('确认仅重建以下文件的索引副本（正文不变）？', 'Rebuild index copies for these files? Source text is unchanged.') + '\\n' + (payload.items || []).map(function (s) { return s.file || s.sourceRef }).join('\\n'))) return
         setMsg('')`)
 storage = replaceOnce(storage, "            setMsg(action + ': ' + reason)\n            if (onDone) onDone(j)", `            setMsg(action + ': ' + reason + (j && j.cascade ? ' · cascade: ' + JSON.stringify(j.cascade) : ''))
@@ -172,7 +184,23 @@ const sourcesStart = storage.indexOf("          (data.sources || []).map(functio
 const sourcesEnd = storage.indexOf("          h('div', { style: { display: 'flex', gap: '6px', marginTop: '8px' } },", sourcesStart)
 if (sourcesStart < 0 || sourcesEnd < 0) throw Error('Storage source-list boundary not found')
 storage = storage.slice(0, sourcesStart) + "          h(Iter5StorageSources, { data: data, act: act }),\n" + storage.slice(sourcesEnd)
+const migrationStart = storage.indexOf('    var migOutPlaceholder = ')
+const migrationEnd = storage.indexOf("    rows.push(h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, migRows))", migrationStart)
+if (migrationStart < 0 || migrationEnd < 0) throw Error('Migration view boundary not found')
+storage = storage.slice(0, migrationStart) + `    var migRows = h(Iter5Migration, {
+      out: migOut, setOut: setMigOut, outPicking: migOutPicking,
+      pickOut: function () { migPickInto(setMigOut, setMigOutPicking) }, onExport: function () { migExport() },
+      pack: migPack, setPack: function (value) { setMigPack(value); setMigPlan(null); setMigResult(null) }, packPicking: migPackPicking,
+      pickPack: function () { migPickInto(function (value) { setMigPack(value); setMigPlan(null); setMigResult(null) }, setMigPackPicking) },
+      onPreview: function () { migPreview(migConflict) }, plan: migPlan, onCancelPreview: function () { setMigPlan(null) },
+      conflict: migConflict, setConflict: function (value) { setMigConflict(value); migPreview(value) }, onApply: migApply,
+      busy: migBusy, error: migErr, message: migNote, result: migResult
+    })
+` + storage.slice(migrationEnd)
+storage = replaceOnce(storage, 'function migPreview() {', 'function migPreview(conflict) {')
+storage = replaceOnce(storage, "apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined })", "apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined, onConflict: conflict || migConflict })")
 storage = replaceOnce(storage, "return h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows)", `return h('div', { className: 'i5-storage-view' },
+        deleteRequest[0] ? h(Iter5DeleteConfirmation, { payload: deleteRequest[0].payload, onClose: function () { deleteRequest[1](null) }, onConfirm: function () { var pending = deleteRequest[0]; deleteRequest[1](null); act('delete', pending.payload, pending.onDone, true) } }) : null,
         h('div', { className: 'i5-stats i5-stats-four' },
           h(Iter5Stat, { icon: 'storage', hue: 'blue', label: L('扫描来源', 'Scanned sources'), value: data.counts ? counts.total : null, hint: L('当前语料来源数', 'Current corpus sources') }),
           h(Iter5Stat, { icon: 'check', hue: 'green', label: L('索引一致', 'Consistent'), value: data.indexEnabled === false ? null : data.counts ? counts.ok : null, hint: data.indexEnabled === false ? L('索引尚未启用', 'Index disabled') : L('正文与索引校验一致', 'Source and index agree') }),

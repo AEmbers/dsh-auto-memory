@@ -40,20 +40,20 @@
 | C34 | DSH记忆设置·行为与维护 | Iter5HostSettings / behavior | implemented-awaiting-final-host-review |
 | C35 | 轻面板·概览 | Iter5QuickPanel | implemented-awaiting-final-host-review |
 | C36 | 轻面板·展开分区 | MemoryPanel / MemoryTabBody | implemented-awaiting-final-host-review |
-| C37 | 追加笔记编辑区 | Iter5Note | implemented-awaiting-final-host-review |
-| C38 | 日程新增与编辑 | Iter5Calendar / Iter5Dialog | pending-page-comparison |
+| C37 | 追加笔记编辑区 | Iter5Note | implemented-awaiting-full-matrix |
+| C38 | 日程新增与编辑 | Iter5Calendar / Iter5Dialog | implemented-awaiting-full-matrix |
 | C39 | 自动接续确认 | AutoContinueHost | pending-page-comparison |
 | C40 | 接续执行进度 | AutoContinueHost | pending-page-comparison |
-| C41 | 记忆中枢初始化 | DialogHost / workbench | pending-page-comparison |
-| C42 | 内置模型安装与下载 | DialogHost / semantic install | pending-page-comparison |
-| C43 | 高级Python环境配置 | SettingsPage / Python setup | pending-page-comparison |
+| C41 | 记忆中枢初始化 | DialogHost / workbench | implemented-awaiting-host-review |
+| C42 | 内置模型安装与下载 | DialogHost / semantic install | implemented-awaiting-full-matrix |
+| C43 | 高级Python环境配置 | SettingsPage / Python setup | implemented-awaiting-full-matrix |
 | C44 | 版本与更新说明 | DialogHost / update | pending-page-comparison |
-| C45 | 诊断与调试中心 | DebugCenter | pending-page-comparison |
-| C46 | 记忆导出 | Iter5Storage / export | pending-page-comparison |
-| C47 | 记忆导入预览 | Iter5Storage / import | pending-page-comparison |
-| C48 | 危险操作确认 | window.confirm (native host behavior retained) | pending-page-comparison |
-| C49 | 模型与思考强度选择 | model picker (verify exact component) | pending-page-comparison |
-| C50 | 目录选择 | settings path browser (verify exact component) | pending-page-comparison |
+| C45 | 诊断与调试中心 | DebugCenter | implemented-awaiting-full-matrix |
+| C46 | 记忆导出 | Iter5Migration | implemented-awaiting-full-matrix |
+| C47 | 记忆导入预览 | Iter5Migration | implemented-awaiting-full-matrix |
+| C48 | 危险操作确认 | Iter5DeleteConfirmation | implemented-awaiting-full-matrix |
+| C49 | 模型与思考强度选择 | Iter5Settings / Iter5Dialog model picker | implemented-awaiting-full-matrix |
+| C50 | 目录选择 | Iter5Settings / Iter5Dialog directory fallback | implemented-awaiting-full-matrix |
 | C51 | 经典模式与回退 | MemoryPageView / MemoryTabBody | pending-page-comparison |
 | C52 | 暂离返回提示 | Greeting drawer / DialogHost | pending-page-comparison |
 | C53 | 阶段总结 | DialogHost / summary | pending-page-comparison |

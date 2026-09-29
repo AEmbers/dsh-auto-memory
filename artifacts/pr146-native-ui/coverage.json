@@ -365,8 +365,8 @@
     "reference": "C37-note-editor.png",
     "group": "编辑与弹窗",
     "source": "library",
-    "implementation": "implemented-awaiting-final-host-review",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
     "component": "Iter5Note"
   },
   {
@@ -375,8 +375,8 @@
     "reference": "C38-calendar-editor.png",
     "group": "编辑与弹窗",
     "source": "calendar",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
     "component": "Iter5Calendar / Iter5Dialog"
   },
   {
@@ -405,7 +405,7 @@
     "reference": "C41-workbench-init.png",
     "group": "编辑与弹窗",
     "source": "handoff",
-    "implementation": "pending-page-comparison",
+    "implementation": "implemented-awaiting-host-review",
     "hostEvidence": null,
     "component": "DialogHost / workbench"
   },
@@ -415,8 +415,8 @@
     "reference": "C42-model-download.png",
     "group": "编辑与弹窗",
     "source": "settings",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
     "component": "DialogHost / semantic install"
   },
   {
@@ -425,8 +425,8 @@
     "reference": "C43-python-install.png",
     "group": "编辑与弹窗",
     "source": "settings",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
     "component": "SettingsPage / Python setup"
   },
   {
@@ -445,8 +445,8 @@
     "reference": "C45-diagnostics.png",
     "group": "编辑与弹窗",
     "source": "storage",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "diagnostics-check.json",
     "component": "DebugCenter"
   },
   {
@@ -455,9 +455,9 @@
     "reference": "C46-export.png",
     "group": "编辑与弹窗",
     "source": "storage",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "Iter5Storage / export"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
+    "component": "Iter5Migration"
   },
   {
     "id": "C47",
@@ -465,9 +465,9 @@
     "reference": "C47-import-preview.png",
     "group": "编辑与弹窗",
     "source": "storage",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "Iter5Storage / import"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
+    "component": "Iter5Migration"
   },
   {
     "id": "C48",
@@ -475,9 +475,9 @@
     "reference": "C48-delete-confirm.png",
     "group": "编辑与弹窗",
     "source": "storage",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "window.confirm (native host behavior retained)"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
+    "component": "Iter5DeleteConfirmation"
   },
   {
     "id": "C49",
@@ -485,9 +485,9 @@
     "reference": "C49-model-picker.png",
     "group": "编辑与弹窗",
     "source": "settings",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "model picker (verify exact component)"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
+    "component": "Iter5Settings / Iter5Dialog model picker"
   },
   {
     "id": "C50",
@@ -495,9 +495,9 @@
     "reference": "C50-path-browser.png",
     "group": "编辑与弹窗",
     "source": "settings",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "settings path browser (verify exact component)"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "editors-check.json",
+    "component": "Iter5Settings / Iter5Dialog directory fallback"
   },
   {
     "id": "C51",

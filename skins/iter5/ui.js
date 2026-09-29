@@ -132,13 +132,16 @@
       }
       if (rowsData.error) return h(Iter5Error, { error: rowsData.error, retry: rowsData.retry })
       if (rowsData.loading) return h(Loading)
+      if (append[0]) return h('section', { className: 'i5-note-page' },
+        h('h2', null, L('追加项目笔记', 'Append project note')),
+        h('p', { className: 'i5-muted' }, L('记录决定、补充信息与下一步行动。', 'Record decisions, supporting details and next actions.')),
+        h(Iter5Note, { source: rowsData.data[1].notesPath, onSaved: rowsData.retry, onClose: function () { append[1](false) } }))
       return h('div', null,
         h('div', { className: 'i5-toolbar' },
           h('input', { type: 'search', placeholder: L('按标题或路径筛选', 'Filter titles or paths'), 'aria-label': L('筛选记忆文件', 'Filter memory files'), value: query[0], onChange: function (e) { query[1](e.target.value) } }),
           h('select', { 'aria-label': L('记忆范围', 'Memory scope'), value: scope[0], onChange: function (e) { scope[1](e.target.value) } }, [['all', L('全部范围', 'All scopes')], ['user', L('用户级', 'User')], ['project', L('本项目', 'This project')]].map(function (x) { return h('option', { key: x[0], value: x[0] }, x[1]) })),
           h('select', { 'aria-label': L('记忆分类', 'Memory category'), value: filter[0], onChange: function (e) { filter[1](e.target.value) } }, [['all', L('全部分类', 'All categories')], ['user', L('用户偏好', 'Preferences')], ['notes', L('项目笔记', 'Notes')], ['logs', L('日志', 'Logs')], ['reflections', L('反思', 'Reflections')]].map(function (x) { return h('option', { key: x[0], value: x[0] }, x[1]) })),
           h('button', { onClick: function () { if (append[0] && !window.confirm(L('关闭笔记编辑区？未保存的内容将丢失。', 'Close the note editor and discard unsaved text?'))) return; append[1](!append[0]) }, 'aria-expanded': append[0] }, L('追加笔记', 'Append note'))),
-        append[0] ? h(Iter5Card, { title: L('追加项目笔记', 'Append project note') }, h(Iter5Note, { onSaved: rowsData.retry })) : null,
         h('div', { className: 'i5-list-detail' },
           h('div', { className: 'i5-card i5-file-list', 'aria-label': L('记忆文件', 'Memory files') }, rows.length ? rows.map(function (r) {
               return h('button', { key: r.path, className: 'i5-file', 'aria-current': r.path === path ? 'true' : undefined, onClick: function () { selectFile(r.path) } }, h('span', { className: 'i5-badge i5-badge-lg', 'data-hue': r.kind === 'user' ? 'pink' : r.kind === 'reflections' ? 'purple' : 'blue' }, h(Iter5Icon, { name: r.kind === 'user' ? 'heart' : 'note' })), h('span', { className: 'i5-file-copy' }, h('strong', null, r.label), h('small', null, r.kind === 'user' ? L('长期偏好与规则', 'Lasting preferences and rules') : r.kind === 'notes' ? L('项目笔记', 'Project notes') : r.kind === 'logs' ? L('每日日志', 'Daily log') : L('反思记录', 'Reflection')), h('span', { className: 'i5-tag' }, r.scope === 'user' ? L('用户级', 'User') : L('本项目', 'Workspace'))), h('small', null, fmtSize(r.size)))

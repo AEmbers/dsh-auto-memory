@@ -1,0 +1,5 @@
+        kb.stats.deduped = boardCards.length < cards.length
+        // ★R11c-4：归档可展开量（供前端渲染「展开更早 N 篇」）。
+        //   真值 = 本次是否已读归档 + 归档篇数（读盘时取 docs 里的 archive 篇数；未读盘则为 0 + known 标记）。
+        const archDocs = docs.filter((d) => String(d.kind || '') === 'archive').length
+        kb.stats.archived = { included: wantArchive, count: archDocs }

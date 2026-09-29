@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """M7-7.5 H5: real-provider closed-loop smoke (audit P0 proof).
 
-Spawns worker_semantic_pre_v1.py with the REAL bge-m3 snapshot, runs a full
+Spawns worker_semantic_v1.py with the REAL bge-m3 snapshot, runs a full
 index_sync commit -> vector build -> context_push -> hybrid shadow search,
 and asserts: 1024-dim L2-normalized vectors, identity block, query/corpus
 template consistency (no double specials), hybrid fusion fields, provenance.
@@ -43,7 +43,7 @@ def main():
     env = dict(os.environ, DSH_M7_EMBEDDING_CONFIG=cfg)
     t0 = time.time()
     p = subprocess.Popen(
-        [sys.executable, r'D:\dsh-auto-memory\python\worker_semantic_pre_v1.py',
+        [sys.executable, r'D:\dsh-auto-memory\python\worker_semantic_v1.py',
          '--expect-epoch', 'ep', '--dsh-home', home],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         stderr=subprocess.PIPE, env=env)

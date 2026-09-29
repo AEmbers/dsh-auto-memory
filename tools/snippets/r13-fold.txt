@@ -1,0 +1,53 @@
+/**
+ * ★R13（44 卷 L13 用户原话 + 46 卷 L124 折叠条）：卡片集合 → **首屏/折叠** 两段（纯函数，零 IO，可复算）。
+ *
+ * 用户原话：「**显示最近的修改和每天的修改，之前的记录进行折叠**；或者只展示前多少个，后面的折叠，点击后就显示」。
+ * 折叠条规格：「展开更早的 **21 天**（**1,341 条**活动）」⇒ 三个量：days / count / hasMore。
+ *
+ * @param {Array} cards buildSectionCardsPre/dedupeCardsPre 的输出
+ * @param {{now?:string|number|Date, foldDays?:number}} opts  foldDays=0 ⇒ **不折叠**（全量，等价「点击后显示」）；缺省 7 天
+ * @returns {{visible:Array, folded:{days:number,count:number}, hasMore:boolean, total:number, foldDays:number}}
+ */
+export function foldCardsPre(cards, opts = {}) {
+  const o = (opts && typeof opts === 'object') ? opts : {}
+  const list = Array.isArray(cards) ? cards : []
+  const total = list.length
+  // ★foldDays 语义：undefined/null ⇒ 默认 7；数字（含 0）原样用；非法 ⇒ 默认 7。0 = 不折叠。
+  const rawDays = o.foldDays
+  const foldDays = (rawDays === undefined || rawDays === null)
+    ? 7
+    : (Number.isFinite(Number(rawDays)) && Number(rawDays) >= 0 ? Math.floor(Number(rawDays)) : 7)
+  // mtime 倒序（同 mtime 用 id 稳定序）—— 与 buildKanbanPre 的 recent 排序同款
+  const sorted = list.slice().sort((a, b) => {
+    const am = Number(a && a.mtime) || 0
+    const bm = Number(b && b.mtime) || 0
+    return (bm - am) || (String(a && a.id || '') < String(b && b.id || '') ? -1 : 1)
+  })
+  const nowRaw = o.now === undefined || o.now === null ? Date.now() : o.now
+  const nowMs = nowRaw instanceof Date ? nowRaw.getTime() : (typeof nowRaw === 'number' ? nowRaw : Date.parse(String(nowRaw)))
+  const t = Number.isFinite(nowMs) ? nowMs : 0
+  const d = new Date(t)
+  const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  // ★foldDays=0 ⇒ 全量（不折叠）
+  const visible = foldDays === 0
+    ? sorted
+    : sorted.filter((c) => (Number(c && c.mtime) || 0) >= dayStart - (foldDays - 1) * 86400000)
+  const foldedCount = total - visible.length
+  let days = 0
+  if (foldedCount > 0) {
+    // ★「更早的天数」= 最早被折叠卡距今天数（向下取整 + 1，与「21 天」同口径）
+    let minM = Infinity
+    for (const c of sorted) {
+      const m = Number(c && c.mtime) || 0
+      if (m < dayStart - (foldDays - 1) * 86400000 && m < minM) minM = m
+    }
+    if (Number.isFinite(minM)) days = Math.max(1, Math.floor((dayStart - minM) / 86400000) + 1)
+  }
+  return {
+    visible,
+    folded: { days, count: foldedCount },
+    hasMore: foldedCount > 0,
+    total,
+    foldDays,
+  }
+}

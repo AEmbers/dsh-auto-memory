@@ -1,0 +1,72 @@
+/**
+ * ★R11（看板去重 · 43 卷环 3 + 66 卷裁定）：把「同标题/同小节」的小节卡归并为一张。
+ *   现状（43 卷取证 + 本轮实测）：每篇四段式账本的四个小节名**逐字相同** ⇒ 大量卡标题重复
+ *   （43 卷实测 2,416 张里 84.4% 重复；唯一标题 376）。用户看到的即「几百张卡全叫『已试方案与失败原因』」。
+ *   归并后：卡数 → 组数；被并条目**不丢弃** —— 卡内记 count / sources / dates（可复算）。
+ *   纯函数、零 IO、确定性；负路径一律返回可渲染结果（绝不抛、绝不丢卡）。
+ *
+ * ★为什么按 section 而非 title 分组：`laneOfEntryPre` 用 `e.section || e.title` 归类泳道
+ *   （wb-sidecar.js 的既有实现），故归并只动展示标题、**不动 section** ⇒ 泳道归类逐条不变。
+ *
+ * @param {Array} cards `buildSectionCardsPre` 的输出
+ * @param {object} [opts] { by?:'section'|'title', maxSources?:number }
+ * @returns {Array} 归并后的卡（顺序 = 各组首现顺序）
+ */
+export function dedupeCardsPre(cards, opts = {}) {
+  const list = Array.isArray(cards) ? cards : []
+  if (!list.length) return []
+  const o = (opts && typeof opts === 'object') ? opts : {}
+  const by = o.by === 'title' ? 'title' : 'section'
+  const maxSources = Number(o.maxSources) > 0 ? Number(o.maxSources) : 8
+  const order = []
+  const groups = new Map()
+  for (const c of list) {
+    if (!c || typeof c !== 'object') continue
+    const raw = by === 'title' ? c.title : (c.section || c.title)
+    const label = String(raw || '').trim()
+    // ★R11c（复合键）：归并键必须含 kind —— 归档卡与活跃卡**不得**并进同一组。
+    //   实测（448 篇真实数据）4 组混 kind：汇报口径=plan+archive；
+    //   已试方案与失败原因 / 进度与下一步 / 关键文件 = ledger+archive。
+    //   分隔符用 \u0000：section 文本不含它 ⇒ **无碰撞**；
+    //   节名含冒号/竖线是常态（如「当前状态(2026-09-10 18:0x)」）⇒ 不可用 ':' 或 '|'。
+    //   label 仍保持**纯节名**（title 拼接与 section 语义都靠它）。
+    const key = label ? (String(c.kind || '') + '\u0000' + label) : ''
+    if (!key) continue
+    let g = groups.get(key)
+    if (!g) {
+      g = { key: label, head: c, count: 0, sources: [], dates: [] }
+      groups.set(key, g)
+      order.push(key)
+    }
+    g.count += 1
+    const src = String(c.source || '')
+    if (src && g.sources.indexOf(src) < 0 && g.sources.length < maxSources) g.sources.push(src)
+    const d = dateOfCardPre(c)
+    if (d && g.dates.indexOf(d) < 0 && g.dates.length < maxSources) g.dates.push(d)
+  }
+  return order.map((k) => {
+    const g = groups.get(k)
+    const head = g.head
+    const merged = g.count > 1
+    return Object.assign({}, head, {
+      title: merged ? g.key + '（共 ' + g.count + ' 条）' : head.title,
+      section: head.section,
+      merged,
+      count: g.count,
+      sources: g.sources,
+      dates: g.dates,
+    })
+  })
+}
+
+/** 从卡片的 mtime 取 YYYY-MM-DD（本地时区）；无效 ⇒ 空串（不抛）。 */
+function dateOfCardPre(c) {
+  const t = Number(c && c.mtime) || 0
+  if (!t) return ''
+  const d = new Date(t)
+  if (isNaN(d.getTime())) return ''
+  const p = (n) => (n < 10 ? '0' + n : String(n))
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+}
+
+export function buildKanbanPre(index, opts = {}) {

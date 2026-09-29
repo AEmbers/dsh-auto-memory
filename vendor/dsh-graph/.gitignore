@@ -1,0 +1,26 @@
+node_modules
+node_modules/
+*.log
+/tmp/
+probe/
+
+core-dist/
+
+# 从源码直接安装（github:owner/repo 等）时 dsh 不会执行 prepack，所以
+# dsh-graph-host/core/*.js 编译产物必须随源码跟踪，否则插件加载缺 ops/events 等模块。
+# 唯一事实源仍是 core/*.ts；改 core 后运行 scripts/sync-core.sh 并把产物一起提交。
+# （npm 发布仍走 prepack sync-core 生成，属正常。）
+
+# g-149：看板数据由 .dsh-graph 内层 Git 仓库独立管理；父代码仓库不再跟踪。
+/.dsh-graph/
+
+# 子代理在包目录、子 Agent cwd 或 linked worktree 跑 graph 工具时误 init 的 .dsh-graph 骨架
+#（非项目数据、非 git 跟踪）——阻止污染 git status。已跟踪的根 .dsh-graph 不受影响（gitignore 只拒新文件）。
+**/.dsh-graph/
+
+# g-121：HANDOFF 旧版归档目录（<root>/handoffs/）不入 git——旧交接文件不提交入库
+handoffs/
+
+# g-142：worktree 目录不入 git——避免误提交 .worktrees/** 污染
+.worktrees/
+.pnpm-store/

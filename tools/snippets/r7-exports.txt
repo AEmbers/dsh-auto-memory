@@ -1,0 +1,3 @@
+    // R7 测试出口（与既有 exports._* 同类，仅供 tests 真调用，不改变运行时行为）
+    exports._layoutRegionPlanPre = layoutRegionPlanPre
+    exports._applyLayoutRegionsPre = applyLayoutRegionsPre

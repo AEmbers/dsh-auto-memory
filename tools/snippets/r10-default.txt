@@ -1,0 +1,16 @@
+  const slots = {}
+  for (let i = 0; i < LAYOUT_SLOTS.length; i++) {
+    slots[LAYOUT_SLOTS[i]] = { }
+  }
+  const blocks = {}
+  for (let i = 0; i < LAYOUT_BLOCK_KINDS.length; i++) {
+    blocks[LAYOUT_BLOCK_KINDS[i]] = { }
+  }
+  return {
+    version: LAYOUT_CONFIG_VERSION,
+    regions: regions,
+    slots: slots,
+    blocks: blocks,
+    tokens: {},
+    hidden: [],
+  }

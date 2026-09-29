@@ -1,0 +1,5 @@
+    // R8 测试出口（同类于 R7，仅测试可用）
+    exports._layoutRegionSizePlanPre = layoutRegionSizePlanPre
+    exports._applyLayoutRegionSizesPre = applyLayoutRegionSizesPre
+    exports._layoutTokenPlanPre = layoutTokenPlanPre
+    exports._applyLayoutTokensPre = applyLayoutTokensPre

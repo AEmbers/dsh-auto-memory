@@ -1,0 +1,3 @@
+      var vp = useState(function () { return 'timeline' })
+      // ★R15d：视图态上提到外层容器（props 优先），工具栏自身 state 仅作兜底。
+      var view = props.view || vp[0], setView = props.onView || vp[1]

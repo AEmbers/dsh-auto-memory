@@ -1,0 +1,9 @@
+        kb.stats.cards4 = stat4.cards
+        // ★R13（44 卷 L13 用户原话「只展示前多少个，后面的折叠，点击后就显示」+ 46 卷 L124 折叠条）：
+        //   首屏默认 7 天；`foldDays=0` ⇒ 全量（等价「点击后显示」）；stats.fold 供前端渲染折叠条。
+        const foldDaysWant = Number(opts && opts.foldDays)
+        const foldRes = foldCardsPre(boardCards, {
+          now: (opts && opts.now) || Date.now(),
+          foldDays: (opts && opts.foldDays !== undefined && Number.isFinite(foldDaysWant)) ? foldDaysWant : undefined,
+        })
+        kb.stats.fold = { foldDays: foldRes.foldDays, days: foldRes.folded.days, count: foldRes.folded.count, hasMore: foldRes.hasMore }

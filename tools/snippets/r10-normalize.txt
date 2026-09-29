@@ -1,0 +1,32 @@
+  // ---------- blocks:按 blockKind 配置块外观(--dam-block-style)与背景图(--dam-block-bg) ----------
+  // 依据 28 卷 §3.4(10 类 kind 取值受控)/ §3.5 方式 C(--dam-block-style 消费点)/ §3.6(authorSurface.imagery)。
+  // 与 regions/slots 同款 fail-safe:未知 kind 忽略留告警、非对象忽略、空值忽略,永不抛。
+  if (raw.blocks !== undefined) {
+    if (!isPlainObject(raw.blocks)) {
+      warnings.push('layout-config: blocks 不是对象,已忽略整块')
+    } else {
+      const kinds = Object.keys(raw.blocks)
+      for (let i = 0; i < kinds.length; i++) {
+        const kind = kinds[i]
+        if (LAYOUT_BLOCK_KINDS.indexOf(kind) < 0) {
+          warnings.push('layout-config: 未知 blockKind「' + kind + '」,已忽略该项')
+          continue
+        }
+        const spec = raw.blocks[kind]
+        if (!isPlainObject(spec)) {
+          warnings.push('layout-config: blockKind「' + kind + '」的值不是对象,已忽略')
+          continue
+        }
+        const out = {}
+        const style = safeText(spec.style)
+        if (style) out.style = style
+        else if (spec.style !== undefined) warnings.push('layout-config: blockKind「' + kind + '」.style 不是有效值,已忽略')
+        const bg = safeText(spec.bg)
+        if (bg) out.bg = bg
+        else if (spec.bg !== undefined) warnings.push('layout-config: blockKind「' + kind + '」.bg 不是有效值,已忽略')
+        if (Object.keys(out).length > 0) config.blocks[kind] = out
+      }
+    }
+  }
+
+  // ---------- hidden:便捷数组写法(等价于 region/slot.hidden=true) ----------

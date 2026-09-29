@@ -1,0 +1,63 @@
+    // ───────────────── R9:结构层消费 A（slot 层 order + 显隐）─────────────────
+    // 依据 70 卷 R9（锚点从「死标记」变「活接口」）、authorSurface.reorder/visibility 的 slot 半边
+    //  （schema 逐字：「slot 级用 [data-dam-slot="Y"] { order: N }」/「[data-dam-slot="Y"] { display:none }」）。
+    // ★零视觉变化纪律（62 卷 §二 纪律 1）：只在客户**显式配置**时写 inline；默认 ⇒ 一个属性都不写。
+    var LAYOUT_SLOT_SEL = '[data-dam-slot]'
+    /** ★R9 边界（实测 6 个节点同时带 data-dam-region 与 data-dam-slot，见 75/76 卷）：
+     *  为不让本层把 R7 写下的 region 显隐/顺序覆盖掉，本层**只处理**「在计划内」或
+     *  「上一次本层写过」的 slot 节点；其余节点一律不碰（跨层互不越权）。 */
+    var lastAppliedSlots = {}
+    /** 纯函数：slot 执行计划（无 DOM 依赖）。负路径 ⇒ 空数组，绝不抛。
+     *  只对**显式配置**过的 slot 产行（normalize 只给显式键写值，未配置的 slot 恒为 {}）。 */
+    function layoutSlotPlanPre(cfg) {
+      var out = []
+      try {
+        if (!cfg || cfg.ok !== true) return out
+        var c = cfg.config
+        if (!c || !c.slots || typeof c.slots !== 'object') return out
+        var names = Object.keys(c.slots)
+        for (var i = 0; i < names.length; i++) {
+          var name = names[i]
+          if (typeof name !== 'string' || !name) continue
+          var spec = c.slots[name]
+          if (!spec || typeof spec !== 'object') continue
+          var item = { name: name, order: null, hidden: false }
+          if (typeof spec.order === 'number' && isFinite(spec.order)) item.order = spec.order
+          if (spec.hidden === true) item.hidden = true
+          if (item.order === null && item.hidden !== true) continue
+          out.push(item)
+        }
+      } catch (e) { return [] }
+      out.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0) })
+      return out
+    }
+    /** 把 slot 计划应用到 DOM：按 data-dam-slot 批量写 inline order / display:none。
+     *  幂等（整批重算）；任何异常静默返回，绝不让面板崩。 */
+    function applyLayoutSlotsPre(cfg) {
+      var plan = layoutSlotPlanPre(cfg)
+      var nodes
+      try { nodes = document.querySelectorAll(LAYOUT_SLOT_SEL) } catch (e) { return 0 }
+      if (!nodes || !nodes.length) return 0
+      var want = {}
+      for (var i = 0; i < plan.length; i++) want[plan[i].name] = plan[i]
+      var applied = 0
+      for (var j = 0; j < nodes.length; j++) {
+        var el = nodes[j]
+        if (!el || !el.style) continue
+        var nm = null
+        try { nm = el.getAttribute('data-dam-slot') } catch (e) { nm = null }
+        var it = nm ? want[nm] : null
+        // ★只处理「本次计划内」或「上次本层写过」的节点 —— 避免覆盖 R7 在双锚点节点上写的 region 样式
+        var mine = !!(nm && (it || lastAppliedSlots[nm]))
+        if (!mine) continue
+        if (it && it.order !== null) { el.style.order = String(it.order); applied++ }
+        else { el.style.order = '' }
+        if (it && it.hidden === true) el.style.display = 'none'
+        else { el.style.display = '' }
+      }
+      var next = {}
+      for (var q = 0; q < plan.length; q++) next[plan[q].name] = true
+      lastAppliedSlots = next
+      return applied
+    }
+

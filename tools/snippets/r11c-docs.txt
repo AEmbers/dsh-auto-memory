@@ -1,0 +1,5 @@
+      // ★R11c（44 卷用户原话「5 个泳道没啥毛病 · 修好或者删掉、换泳道」+ 66 卷 #3）：
+      //   归档泳道**修好**但**默认不读盘**（守 lib/index.js 原注释载明的「用户拍板 C：归档默认不进看板投影」性能约束）。
+      //   前端「展开更早 N 篇」显式传 includeArchive=true 时才读 archive/ ⇒ 默认路径读盘量与耗时**逐字节不变**。
+      const wantArchive = (opts && opts.includeArchive === true) || String((this.config || {}).boardArchive || '') === 'on'
+      const docs = await this._collectWhiteboardDocsPre(projectDir, { includeArchive: wantArchive })

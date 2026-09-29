@@ -1,0 +1,5 @@
+          const _snap = await engine.snapshot()
+          // B12 R6：配置层并入既有 state 响应（★不新增路由）。fail-safe：读失败也给默认，绝不让面板崩。
+          let _lc
+          try { _lc = readLayoutConfigPre() } catch (e) { _lc = { ok: false, config: defaultLayoutConfig(), warnings: [String((e && e.message) || e)] } }
+          writeJson(res, 200, Object.assign({}, _snap, { layoutConfig: _lc }))

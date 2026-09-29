@@ -1,0 +1,9 @@
+        kb.stats.fold = { foldDays: foldRes.foldDays, days: foldRes.folded.days, count: foldRes.folded.count, hasMore: foldRes.hasMore }
+        // ★R14（70 卷 L95「全部成员」；44 卷 L65「全部成员」筛选下拉；48 卷 L69 胶囊；fe02 屏②）：
+        //   14a 成员聚合（个人版无 member 字段 ⇒ members=[] 且 hasActorData=false）；
+        //   14b 筛选联动（actor 为空 ⇒ 不筛选）；members + filter 与泳道正交（只读成员维度）。
+        const actorWant = typeof opts.actor === 'string' ? opts.actor.trim() : ''
+        const memberRes = buildMemberListPre(boardCards, { limit: 200 })
+        const filterRes = filterCardsPre(boardCards, { actor: actorWant })
+        kb.stats.members = { total: memberRes.total, assigned: memberRes.assigned, unassigned: memberRes.unassigned, hasActorData: memberRes.hasActorData, filtered: filterRes.matched, dropped: filterRes.dropped, actor: filterRes.actor }
+        kb.memberList = memberRes.members

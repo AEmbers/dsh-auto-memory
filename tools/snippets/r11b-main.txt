@@ -1,0 +1,14 @@
+      const docs = await this._collectWhiteboardDocsPre(projectDir, { includeArchive: false })
+      const cards = buildSectionCardsPre(this.wbWsKeyPre(projectDir), docs)
+      // ★R11b（看板层去重 · 43 卷环 3 + 66 卷裁定）：同 section 的多张小节卡归并成一张，
+      //   标题带「共 N 条」；原始 cards **原样保留**供 kanbanCardBody 按 id 取全文（不受归并影响）。
+      const boardCards = dedupeCardsPre(cards)
+      const index = await this._loadSidecarIndexPre(projectDir)
+      const kb = buildKanbanPre(index, { now: new Date().toISOString(), cards: boardCards, perLaneCap: Number(opts.perLaneCap) || 0 })
+      // 归并审计量（可复算）：原始卡数 / 归并后组数 / 是否发生归并。
+      //   放在 stats 内（不改 buildKanbanPre 签名，也不动下方被守卫锁定的载荷字面量）。
+      if (kb && kb.stats) {
+        kb.stats.cardsRaw = cards.length
+        kb.stats.cardsMerged = boardCards.length
+        kb.stats.deduped = boardCards.length < cards.length
+      }

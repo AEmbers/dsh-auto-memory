@@ -1,0 +1,49 @@
+    /**
+     * useDeepTheme —— 真实页面**自动跟随宿主主题**（不要求用户去设置页手点）。
+     * 判据来源：64 卷 `assetOf(key, deep)` 第二参；53 卷「深色版是白→透明的 WebP，必须贴深色底」。
+     * fail-safe：拿不到主题标记时一律回**浅色**（浅色是安全默认，不会把透明图贴到白底上）。
+     */
+    function readHostDeep() {
+      try {
+        var de = typeof document !== 'undefined' ? document.documentElement : null
+        if (!de) return false
+        if (de.getAttribute && de.getAttribute('data-dsh-theme') === 'dark') return true
+        if (de.classList && de.classList.contains && de.classList.contains('dark')) return true
+        if (de.getAttribute && de.getAttribute('data-theme') === 'dark') return true
+      } catch (_) {}
+      return false
+    }
+    function useDeepTheme() {
+      var pair = useState(readHostDeep)
+      useEffect(function () {
+        var sync = function () { pair[1](readHostDeep()) }
+        sync()
+        try {
+          if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+            var ob = new MutationObserver(sync)
+            ob.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'data-dsh-theme'] })
+            return function () { try { ob.disconnect() } catch (_) {} }
+          }
+        } catch (_) {}
+      }, [])
+      return pair[0] === true
+    }
+
+    /** 背景层：`bg.mindmap` 挂到导图画布；★必须可交互穿透（不拦截既有拖拽/缩放）。 */
+    function SkinBackdrop(props) {
+      var deepOn = useDeepTheme()
+      var wrap = {
+        'data-dam-skin-backdrop': String((props && props.slot) || 'bg.mindmap'),
+        'data-dam-skin-deep': deepOn ? 'dark' : 'light',
+        className: 'dam-skin-backdrop',
+        style: { position: 'absolute', inset: '0', pointerEvents: 'none', zIndex: 0 },
+      }
+      return h('div', wrap, h(SkinImg, { slot: (props && props.slot) || 'bg.mindmap', deep: deepOn, label: (props && props.label) || 'bg.mindmap' }))
+    }
+
+    /** 同步示意：`illust.sync` 挂在同步状态条（横向构图，与卡片同向）。 */
+    function SkinSyncIllust() {
+      var deepOn = useDeepTheme()
+      return h('span', { 'data-dam-skin-illust': 'illust.sync', 'data-dam-skin-deep': deepOn ? 'dark' : 'light', className: 'dam-skin-illust' },
+        h(SkinImg, { slot: 'illust.sync', deep: deepOn, label: 'illust.sync' }))
+    }

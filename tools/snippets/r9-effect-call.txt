@@ -1,0 +1,2 @@
+          applyLayoutTokensPre(state && state.layoutConfig)       // R8b：--dam-* / --skin-* token
+          applyLayoutSlotsPre(state && state.layoutConfig)        // R9：slot order + 显隐

@@ -1,0 +1,1 @@
+      var main = h('div', { 'data-dam-rail-main': '', style: { flex: '1 1 320px', minWidth: '0' } },

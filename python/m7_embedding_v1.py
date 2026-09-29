@@ -6,7 +6,7 @@ Pure re-implementation of the frozen policy for the production sidecar path
 (the benchmark rig lives separately under python/bench/ and stays untouched):
 
   provider      bge-m3 pinned revision, CLS pooling, L2-normalized float32
-  chunk policy  m7_chunk_v1 = para-512-noov (tokenizer id space,
+  chunk policy  m7_chunk_pre_v1 = para-512-noov (tokenizer id space,
                 greedy paragraph packing, oversized paragraph hard-split,
                 no overlap; special tokens added by the model tokenizer)
   identity      provider/model/revision/dimension/normalization/policyVersion
@@ -26,14 +26,14 @@ import json
 import re
 
 PROVIDER_REAL = 'bge-m3-pre-v1'
-PROVIDER_REAL_INT8 = 'bge-m3-onnx-int8-v1'
+PROVIDER_REAL_INT8 = 'bge-m3-onnx-int8-pre-v1'
 PROVIDER_HASH = 'hash-pre-v1'
-CHUNK_POLICY_VERSION = 'm7_chunk_v1'
+CHUNK_POLICY_VERSION = 'm7_chunk_pre_v1'
 CHUNK_MAX_TOKENS = 512
 QUERY_MAX_TOKENS = 256
 DIMENSION = 1024
 
-RE_CHUNK = re.compile(r'^chk_[0-9a-f]{16,}$')
+RE_CHUNK = re.compile(r'^chk_pre_[0-9a-f]{16,}$')
 
 
 def sha_hex(data):
@@ -73,7 +73,7 @@ def config_hash(provider, model_revision, dimension):
 
 
 def chunk_id_for(memory_id, record_digest, ordinal):
-    return 'chk_' + sha_hex(
+    return 'chk_pre_' + sha_hex(
         ('m7-chunk-pre-v1\u0000' + memory_id + '\u0000' + record_digest +
          '\u0000' + str(ordinal)).encode('utf-8'))[:32]
 
@@ -257,19 +257,9 @@ class BgeM3OnnxInt8Embedder:
         self._np = np
         base = config['modelDir']
         onnx_rel = str(config.get('onnxFile') or 'onnx/model_int8.onnx')
-        # GPU 开关:配置 gpu=true 时优先 CUDA(装了 onnxruntime-gpu 才有该 provider),
-        # 不可用自动回退 CPU——推理契约(输入名/CLS pooling/L2)与 CPU 完全一致。
-        providers = ['CPUExecutionProvider']
-        try:
-            avail = ort.get_available_providers()
-            gpu_conf = str(config.get('gpu') or '').lower() in ('1', 'true', 'yes', 'on')
-            if gpu_conf and 'CUDAExecutionProvider' in avail:
-                providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
-        except Exception:
-            pass
         self.session = ort.InferenceSession(
             os.path.join(base, *onnx_rel.split('/')),
-            providers=providers)
+            providers=['CPUExecutionProvider'])
         self.tokenizer = AutoTokenizer.from_pretrained(base)
         self._inp = self.session.get_inputs()[0].name
         self._att = self.session.get_inputs()[1].name
@@ -369,8 +359,8 @@ def identity_block(provider, config):
         dtype = 'int8-dynamic-onnx'
     return {
         'schemaVersion': 1,
-        'namespace': 'dsh-auto-memory',
-        'policyVersion': 'semantic_vectors_v1',
+        'namespace': 'dsh-auto-memory-pre',
+        'policyVersion': 'semantic_vectors_pre_v1',
         'provider': provider,
         'model': model_name,
         'modelRevision': str(config.get('modelRevision') or 'hash'),

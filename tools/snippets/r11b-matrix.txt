@@ -1,0 +1,1 @@
+      const matrix = buildKanbanMatrixPre(boardCards, { now: new Date().toISOString() })

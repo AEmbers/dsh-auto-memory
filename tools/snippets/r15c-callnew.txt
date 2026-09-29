@@ -1,0 +1,6 @@
+        h('div', null, [
+          h(DamRailToolbar, { zh: zh }),
+          h(DamStatBar, { stats: (props.data && props.data.stats) || {} }),
+          h(KanbanBoard, { data: props.data }),
+          h(DamFoldBar, { zh: zh, fold: (props.data && props.data.stats && props.data.stats.fold) || null }),
+        ]))

@@ -1,0 +1,9 @@
+      // —— fe02 屏①–④ 样式（R18）：全部 token 化、零字面色值（契约 §8.3 断言 3）——
+      '.dam-team-statusbar { display: flex; align-items: center; gap: var(--dam-space-s3, 8px); padding: var(--dam-space-s2, 6px) var(--dam-space-s4, 10px); border-bottom: 1px solid var(--dam-border); }',
+      '.dam-team-members { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dam-space-s2, 6px); padding: var(--dam-space-s2, 6px) 0; }',
+      '.dam-team-member { display: inline-flex; align-items: center; gap: var(--dam-space-s1, 4px); font-size: var(--dam-fontsize-base, 12px); }',
+      '.dam-team-presence-dot { width: 7px; height: 7px; border-radius: var(--dam-radius-circle, 50%); background: var(--dam-text); opacity: .55; }',
+      '.dam-team-filterbar { display: flex; flex-wrap: wrap; gap: var(--dam-space-s3, 8px); padding: var(--dam-space-s2, 6px) 0; }',
+      '.dam-team-diff { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dam-space-s3, 8px); }',
+      '.dam-team-diff-local, .dam-team-diff-remote { margin: 0; overflow: auto; font-size: var(--dam-fontsize-base, 12px); }',
+      '.dam-team-verdict { display: flex; flex-wrap: wrap; gap: var(--dam-space-s2, 6px); padding-top: var(--dam-space-s2, 6px); }',

@@ -1,0 +1,8 @@
+      // —— R22 皮肤挂载点 B（53 卷：深色素材是「白→透明」的 WebP，必须贴深色底才可读）——
+      '.dam-skin-backdrop { overflow: hidden; border-radius: inherit; opacity: var(--dam-skin-backdrop-opacity, .5); }',
+      '.dam-skin-backdrop img { width: 100%; height: 100%; object-fit: cover; }',
+      // ★深色底：透明图贴在深色底上才有对比（浅色模式下透明图贴浅底 = 不可读）
+      '.dam-skin-backdrop[data-dam-skin-deep="dark"] { background: var(--dam-bg-deep, #0f1115); }',
+      '.dam-skin-illust { display: inline-flex; align-items: center; margin-right: var(--dam-space-s3, 8px); }',
+      '.dam-skin-illust img { width: 76px; height: 51px; object-fit: contain; }',
+      '.dam-skin-illust[data-dam-skin-deep="dark"] { background: var(--dam-bg-deep, #0f1115); border-radius: var(--dam-radius-sm, 8px); }',

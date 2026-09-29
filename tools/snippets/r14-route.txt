@@ -1,0 +1,5 @@
+          const _fdRaw = url.searchParams.get('foldDays')
+          const _fd = (_fdRaw === null || _fdRaw === '') ? undefined : Number(_fdRaw)
+          const _actorRaw = url.searchParams.get('actor')
+          const _actor = (_actorRaw === null || _actorRaw === '') ? undefined : _actorRaw
+          return writeJson(res, 200, await engine.kanbanBoardData(url.searchParams.get('sessionId'), { includeArchive: url.searchParams.get('includeArchive') === '1', foldDays: Number.isFinite(_fd) ? _fd : undefined, actor: _actor }))

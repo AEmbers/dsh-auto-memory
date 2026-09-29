@@ -1,0 +1,121 @@
+    // ── R15d 时间轴列表（48 卷 L91–L125 · 46 卷 L87–L120 · 49 卷 §四数据映射）────────────
+    // 权威：48 卷 L94-L97（日期分组行高 40：「YYYY-MM-DD · 星期日」15px semibold，右侧
+    //       「N 条活动」12px + 箭头，行下 1px 横线）；48 卷 L99-L100（卡高 152 圆角 12 间距 12）；
+    //       48 卷 L104-L112（左列宽 88：头像 44×44 + 徽标 16×16 + 2px 竖线 + 8×8 节点圆点）；
+    //       48 卷 L114-L124（右列四行：身份行高 26 / 标题 16px / 摘要 13px 单行 / 元信息 12px）。
+    // ★口径：头像与角色徽标**不渲染**（49 卷数据映射「个人版不渲染」，member 属团队层 R16+）；
+    //   竖线与节点圆点保留（纯几何，圆点色跟随泳道色）。
+    // ★零裸 hex / 零裸 rgba：色值全部走既有 --dam-* token。
+    var DAM_WEEKDAY_ZH = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+    var DAM_WEEKDAY_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+    /** 把 kb.lanes 展开成一维卡片流（保留 laneKey 以便取泳道色）。纯函数，不改入参。 */
+    function damFlattenCards(kb) {
+      var lanes = (kb && kb.lanes) || []
+      var out = []
+      for (var i = 0; i < lanes.length; i++) {
+        var l = lanes[i] || {}
+        var cs = l.cards || []
+        for (var j = 0; j < cs.length; j++) {
+          var c = cs[j]
+          if (!c || typeof c !== 'object') continue
+          out.push({ card: c, laneKey: l.key, laneLabel: l.label })
+        }
+      }
+      return out
+    }
+
+    /** 按**本地日期**分组（与 sidecar 的 groupByDayPre 同口径）。组按日降序、组内 mtime 降序 → id 升序。 */
+    function damGroupByDay(rows) {
+      var pad = function (n) { return n < 10 ? '0' + n : String(n) }
+      var map = {}, order = [], total = 0
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i]
+        var m = Number(r.card && r.card.mtime) || 0
+        var d = new Date(m)
+        var key = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+        if (!map[key]) { map[key] = { day: key, weekday: new Date(d.getFullYear(), d.getMonth(), d.getDate()).getDay(), count: 0, rows: [] }; order.push(key) }
+        map[key].rows.push(r)
+        map[key].count += 1
+        total += 1
+      }
+      var groups = []
+      for (var k = 0; k < order.length; k++) groups.push(map[order[k]])
+      for (var g = 0; g < groups.length; g++) {
+        groups[g].rows.sort(function (a, b) {
+          var am = Number(a.card && a.card.mtime) || 0
+          var bm = Number(b.card && b.card.mtime) || 0
+          if (am !== bm) return bm - am
+          var aid = String((a.card && a.card.id) || '')
+          var bid = String((b.card && b.card.id) || '')
+          return aid < bid ? -1 : aid > bid ? 1 : 0
+        })
+      }
+      groups.sort(function (a, b) { return a.day < b.day ? 1 : a.day > b.day ? -1 : 0 })
+      return { groups: groups, total: total }
+    }
+
+    /** 单张活动卡（48 卷 L99–L124 四行结构）。 */
+    function DamTimelineCard(props) {
+      var c = props.card || {}
+      var zh = props.zh !== false
+      var laneKey = props.laneKey
+      var dot = typeof kxLaneColor === 'function' ? kxLaneColor(laneKey) : 'currentColor'
+      var t = Number(c.mtime) || 0
+      var dt = new Date(t)
+      var pad = function (n) { return n < 10 ? '0' + n : String(n) }
+      var hhmm = pad(dt.getHours()) + ':' + pad(dt.getMinutes())
+      var tags = (Array.isArray(c.tags) ? c.tags : []).filter(function (x) { return String(x || '').indexOf('sec:') !== 0 }).slice(0, 3)
+      var meta = []
+      if (c.docTitle || c.source) meta.push(String(c.docTitle || c.source))
+      if (Number(c.bullets) > 0) meta.push(c.bullets + (zh ? ' 条' : ' items'))
+      if (Number(c.chars) > 0) meta.push(c.chars + (zh ? ' 字' : ' chars'))
+      if (c.anchored) meta.push(zh ? '可跳原文' : 'source link')
+      var sep = { color: 'var(--dam-fg-weak, inherit)', opacity: 0.6 }
+      return h('div', {
+        'data-dam-tl-card': c.id || '',
+        style: { display: 'grid', gridTemplateColumns: '88px 1fr', minHeight: '152px', boxSizing: 'border-box', borderRadius: 'var(--dam-radius-lg, 12px)', background: 'var(--dam-card-bg, transparent)', border: '1px solid var(--dam-border, rgba(128,128,128,.22))', marginBottom: 'var(--dam-space-s3, 12px)', overflow: 'hidden' },
+      }, [
+        h('div', { 'data-dam-tl-rail': '', style: { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, [
+          h('span', { 'aria-hidden': 'true', style: { position: 'absolute', top: 0, bottom: 0, left: '50%', width: '2px', marginLeft: '-1px', background: 'var(--dam-border, rgba(128,128,128,.22))' } }),
+          h('span', { 'data-dam-tl-dot': laneKey || '', 'aria-hidden': 'true', style: { position: 'relative', width: '8px', height: '8px', borderRadius: 'var(--dam-radius-circle, 50%)', background: dot } }),
+        ]),
+        h('div', { 'data-dam-tl-body': '', style: { minWidth: '0', padding: 'var(--dam-space-s3, 12px)' } }, [
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 'var(--dam-space-s2, 8px)', minHeight: '26px', flexWrap: 'wrap' } }, [
+            h('span', { style: { fontSize: 'var(--dam-fontsize-sm, 15px)', fontWeight: 600 } }, String(props.laneLabel || c.section || '')),
+            h('span', { 'data-dam-tl-time': hhmm, style: { fontSize: 'var(--dam-fontsize-sm, 13px)', color: 'var(--dam-fg-weak, inherit)' } }, hhmm),
+            h('span', { style: { height: '22px', display: 'inline-flex', alignItems: 'center', padding: '0 var(--dam-space-s2, 10px)', borderRadius: 'var(--dam-radius-pill, 999px)', background: dot, opacity: 0.18, fontSize: 'var(--dam-fontsize-xs, 12px)' } }, String(c.laneLabel || '')),
+          ].concat(tags.map(function (tg, i) { return h('span', { key: 'tg' + i, style: { fontSize: 'var(--dam-fontsize-sm, 13px)', color: 'var(--dam-accent-2, inherit)' } }, '#' + tg) }))),
+          h('div', { 'aria-hidden': 'true', style: { height: '1px', background: 'var(--dam-border, rgba(128,128,128,.22))', margin: 'var(--dam-space-s2, 8px) 0' } }),
+          h('div', { 'data-dam-tl-title': '', style: { fontSize: 'var(--dam-fontsize-md, 16px)', fontWeight: 600, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, String(c.title || '')),
+          h('div', { 'data-dam-tl-summary': '', style: { fontSize: 'var(--dam-fontsize-sm, 13px)', color: 'var(--dam-fg-weak, inherit)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, String(c.preview || '')),
+          h('div', { 'aria-hidden': 'true', style: { height: '1px', background: 'var(--dam-border, rgba(128,128,128,.22))', margin: 'var(--dam-space-s2, 8px) 0' } }),
+          h('div', { 'data-dam-tl-meta': '', style: { fontSize: 'var(--dam-fontsize-xs, 12px)', color: 'var(--dam-fg-weak, inherit)', display: 'flex', gap: 'var(--dam-space-s1, 4px)', flexWrap: 'wrap' } },
+            meta.reduce(function (acc, x, i) { if (i > 0) acc.push(h('span', { key: 's' + i, style: sep }, '·')); acc.push(h('span', { key: 'm' + i }, x)); return acc }, [])),
+        ]),
+      ])
+    }
+
+    /** 时间轴列表（日期分组 + 可折叠 + 活动卡流）。 */
+    function DamTimelineList(props) {
+      var zh = props.zh !== false
+      var fp = useState({})
+      var folded = fp[0], setFolded = fp[1]
+      var g = damGroupByDay(damFlattenCards(props.data))
+      if (!g.total) return h('div', { 'data-dam-tl-empty': '', style: { fontSize: 'var(--dam-fontsize-sm, 13px)', color: 'var(--dam-fg-weak, inherit)', padding: 'var(--dam-space-s4, 16px) 0' } }, zh ? '无命中' : 'no match')
+      var wk = zh ? DAM_WEEKDAY_ZH : DAM_WEEKDAY_EN
+      return h('div', { 'data-dam-tl': '', 'data-dam-tl-days': String(g.groups.length), 'data-dam-tl-total': String(g.total) }, g.groups.map(function (grp) {
+        var isFolded = !!folded[grp.day]
+        return h('div', { key: grp.day, 'data-dam-tl-group': grp.day }, [
+          h('div', {
+            'data-dam-tl-head': grp.day,
+            onClick: function () { setFolded(function (prev) { var nx = {}; for (var k in prev) nx[k] = prev[k]; nx[grp.day] = !prev[grp.day]; return nx }) },
+            style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--dam-space-s2, 8px)', height: '40px', cursor: 'pointer', borderBottom: '1px solid var(--dam-border, rgba(128,128,128,.22))' },
+          }, [
+            h('span', { style: { fontSize: 'var(--dam-fontsize-sm, 15px)', fontWeight: 600 } }, grp.day + ' · ' + (wk[grp.weekday] || '')),
+            h('span', { style: { fontSize: 'var(--dam-fontsize-xs, 12px)', color: 'var(--dam-fg-weak, inherit)' } }, grp.count + (zh ? ' 条活动' : ' entries') + ' ' + (isFolded ? '▸' : '▾')),
+          ]),
+          isFolded ? null : h('div', { 'data-dam-tl-body-list': '', style: { paddingTop: 'var(--dam-space-s3, 12px)' } }, grp.rows.map(function (r) { return h(DamTimelineCard, { key: r.card.id, card: r.card, laneKey: r.laneKey, laneLabel: r.laneLabel, zh: zh }) })),
+        ])
+      }))
+    }

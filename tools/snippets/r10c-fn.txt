@@ -1,0 +1,61 @@
+    /** ★R10 边界（实测：10 个 block 节点中 9 个同时带 region 或 slot，见 78 卷）：
+     *  本层只写自己两个属性（--dam-block-style / --dam-block-bg），
+     *  不触碰既有三层写过的 inline order、display 与区域尺寸变量。 */
+    var LAYOUT_BLOCK_SEL = '[data-dam-block]'
+    var lastAppliedBlocks = {}
+    /** 纯函数：block 执行计划（无 DOM 依赖）。负路径 ⇒ 空数组，绝不抛。
+     *  只对**显式配置**过的 blockKind 产行（normalize 只给显式键写值，未配置的 kind 恒为 {}）。 */
+    function layoutBlockPlanPre(cfg) {
+      var out = []
+      try {
+        if (!cfg || cfg.ok !== true) return out
+        var c = cfg.config
+        if (!c || !c.blocks || typeof c.blocks !== 'object') return out
+        var kinds = Object.keys(c.blocks)
+        for (var i = 0; i < kinds.length; i++) {
+          var kind = kinds[i]
+          if (typeof kind !== 'string' || !kind) continue
+          var spec = c.blocks[kind]
+          if (!spec || typeof spec !== 'object') continue
+          var item = { kind: kind, style: '', bg: '' }
+          if (typeof spec.style === 'string' && spec.style) item.style = spec.style
+          if (typeof spec.bg === 'string' && spec.bg) item.bg = spec.bg
+          if (!item.style && !item.bg) continue
+          out.push(item)
+        }
+      } catch (e) { return [] }
+      out.sort(function (a, b) { return a.kind < b.kind ? -1 : (a.kind > b.kind ? 1 : 0) })
+      return out
+    }
+    /** 把 block 计划应用到 DOM：按 [data-dam-block] 批量写 inline 两个自定义属性。
+     *  只写这两个自有属性；幂等（整批重算）；异常静默返回，绝不让面板崩。 */
+    function applyLayoutBlocksPre(cfg) {
+      var plan = layoutBlockPlanPre(cfg)
+      var nodes
+      try { nodes = document.querySelectorAll(LAYOUT_BLOCK_SEL) } catch (e) { return 0 }
+      if (!nodes || !nodes.length) return 0
+      var want = {}
+      for (var i = 0; i < plan.length; i++) want[plan[i].kind] = plan[i]
+      var applied = 0
+      for (var j = 0; j < nodes.length; j++) {
+        var el = nodes[j]
+        if (!el || !el.style) continue
+        var kd = null
+        try { kd = el.getAttribute('data-dam-kind') } catch (e) { kd = null }
+        if (!kd) { try { kd = el.getAttribute('data-dam-block') } catch (e) { kd = null } }
+        var it = kd ? want[kd] : null
+        var mine = !!(kd && (it || lastAppliedBlocks[kd]))
+        if (!mine) continue
+        var wrote = false
+        if (it && it.style) { el.style.setProperty('--dam-block-style', it.style); wrote = true }
+        else { el.style.removeProperty('--dam-block-style') }
+        if (it && it.bg) { el.style.setProperty('--dam-block-bg', it.bg); wrote = true }
+        else { el.style.removeProperty('--dam-block-bg') }
+        if (wrote) applied++
+      }
+      var next = {}
+      for (var q = 0; q < plan.length; q++) next[plan[q].kind] = true
+      lastAppliedBlocks = next
+      return applied
+    }
+

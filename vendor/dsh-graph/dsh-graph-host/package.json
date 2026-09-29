@@ -1,0 +1,79 @@
+{
+  "name": "dsh-graph",
+  "version": "0.11.0",
+  "description": "A DeepSeek Harness plugin for graph-based goal management and kanban visualization.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "core",
+    "lib",
+    "cordis.patch.yml",
+    "supervisor-guide.zh.md",
+    "supervisor-guide.en.md",
+    "prompts",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "plugin",
+    "goals",
+    "kanban",
+    "graph",
+    "ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/miuzel/dsh-graph.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "@deepseek-ai/dsh-settings": "^0.1.5-rc.2"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-settings": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
+  },
+  "scripts": {
+    "prepack": "bash ../scripts/sync-core.sh && node -e \"require('node:fs').existsSync('core/ops.js') || (console.error('core 未同步'), process.exit(1))\"",
+    "build": "bash ../scripts/sync-core.sh",
+    "test": "node --test ../core/tests/*.test.ts"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-primitives"
+      ]
+    }
+  }
+}

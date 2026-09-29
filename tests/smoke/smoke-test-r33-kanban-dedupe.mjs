@@ -5,10 +5,7 @@
  * 权威：43 卷环 3（同标题归并）/ 66 卷裁定（复合键含 kind）/ 46+48 卷（v4 看板形态）/ 70 卷 R11。
  */
 import { readFileSync } from 'node:fs'
-import {
-  buildSectionCardsPre, dedupeCardsPre, laneOfEntryPre,
-  buildKanbanPre, buildStatCardsPre, buildMemberListPre, buildRailPre, WB_RAIL_ITEMS_PRE_V1,
-} from 'file:///D:/dsh-auto-memory/lib/wb-sidecar.js'
+const { buildSectionCardsPre, dedupeCardsPre, laneOfEntryPre, buildKanbanPre, buildStatCardsPre, buildMemberListPre, buildRailPre, WB_RAIL_ITEMS_PRE_V1 } = await import(new URL('../../lib/wb-sidecar.js', import.meta.url).href)
 
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }

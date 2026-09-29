@@ -1,0 +1,17 @@
+/** B12 R6：读取客户手改的 layout-config.json（fail-safe：任何输入都返回可用对象，绝不抛）。
+ *  依据 56 卷 §三判据：删文件 / 坏 JSON ⇒ 与默认完全一致且不崩；未知键 ⇒ 忽略并留告警。
+ *  读取走 readJsonQuarantinePreSync：坏文件先隔离留存，再回落默认，绝不静默盖掉客户数据。 */
+function readLayoutConfigPre() {
+  const file = path.join(dshHome(), LAYOUT_CONFIG_FILE)
+  let rd
+  try { rd = readJsonQuarantinePreSync(file) } catch (e) { rd = { ok: false, reason: String((e && e.message) || e) } }
+  if (rd && rd.ok) {
+    try { return normalizeLayoutConfig(rd.value) } catch (e) {
+      return { ok: false, config: defaultLayoutConfig(), warnings: ['layout-config: normalize 抛错，已回落默认 —— ' + String((e && e.message) || e)] }
+    }
+  }
+  const n = normalizeLayoutConfig(null)
+  if (rd && rd.corrupted) n.warnings.push('layout-config: JSON 损坏已隔离留存，已回落默认布局')
+  return n
+}
+

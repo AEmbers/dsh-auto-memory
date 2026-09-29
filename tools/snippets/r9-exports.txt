@@ -1,0 +1,3 @@
+    // R9 测试出口（同类于 R7/R8，仅测试可用）
+    exports._layoutSlotPlanPre = layoutSlotPlanPre
+    exports._applyLayoutSlotsPre = applyLayoutSlotsPre

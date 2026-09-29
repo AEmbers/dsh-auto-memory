@@ -1,0 +1,65 @@
+/**
+ * ★R14（70 卷 L95「全部成员」；44 卷 L65 筛选下拉「全部成员」；48 卷 L69 胶囊文字「全部成员」；fe02 屏②）。
+ * 14a 成员聚合：从卡片集合抽取**成员列表**（纯函数、零 IO、确定性）。
+ *
+ * ★口径（44 卷 §二 + fe02 屏②）：字段取 `member`/`actor`/`author` 三者任一；
+ *   **个人版无此三字段 ⇒ 成员列表为空**（不是「一个叫未知的成员」）——与 R12 统计卡「协作成员恒 0」同源。
+ *
+ * @returns {{members:Array<{id,name,count,lastMtime}>, total:number, assigned:number, unassigned:number, hasActorData:boolean}}
+ *   assigned = 带 member/actor/author 之一的卡数；unassigned = 其余卡数 ⇒ ★assigned + unassigned === total（守恒）
+ */
+export function buildMemberListPre(cards, opts = {}) {
+  const o = (opts && typeof opts === 'object') ? opts : {}
+  const list = Array.isArray(cards) ? cards : []
+  const total = list.length
+  const limit = Number(o.limit) > 0 ? Math.floor(Number(o.limit)) : 0
+  const acc = new Map()
+  let assigned = 0
+  for (const c of list) {
+    if (!c || typeof c !== 'object') continue
+    let name = ''
+    for (const k of ['member', 'actor', 'author']) {
+      const v = c[k]
+      if (typeof v === 'string' && v.trim()) { name = v.trim(); break }
+      if (v && typeof v === 'object' && typeof v.name === 'string' && v.name.trim()) { name = v.name.trim(); break }
+    }
+    if (!name) continue
+    assigned++
+    const cur = acc.get(name) || { id: name, name, count: 0, lastMtime: 0 }
+    cur.count++
+    const m = Number(c.mtime) || 0
+    if (m > cur.lastMtime) cur.lastMtime = m
+    acc.set(name, cur)
+  }
+  // 稳定排序：先按 count 降序，再按 name 升序（保证确定性，不依赖插入序）
+  const all = Array.from(acc.values()).sort((a, b) => (b.count - a.count) || (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)))
+  const members = limit > 0 ? all.slice(0, limit) : all
+  return { members, total, assigned, unassigned: total - assigned, hasActorData: assigned > 0 }
+}
+
+/**
+ * ★R14 14b 筛选联动（44 卷 L65「两个筛选下拉（全部成员/全部泳道）」+ fe02 屏② `data-dam-team-member-filter`）。
+ * 按成员筛选卡片；`actor` 为空/缺省 ⇒ **不筛选**（返回全量，等价「全部成员」）。
+ *
+ * 与泳道筛选**正交**：本函数只看成员维度，不读 lane/tag ⇒ 二者可串联组合，互不覆盖。
+ *
+ * @returns {{cards:Array, total:number, matched:number, dropped:number, actor:string}}
+ *   ★恒等式：matched + dropped === total（筛选前后计数守恒）
+ */
+export function filterCardsPre(cards, opts = {}) {
+  const o = (opts && typeof opts === 'object') ? opts : {}
+  const list = Array.isArray(cards) ? cards : []
+  const actor = typeof o.actor === 'string' ? o.actor.trim() : (o.actor === undefined || o.actor === null ? '' : String(o.actor).trim())
+  if (!actor) return { cards: list, total: list.length, matched: list.length, dropped: 0, actor: '' }
+  const hit = (c) => {
+    if (!c || typeof c !== 'object') return false
+    for (const k of ['member', 'actor', 'author']) {
+      const v = c[k]
+      if (typeof v === 'string' && v.trim() === actor) return true
+      if (v && typeof v === 'object' && typeof v.name === 'string' && v.name.trim() === actor) return true
+    }
+    return false
+  }
+  const out = list.filter(hit)
+  return { cards: out, total: list.length, matched: out.length, dropped: list.length - out.length, actor }
+}

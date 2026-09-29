@@ -1,0 +1,75 @@
+    // ═══════════ R23 皮肤中心：槽位回显 + 客户覆写回显（12 卷 §3 / §二）═══════════
+    // 纪律：① 取数走**既有** apiGet(API.state)（宿主已把 skinCenter 并入该响应，★不新增路由）；
+    //       ② 单飞 + 复用既有 useTick（零新增定时器），与 fetchTeamState 同范式；
+    //       ③ 槽位**不重复声明**任何路径/尺寸 —— 全部来自宿主 skinCenter.slots（单源）。
+    var _skinCache = null
+    var _skinInflight = null
+    function fetchSkinCenter() {
+      if (_skinInflight) return _skinInflight
+      _skinInflight = apiGet(API.state).then(function (d) {
+        var sc = (d && d.skinCenter) || null
+        _skinCache = sc; _skinInflight = null; return _skinCache
+      }, function () { _skinCache = null; _skinInflight = null; return null })
+      return _skinInflight
+    }
+    function skinCacheReset() { _skinCache = null; _skinInflight = null }
+    function skinCacheRead() { return _skinCache }
+    function useSkinCenter() {
+      var tick = useTick()
+      var pair = useState(_skinCache)
+      useEffect(function () {
+        var alive = true
+        fetchSkinCenter().then(function (d) { if (alive) pair[1](d) })
+        return function () { alive = false }
+      }, [tick[0]])
+      return pair[0]
+    }
+
+    /** 皮肤中心状态卡：来源层 / 槽位就绪数 / 告警与错误（**可关闭提示**，12 卷 §3.3-1）。 */
+    function SkinCenterPanel() {
+      var sc = useSkinCenter()
+      var dismissed = useState(false)
+      var st = (sc && sc.status) || {}
+      var layers = (sc && sc.layers) || []
+      var tokens = (sc && sc.tokens) || {}
+      var warn = (sc && sc.warnings) || []
+      var errs = (sc && sc.errors) || []
+      var rows = layers.map(function (l) {
+        return h('div', { key: String(l.layer) + '/' + String(l.name), 'data-dam-skin-layer': String(l.layer), className: 'dam-skin-layer' },[
+          h('span', { className: 'dam-skin-key' }, String(l.layer) + ' · ' + String(l.name)),
+          h('span', { className: 'dam-skin-dim' }, String(l.tokenCount || 0) + ' token'),
+        ])
+      })
+      var banner = (!dismissed[0] && errs.length) ? h('div', { 'data-dam-skin-alert': '1', className: 'dam-skin-alert' },[
+        h('span', null, (locale === 'zh' ? '皮肤加载有 ' : 'Skin load has ') + errs.length + (locale === 'zh' ? ' 条错误（已回落默认，插件可用）' : ' error(s) — fell back to default, plugin usable')),
+        h('button', { 'data-dam-skin-alert-close': '1', onClick: function () { dismissed[1](true) } }, locale === 'zh' ? '关闭' : 'Dismiss'),
+      ]) : null
+      return h('div', { 'data-dam-skin-center': '1' },[
+        h('div', { 'data-dam-skin-summary': '1', className: 'dam-skin-summary' },[
+          h('span', null, (locale === 'zh' ? '槽位就绪 ' : 'slots ready ') + String(st.ready || 0) + '/' + String(st.total || 0)),
+          h('span', null, (locale === 'zh' ? '已生效 token ' : 'active tokens ') + String(Object.keys(tokens).length)),
+          h('span', null, (st.usable ? (locale === 'zh' ? '状态：可用' : 'state: usable') : (locale === 'zh' ? '状态：待补齐' : 'state: pending'))),
+        ]),
+        banner,
+        rows.length ? h('div', { 'data-dam-skin-layers': '1' }, rows) : null,
+        (sc && sc.conflict) ? h('div', { 'data-dam-skin-conflict': '1', className: 'dam-skin-dim' },
+          locale === 'zh' ? '团队主题覆盖了你的用户主题（不禁止，仅提示）。' : 'Team theme overrides your user theme (notice only).') : null,
+        warn.length ? h('div', { 'data-dam-skin-warn': '1', className: 'dam-skin-dim' }, warn.slice(0, 4).map(function (w, i) { return h('div', { key: 'w' + i }, String(w)) })) : null,
+      ])
+    }
+
+    /** 槽位明细行（23a）：key / 文件名 / 深色 / 尺寸 / 状态 —— 全部来自宿主，本段零路径零尺寸字面量。 */
+    function SkinSlotRows() {
+      var sc = useSkinCenter()
+      var rows = (sc && sc.slots) || []
+      if (!rows.length) return null
+      return h('div', { 'data-dam-skin-slots': '1' }, rows.map(function (r) {
+        var size = Array.isArray(r.size) && r.size.length === 2 ? String(r.size[0]) + 'x' + String(r.size[1]) : '—'
+        return h('div', { key: String(r.key), 'data-dam-skin-slot-row': String(r.key), className: 'dam-skin-row' },[
+          h('span', { className: 'dam-skin-key' }, String(r.key)),
+          h('span', { className: 'dam-skin-dim' }, size),
+          h('span', { className: 'dam-skin-dim' }, r.hasDark ? (locale === 'zh' ? '深+浅' : 'dark+light') : (locale === 'zh' ? '仅浅色' : 'light only')),
+          h('span', { 'data-dam-skin-slot-status': r.status }, r.status),
+        ])
+      }))
+    }

@@ -1,0 +1,75 @@
+    // ── R15 左栏 8 项（48 卷 L44–L59 · 42 卷 Q2「它肯定是页签内自带」）──────────────────────
+    // 权威：48 卷 L46 宽 220 ／ L50 侧栏底色 ／ L54-L57 8 项（每项高 40 宽 188 圆角 8、
+    //       左图标 18×18 + 文字 14px、选中态整行高亮 + 左侧 3×24 圆角蓝条）／ L58-L59 底部卡片。
+    // ★零裸 hex：色值一律走既有 --dam-* token（R4/R5 外观层纪律）；本注释亦不含 hex 字面量。
+    // ★跨层一致性：本表 key/label 必须与 lib/wb-sidecar.js 的 WB_RAIL_ITEMS_PRE_V1 逐项一致
+    //   （client.js 是浏览器 bundle，无法 import sidecar ⇒ 两次内联 + 套件锁一致）。
+    var DAM_RAIL_ITEMS = [
+      { key: 'home', label: '首页' },
+      { key: 'timeline', label: '时间轴' },
+      { key: 'ledger', label: '交接账本' },
+      { key: 'library', label: '记忆库' },
+      { key: 'recall', label: '召回审查' },
+      { key: 'team', label: '团队' },
+      { key: 'calendar', label: '日历' },
+      { key: 'settings', label: '设置' },
+    ]
+
+    /** 左栏（48 卷形态）：包一层 rail + 主区，不侵入 KanbanBoard 本体。 */
+    function KanbanBoardRail(props) {
+      var zh = props.zh !== false
+      var rp = useState(function () { return 'timeline' })
+      var railKey = rp[0], setRailKey = rp[1]
+      var rail = h('div', {
+        'data-dam-rail': '',
+        style: {
+          flex: '0 0 220px',
+          width: '220px',
+          boxSizing: 'border-box',
+          alignSelf: 'stretch',
+          padding: 'var(--dam-space-s3, 12px) var(--dam-space-s2, 8px)',
+          background: 'var(--dam-surface, transparent)',
+          borderRight: '1px solid var(--dam-border, rgba(128,128,128,.22))',
+        },
+      }, [
+        h('div', { 'data-dam-rail-brand': '', style: { display: 'flex', alignItems: 'center', gap: 'var(--dam-space-s2, 8px)', marginBottom: 'var(--dam-space-s4, 16px)' } }, [
+          h('span', { 'aria-hidden': 'true', style: { width: '24px', height: '24px', flex: '0 0 auto', display: 'inline-block', borderRadius: 'var(--dam-radius-md, 8px)', background: 'var(--dam-accent-weak, rgba(74,144,217,.18))' } }),
+          h('span', { style: { fontSize: 'var(--dam-fontsize-sm, 14px)', fontWeight: 600, whiteSpace: 'nowrap' } }, 'dsh-auto-memory'),
+        ]),
+        h('div', { 'data-dam-rail-nav': '', style: { display: 'block' } }, DAM_RAIL_ITEMS.map(function (it) {
+          var on = it.key === railKey
+          return h('div', {
+            key: it.key,
+            'data-dam-rail-item': it.key,
+            'data-dam-rail-active': on ? '1' : '0',
+            onClick: function () { setRailKey(it.key) },
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--dam-space-s2, 8px)',
+              height: '40px',
+              width: '188px',
+              maxWidth: '100%',
+              padding: '0 var(--dam-space-s2, 8px)',
+              boxSizing: 'border-box',
+              cursor: 'pointer',
+              borderRadius: 'var(--dam-radius-md, 8px)',
+              background: on ? 'var(--dam-accent-weak, rgba(74,144,217,.18))' : 'transparent',
+              color: on ? 'inherit' : 'var(--dam-fg-weak, inherit)',
+              fontSize: 'var(--dam-fontsize-sm, 14px)',
+              boxShadow: on ? 'inset 3px 0 0 0 var(--dam-accent-2, currentColor)' : 'none',
+            },
+          }, [
+            h('span', { 'aria-hidden': 'true', style: { width: '18px', height: '18px', flex: '0 0 auto', display: 'inline-block', borderRadius: 'var(--dam-radius-xs, 4px)', background: on ? 'var(--dam-accent-2, currentColor)' : 'var(--dam-border, currentColor)', opacity: on ? 1 : 0.5 } }),
+            h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, it.label),
+          ])
+        })),
+        h('div', { 'data-dam-rail-foot': '', style: { marginTop: 'var(--dam-space-s4, 16px)', display: 'flex', alignItems: 'center', gap: 'var(--dam-space-s2, 8px)', width: '188px', maxWidth: '100%', height: '44px', boxSizing: 'border-box', padding: '0 var(--dam-space-s2, 8px)', borderRadius: 'var(--dam-radius-lg, 10px)', background: 'var(--dam-card-bg, transparent)', border: '1px solid var(--dam-border, rgba(128,128,128,.22))' } }, [
+          h('span', { style: { width: '8px', height: '8px', flex: '0 0 auto', borderRadius: 'var(--dam-radius-circle, 50%)', background: 'var(--dam-state-ok, currentColor)' } }),
+          h('span', { style: { fontSize: 'var(--dam-fontsize-xs, 12px)', color: 'var(--dam-fg-weak, inherit)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, zh ? '本地优先 · 数据不出本机' : 'Local-first · data stays here'),
+        ]),
+      ])
+      var main = h('div', { 'data-dam-rail-main': '', style: { flex: '1 1 320px', minWidth: '0' } },
+        h(KanbanBoard, { data: props.data }))
+      return h('div', { 'data-dam-rail-wrap': '', style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--dam-space-s3, 12px)', alignItems: 'flex-start' } }, [rail, main])
+    }

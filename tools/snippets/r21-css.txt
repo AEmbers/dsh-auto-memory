@@ -1,0 +1,8 @@
+      // —— R21 皮肤挂载点样式（12 卷纪律二：占位亦须「像成品」；零字面色值）——
+      '.dam-skin-slot { display: block; width: 100%; border-radius: var(--dam-radius, 12px); overflow: hidden; }',
+      '.dam-skin-slot img { display: block; width: 100%; height: 100%; object-fit: cover; }',
+      '.dam-skin-slot-hero { max-width: 720px; }',
+      '.dam-skin-slot-empty { max-width: 320px; margin: 0 auto; opacity: .92; }',
+      '.dam-skin-empty { display: flex; flex-direction: column; align-items: center; gap: var(--dam-space-s3, 8px); padding: var(--dam-space-s4, 12px) 0; }',
+      '.dam-skin-empty-text { text-align: center; opacity: .72; font-size: var(--dam-fontsize-sm, 11.5px); }',
+      '.dam-skin-hero { margin-bottom: var(--dam-space-s4, 12px); }',

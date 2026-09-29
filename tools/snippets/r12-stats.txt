@@ -1,0 +1,9 @@
+        kb.stats.archived = { included: wantArchive, count: archDocs }
+        // ★R12（48 卷 L78–L89 四张统计卡）：数值纯函数自 wb-sidecar，宿主只补「归档篇数」。
+        //   ★守拍板 C：archiveCount 走 **readdir 计数**（不读内容）⇒ 默认路径读盘内容量逐字节不变。
+        let archTotal = 0
+        try {
+          archTotal = (await readdir(path.join(projectDir, 'handoff', 'archive'))).filter((x) => /\.md$/.test(x)).length
+        } catch (e) { archTotal = 0 }
+        const stat4 = buildStatCardsPre(boardCards, { now: (opts && opts.now) || Date.now(), archiveCount: archTotal })
+        kb.stats.cards4 = stat4.cards

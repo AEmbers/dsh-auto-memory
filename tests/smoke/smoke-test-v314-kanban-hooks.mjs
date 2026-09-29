@@ -90,5 +90,43 @@ ok(CL.includes('useCardFull(expanded ? c : null)'), 'K3 KanbanCard 仍是无条�
   ok(offenses.length === 0, '★K4 无「组件级早退之后仍有 hook 调用」的组件（否则宿主槽位边界会报 React #300/#310）（实得 ' + offenses.length + ' 处）', offenses.join('\n           '))
 }
 
+// ★2026-09-28 追加 K5（与社区作者 PR #146 报出的同一缺陷族）：**三元/逻辑表达式里的 hook 调用**。
+//   背景：欢迎向导首屏原写作 `tourStep === 0 ? h(SkinHero, { deep: useDeepTheme() }) : null` ——
+//   hook 在条件表达式里 ⇒ 只有 tourStep===0 时才执行 ⇒ 翻页后 hook 数量变化 ⇒ React #310
+//   （"rendered more hooks than expected"）。表现：**重看欢迎向导时崩溃**。
+//   K2 守「条件表达式里调 hook」的若干写法、K4 守「早退之后」；K5 专补**三元分支里的 hook**——
+//   把真实教训直接编码进判据：hook 只允许出现在语句级无条件位置。
+{
+  const HOOKS5 = ['useState', 'useEffect', 'useMemo', 'useRef', 'useCallback', 'useContext', 'useReducer', 'useLayoutEffect', 'useTick', 'useTeamTick', 'useDeepTheme', 'useSkinCenter']
+  const hookRe5 = new RegExp('\\b(' + HOOKS5.join('|') + ')\\s*\\(')
+  const offenses5 = []
+  lines.forEach((l, i) => {
+    if (/^\s*(\/\/|\*|\/\*)/.test(l)) return          // 注释行跳过（本段注释自己就含样板）
+    if (!hookRe5.test(l)) return
+    const at = l.search(hookRe5)
+    const before = l.slice(0, at)
+    const after = l.slice(at)
+    // 违规形态判定（务实版）：hook **前**有 `?` 且**后**有 `:` —— 即它落在三元的两支之间。
+    //   ① 真缺陷 `cond ? h(X, {deep: useFoo()}) : null`：前有 `?`、后有 `:` ⇒ 命中 ✓
+    //   ② 合法 `h('div', cond ? a : b, useFoo())`：前有 `?` 但 `useFoo` 之后无 `:` ⇒ 不命中 ✓
+    //   ③ 合法 `var x = useFoo(` / `return useFoo(`：前无 `?` ⇒ 不命中 ✓
+    //   （已知不判的形态：同行多个三元、hook 恰在第一个三元之后且行尾还有另一个 `:` —— 罕见，
+    //     若将来出现会被本守卫报出，届时人工确认即可；宁可偶报也不放过真缺陷。）
+    const bad = before.includes('?') && after.includes(':') || /&&\s*$/.test(before) || /\|\|\s*$/.test(before)
+    if (bad) offenses5.push('L' + (i + 1) + ': ' + l.trim().slice(0, 120))
+  })
+  ok(offenses5.length === 0, '★K5 无「三元/逻辑表达式里的 hook 调用」（翻页即改 hook 数量 → React #310）（实得 ' + offenses5.length + ' 处）', offenses5.join('\n           '))
+  // 负向自证：把真实缺陷形态喂进判据，必须被拦（否则 K5 是空断言）
+  const probe = 'tourStep === 0 ? h(SkinHero, { slot: "hero.welcome", deep: useDeepTheme() }) : null,'
+  const pat = probe.search(hookRe5)
+  ok(probe.slice(0, pat).includes('?') && probe.slice(pat).includes(':'),
+    '★K5 负向自证：真实缺陷形态 `… ? h(X, {deep: useDeepTheme()}) : null` 会被本判据拦截')
+  // 正向自证：合法写法不得被误报（否则守卫会被绕过或被迫放宽）
+  const legit = "var pair = useState({})"
+  const lat = legit.search(hookRe5)
+  ok(!(legit.slice(0, lat).includes('?') && legit.slice(lat).includes(':')),
+    '★K5 正向自证：`var pair = useState({})` 这类无条件写法不误报')
+}
+
 console.log('\n[汇总] ' + pass + ' passed, ' + fail + ' failed')
 process.exit(fail ? 1 : 0)

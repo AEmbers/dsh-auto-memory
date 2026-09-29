@@ -1,0 +1,178 @@
+    // ═══════════════ fe02 八屏契约 · 屏⑤–⑧（R19）═══════════════
+    // 分色：actorId 稳定哈希 ⇒ --dam-team-actor-hue（0–360），杜绝写死色值（fe02 §5.3）。
+    function teamActorHue(id) {
+      var s = String(id || '')
+      var acc = 0
+      for (var i = 0; i < s.length; i++) { acc = (acc * 31 + s.charCodeAt(i)) % 360 }
+      return acc
+    }
+
+    // —— 屏⑤ 团队技能审批（§5.2：8 锚点）——
+    function TeamSkillsScreen(props) {
+      var items = (props && props.items) || []
+      var zh = locale === 'zh'
+      var armPair = useState(null)
+      var armed = armPair[0], setArmed = armPair[1]
+      if (!items.length) {
+        return h('div', { 'data-dam-team-skills': 'empty', className: 'dam-team-skills' },
+          h('span', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, zh ? '暂无待审批技能' : 'No skills to approve'))
+      }
+      var act = function (it, action) {
+        if (action === 'reject' || it.riskLevel === 'high') {
+          if (armed !== it.id + ':' + action) { setArmed(it.id + ':' + action); return }
+        }
+        if (props && props.onAct) props.onAct(it.id, action)
+        setArmed(null)
+      };
+      return h('div', { 'data-dam-team-skills': 'ready', className: 'dam-team-skills' },
+        items.map(function (it) {
+          var ev = it.evidence || {}
+          var can = it.canApprove !== false
+          return h('div', { key: it.id, 'data-dam-team-skill': String(it.id), className: 'dam-team-skill' },
+            h('div', { className: 'dam-team-skill-head' },
+              h('span', null, it.title || it.id),
+              it.riskLevel ? h('span', { 'data-dam-team-skill-risk': it.riskLevel }, it.riskLevel) : null),
+            h('div', { 'data-dam-team-skill-owner': String(it.ownerId || '') }, it.ownerId || '-'),
+            h('div', { 'data-dam-team-skill-evidence': 'x', className: 'dam-team-skill-evidence' },
+              (zh ? '见到' : 'seen') + ' ' + (ev.seen || 0) + ' · ' + (zh ? '成功' : 'ok') + ' ' + (ev.success || 0) +
+              ' · ' + (zh ? '会话' : 'sessions') + ' ' + (ev.sessions || 0)),
+            h('div', { 'data-dam-team-skill-steps': String((it.steps || []).length), className: 'dam-team-skill-steps' },
+              (it.steps || []).map(function (s, i2) { return h('div', { key: i2 }, s) })),
+            can ? null : h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, String(it.approveBlockedReason || '')),
+            h('div', { className: 'dam-team-skill-acts' },
+              h('button', { 'data-dam-team-skill-approve': can ? 'ready' : 'blocked', 'data-dam-btn': '', disabled: !can,
+                onClick: function () { if (can) act(it, 'approve') } }, zh ? '批准' : 'Approve'),
+              h('button', { 'data-dam-team-skill-edit': armed === it.id + ':edit' ? 'armed' : 'idle', 'data-dam-btn': '',
+                onClick: function () { act(it, 'edit') } }, zh ? '修改后批准' : 'Edit & approve'),
+              h('button', { 'data-dam-team-skill-reject': armed === it.id + ':reject' ? 'armed' : 'idle', 'data-dam-btn': '',
+                onClick: function () { act(it, 'reject') } }, zh ? '拒绝' : 'Reject')))
+        }))
+    }
+
+    // —— 屏⑥ 交接账本（§5.3：6 锚点，按人分色 + 接续链）——
+    function TeamLedgerScreen(props) {
+      var segs = (props && props.segments) || []
+      var chain = (props && props.chain) || []
+      var zh = locale === 'zh'
+      return h('div', { 'data-dam-team-ledger': 'ready', className: 'dam-team-ledger' },
+        segs.length ? segs.map(function (sg) {
+          var hue = teamActorHue(sg.actorId)
+          return h('div', { key: sg.id, 'data-dam-team-ledger-seg': 'x', 'data-actor': String(sg.actorId || ''),
+            style: { '--dam-team-actor-hue': String(hue) }, className: 'dam-team-ledger-seg' },
+            h('span', { className: 'dam-team-ledger-actor' }, sg.actorId || '-'),
+            h('span', null, sg.title || ''))
+        }) : h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, zh ? '暂无账本' : 'No ledger yet'),
+        h('div', { 'data-dam-team-ledger-chain': String(chain.length), className: 'dam-team-ledger-chain' },
+          chain.length ? chain.map(function (n, i2) {
+            return h('div', { key: i2, className: 'dam-team-chain-row' },
+              h('span', { 'data-dam-team-chain-node': String(n.from || '') + '>' + String(n.to || '') },
+                (n.from || '?') + ' → ' + (n.to || '?')),
+              i2 < chain.length - 1 ? h('span', { 'data-dam-team-chain-link': 'x', className: 'dam-team-chain-link' }, '↓') : null)
+          }) : h('span', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, zh ? '暂无接续链' : 'No chain')),
+        h('button', { 'data-dam-team-takeover': 'idle', 'data-dam-btn': '',
+          onClick: function () { if (props && props.onTakeover) props.onTakeover() } }, zh ? '我来接' : 'Take over'))
+    }
+
+    // —— 屏⑧ 同步调试（§6.2：7 锚点）——
+    function TeamDebugPanel(props) {
+      var d = (props && props.debug) || {}
+      var q = d.queue || {}
+      var zh = locale === 'zh'
+      var armPair = useState(false)
+      var arm = armPair[0], setArm = armPair[1]
+      return h('div', { 'data-dam-team-debug': 'ready', className: 'dam-team-debug' },
+        h('div', { 'data-dam-team-debug-queue': String((q.pending || []).length) + '/' + String((q.failed || []).length) },
+          (zh ? '队列 待' : 'queue pending ') + (q.pending || []).length + ' / ' + (zh ? '失败 ' : 'failed ') + (q.failed || []).length),
+        h('div', { 'data-dam-team-debug-last': String((d.last && d.last.at) || '') },
+          d.last ? ((d.last.ms || 0) + 'ms · ' + (d.last.bytes || 0) + 'B') : (zh ? '尚无同步记录' : 'no sync yet')),
+        h('div', { 'data-dam-team-debug-errors': String((d.errors || []).length) },
+          (d.errors || []).map(function (e, i2) { return h('div', { key: i2 }, String(e.code || '') + ' ' + String(e.message || '')) })),
+        h('div', { 'data-dam-team-debug-cursor': String(d.localSeq || 0) + '/' + String(d.serverSeq || 0) },
+          'local ' + (d.localSeq || 0) + ' · server ' + (d.serverSeq || 0)),
+        h('button', { 'data-dam-team-debug-copy': 'idle', 'data-dam-btn': '',
+          onClick: function () { if (props && props.onCopy) props.onCopy() } }, zh ? '复制诊断 JSON' : 'Copy diag JSON'),
+        h('button', { 'data-dam-team-debug-reset': arm ? 'armed' : 'idle', 'data-dam-btn': '',
+          onClick: function () { if (!arm) { setArm(true); return } if (props && props.onReset) props.onReset(); setArm(false) } },
+          arm ? (zh ? '确认重置游标？' : 'Confirm reset?') : (zh ? '重置同步游标' : 'Reset cursor')))
+    }
+
+    // —— 屏⑤⑥⑧ 组装配（单一接线点）——
+    function TeamScreensR19(props) {
+      var team = props && props.team
+      if (!team) return null
+      return h('div', { className: 'dam-team-screens2', 'data-dam-team-screens': 'r19' },
+        h(TeamSkillsScreen, { items: (props && props.skills) || [], onAct: props && props.onSkillAct }),
+        h(TeamLedgerScreen, { segments: (props && props.segments) || [], chain: (props && props.chain) || [], onTakeover: props && props.onTakeover }),
+        h(TeamDebugPanel, { debug: (props && props.debug) || {}, onCopy: props && props.onDebugCopy, onReset: props && props.onDebugReset }))
+    }
+
+    // —— 屏⑦ 团队设置 15 控件（§6.1）——
+    // ★三档互斥：teamSyncMode 只改自己，绝不动 teamEnabled（开关解耦硬约束）。
+    var TEAM_FIELD_KEYS = ['teamEnabled', 'teamServer', 'teamId', 'teamMemberName', 'teamSyncMode',
+      'teamSyncIntervalSec', 'teamScopeDefault', 'teamShareExternal', 'teamConflictPolicy',
+      'teamShowAttribution', 'teamSkinId', 'teamShowAudit']
+    var TEAM_FIELD_DEFS = [
+      ['data-dam-team-enable', 'fTeamEnable', 'teamEnabled', 'checkbox'],
+      ['data-dam-team-server', 'fTeamServer', 'teamServer', 'text'],
+      ['data-dam-team-id', 'fTeamId', 'teamId', 'text'],
+      ['data-dam-team-member-name', 'fTeamMemberName', 'teamMemberName', 'text'],
+      ['data-dam-team-sync-mode', 'fTeamSyncMode', 'teamSyncMode', 'select'],
+      ['data-dam-team-sync-interval', 'fTeamSyncInterval', 'teamSyncIntervalSec', 'number'],
+      ['data-dam-team-scope-default', 'fTeamScopeDefault', 'teamScopeDefault', 'select'],
+      ['data-dam-team-share-external', 'fTeamShareExternal', 'teamShareExternal', 'checkbox'],
+      ['data-dam-team-conflict-policy', 'fTeamConflictPolicy', 'teamConflictPolicy', 'select'],
+      ['data-dam-team-attribution-show', 'fTeamAttribution', 'teamShowAttribution', 'checkbox'],
+      ['data-dam-team-skin-url', 'fTeamSkin', 'teamSkinId', 'text'],
+      ['data-dam-team-audit-show', 'fTeamAudit', 'teamShowAudit', 'checkbox']
+    ];
+    var TEAM_SEL_OPTS = {
+      teamSyncMode: ['off', 'manual', 'auto'],
+      teamScopeDefault: ['local', 'team'],
+      teamConflictPolicy: ['ask', 'prefer-team', 'prefer-local']
+    };
+    function renderTeamSettings15(ctx) {
+      var cfg = (ctx && ctx.cfg) || {}
+      var set = (ctx && ctx.set) || function () {}
+      var zh = locale === 'zh'
+      var armPair = useState(false)
+      var arm = armPair[0], setArm = armPair[1]
+      var resPair = useState(null)
+      var res = resPair[0], setRes = resPair[1]
+      var rows = TEAM_FIELD_DEFS.map(function (d) {
+        var attr = d[0], labelKey = d[1], key = d[2], kind = d[3]
+        var val = cfg[key]
+        var label = h('span', { className: 'dam-team-field-label' }, t(labelKey))
+        var box = { 'data-dam-key': key }
+        box[attr] = kind === 'checkbox' ? (val === true ? 'on' : 'off') : String(val === undefined || val === null ? '' : val)
+        if (kind === 'checkbox') {
+          box.type = 'checkbox'; box.checked = val === true;
+          box.onChange = function (e) { set(key, e.target.checked) }
+          return h('label', { key: key, className: 'dam-team-field' }, h('input', box), label)
+        }
+        if (kind === 'select') {
+          box.value = String(val || '');
+          box.onChange = function (e) { set(key, e.target.value) }
+          return h('label', { key: key, className: 'dam-team-field' }, label,
+            h('select', box, (TEAM_SEL_OPTS[key] || []).map(function (v) { return h('option', { key: v, value: v }, v) })))
+        }
+        box.type = kind === 'number' ? 'number' : 'text';
+        box.value = String(val === undefined || val === null ? '' : val);
+        box.onChange = function (e) { set(key, kind === 'number' ? Number(e.target.value) : e.target.value) }
+        return h('label', { key: key, className: 'dam-team-field' }, label, h('input', box))
+      });
+      var testBtn = h('button', { 'data-dam-team-test': 'idle', 'data-dam-btn': '',
+        onClick: function () {
+          setRes(zh ? '自检中…' : 'testing…');
+          // ★复用共享取数层（37 卷 §2：团队面只允许一条取数通道；不新增 apiGet 调用点）
+          fetchTeamState().then(function (d2) { setRes(d2 ? (zh ? '连通正常' : 'OK') : (zh ? '无响应' : 'no response')) },
+            function () { setRes(zh ? '失败' : 'failed') });
+        } }, zh ? '连通性自检' : 'Test connection');
+      var testRes = h('div', { 'data-dam-team-test-result': res ? 'done' : 'idle', 'data-dam-slot': 'hint', 'data-dam-hint': '' },
+        res || (zh ? '未自检' : 'not tested'));
+      var leave = h('button', { 'data-dam-team-leave': arm ? 'armed' : 'idle', 'data-dam-btn': '',
+        onClick: function () { if (!arm) { setArm(true); return } if (ctx && ctx.onLeave) ctx.onLeave(); setArm(false) } },
+        arm ? (zh ? '确认退出团队？' : 'Confirm leave?') : (zh ? '退出团队' : 'Leave team'));
+      return h('section', { id: 'dam-settings-team', 'data-dam-settings-group': '', 'data-dam-team-settings': 'x' },
+        rows, h('div', { className: 'dam-team-field' }, testBtn, testRes),
+        h('div', { className: 'dam-team-field' }, leave))
+    }

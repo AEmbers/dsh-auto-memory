@@ -1,0 +1,116 @@
+    // ───────────────── R8:配置层对外消费 B（区域尺寸 + 外观 token）─────────────────
+    // 依据 28 卷 §3.1（皮肤作者操作面 ② 改区域尺寸 = 覆写 --dam-region-w/h/min；
+    //  ④ 改块外观/图片 = 覆写 --dam-* token）、§3.6 authorSurface.resize/.aesthetics；70 卷 R8。
+    // ★零视觉变化纪律（62 卷 §二 纪律 1）：只在客户**显式配置**时写 inline；默认 ⇒ 一个变量都不写。
+    var LAYOUT_TOKEN_PREFIXES = ['--dam-', '--skin-']
+    /** 上一次写过的 token 集合（用于「删配置 ⇒ 清空」的撤销，见 applyLayoutTokensPre）。 */
+    var lastAppliedTokens = {}
+    /** 尺寸三元组白名单（28 卷 §3.6 resize 逐字）。 */
+    var LAYOUT_SIZE_KEYS = ['w', 'h', 'min']
+    /** 纯函数：region 尺寸计划（无 DOM 依赖）。负路径 ⇒ 空数组，绝不抛。 */
+    function layoutRegionSizePlanPre(cfg) {
+      var out = []
+      try {
+        if (!cfg || cfg.ok !== true) return out
+        var c = cfg.config
+        if (!c || !c.regions || typeof c.regions !== 'object') return out
+        var names = Object.keys(c.regions)
+        for (var i = 0; i < names.length; i++) {
+          var name = names[i]
+          if (typeof name !== 'string' || !name) continue
+          var spec = c.regions[name]
+          if (!spec || typeof spec !== 'object') continue
+          var item = { name: name, sizes: {} }
+          for (var k = 0; k < LAYOUT_SIZE_KEYS.length; k++) {
+            var dim = LAYOUT_SIZE_KEYS[k]
+            var val = spec[dim]
+            // 只接受非空字符串（normalize 的 safeText 已保证形态，此处再兜一层）
+            if (typeof val === 'string' && val) item.sizes[dim] = val
+          }
+          if (!Object.keys(item.sizes).length) continue
+          out.push(item)
+        }
+      } catch (e) { return [] }
+      out.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0) })
+      return out
+    }
+    /** 把尺寸计划写到对应 region 节点的 inline CSS 变量上。幂等；异常静默返回。 */
+    function applyLayoutRegionSizesPre(cfg) {
+      var plan = layoutRegionSizePlanPre(cfg)
+      var nodes
+      try { nodes = document.querySelectorAll(LAYOUT_REGION_SEL) } catch (e) { return 0 }
+      if (!nodes || !nodes.length) return 0
+      var want = {}
+      for (var i = 0; i < plan.length; i++) want[plan[i].name] = plan[i].sizes
+      var applied = 0
+      for (var j = 0; j < nodes.length; j++) {
+        var el = nodes[j]
+        if (!el || !el.style) continue
+        var nm = null
+        try { nm = el.getAttribute('data-dam-region') } catch (e) { nm = null }
+        var sizes = nm ? want[nm] : null
+        for (var k2 = 0; k2 < LAYOUT_SIZE_KEYS.length; k2++) {
+          var dim2 = LAYOUT_SIZE_KEYS[k2]
+          var prop = '--dam-region-' + dim2
+          var v = sizes && sizes[dim2] ? sizes[dim2] : ''
+          try {
+            if (el.style.setProperty) el.style.setProperty(prop, v)
+            else el.style[prop] = v
+          } catch (e) { /* 单点失败不影响其余 */ }
+        }
+        if (sizes) applied++
+      }
+      return applied
+    }
+    /** 纯函数：外观 token 计划（只放行 --dam- / --skin- 前缀）。负路径 ⇒ 空数组。 */
+    function layoutTokenPlanPre(cfg) {
+      var out = []
+      try {
+        if (!cfg || cfg.ok !== true) return out
+        var c = cfg.config
+        if (!c || !c.tokens || typeof c.tokens !== 'object') return out
+        var keys = Object.keys(c.tokens)
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i]
+          if (typeof k !== 'string' || !k) continue
+          var okPrefix = false
+          for (var p = 0; p < LAYOUT_TOKEN_PREFIXES.length; p++) {
+            if (k.indexOf(LAYOUT_TOKEN_PREFIXES[p]) === 0) { okPrefix = true; break }
+          }
+          if (!okPrefix) continue
+          var v = c.tokens[k]
+          if (typeof v !== 'string' || !v) continue
+          out.push({ key: k, value: v })
+        }
+      } catch (e) { return [] }
+      out.sort(function (a, b) { return a.key < b.key ? -1 : (a.key > b.key ? 1 : 0) })
+      return out
+    }
+    /** 把 token 计划写到根元素（客户换配色 / 圆角 / 背景色走这条）。幂等；异常静默。 */
+    function applyLayoutTokensPre(cfg) {
+      var plan = layoutTokenPlanPre(cfg)
+      var root = null
+      try { root = document.documentElement } catch (e) { root = null }
+      if (!root || !root.style) return 0
+      var applied = 0
+      var wanted = {}
+      for (var i = 0; i < plan.length; i++) {
+        wanted[plan[i].key] = true
+        try {
+          if (root.style.setProperty) root.style.setProperty(plan[i].key, plan[i].value)
+          else root.style[plan[i].key] = plan[i].value
+          applied++
+        } catch (e) { /* 单点失败不影响其余 */ }
+      }
+      // 撤销：上次写过、这次不在计划里的 ⇒ 清空（保证「删配置 = 回默认」）
+      try {
+        for (var k in lastAppliedTokens) {
+          if (lastAppliedTokens[k] && !wanted[k]) {
+            if (root.style.setProperty) root.style.setProperty(k, '')
+            else root.style[k] = ''
+          }
+        }
+      } catch (e) { /* ignore */ }
+      lastAppliedTokens = wanted
+      return applied
+    }

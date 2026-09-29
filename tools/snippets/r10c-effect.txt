@@ -1,0 +1,1 @@
+      applyLayoutBlocksPre(state && state.layoutConfig)       // R10：block 外观 + 背景图

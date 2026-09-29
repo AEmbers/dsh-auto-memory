@@ -14,11 +14,13 @@
 import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
 import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
+const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
 
-const require = createRequire('D:/dsh-auto-memory/package.json')
+const require = createRequire(damPath('package.json'))
 const acorn = require('acorn')
 
-const SRC = readFileSync('D:/dsh-auto-memory/lib/client.js', 'utf8')
+const SRC = readFileSync(damPath('lib/client.js'), 'utf8')
 
 let pass = 0, fail = 0
 const fails = []

@@ -1,0 +1,16 @@
+{
+  "name": "dsh-graph",
+  "private": true,
+  "type": "module",
+  "description": "A DeepSeek Harness plugin for graph-based goal management and kanban visualization.",
+  "scripts": {
+    "build": "bash scripts/build-core.sh",
+    "test": "node --test core/tests/*.test.ts",
+    "prepack": "bash scripts/build-core.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "typescript": "^5.7.0",
+    "yaml": "^2.9.0"
+  }
+}

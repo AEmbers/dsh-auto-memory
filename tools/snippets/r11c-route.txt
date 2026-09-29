@@ -1,0 +1,1 @@
+          return writeJson(res, 200, await engine.kanbanBoardData(url.searchParams.get('sessionId'), { includeArchive: url.searchParams.get('includeArchive') === '1' }))

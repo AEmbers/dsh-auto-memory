@@ -1,0 +1,111 @@
+    // ── R15c 主区共享层（48 卷 L62–L89 工具栏 + 统计条 · 46 卷 L122–L124 折叠条）──────
+    // 权威：48 卷 L64-L75（标题 26px / 副标题 13px / 搜索框 300×36 圆角 999 / 两个下拉胶囊
+    //       96×36 / 视图切换组 132×36 三按钮）；48 卷 L78-L89 与 46 卷 L80-L85（4 张卡等宽横排
+    //       间距 16 / 每张 281×88 圆角 12 / 图标块 40×40 圆角 12 半透明底 / 上行标签 12px
+    //       下行大数字 28px bold + 单位 12px）；46 卷 L122-L124（左右各 60px 细线 + 中间胶囊 999px）。
+    // ★零裸 hex / 零裸 rgba：色值全部走既有 --dam-* token（R4/R5 外观层纪律）。
+    // ★48 卷的绝对 x 坐标是 1440 画布坐标 ⇒ 本处映射为流体布局（左组 + 右组 flex）。
+    var DAM_TOOLBAR_VIEWS = [
+      { key: 'list', label: '列表视图' },
+      { key: 'timeline', label: '时间轴' },
+      { key: 'lane', label: '泳道' },
+    ]
+    var DAM_STAT_META = [
+      { key: 'today', tint: 'var(--dam-accent-2, currentColor)' },
+      { key: 'week', tint: 'var(--dam-state-ok, currentColor)' },
+      { key: 'members', tint: 'var(--dam-accent-3, currentColor)' },
+      { key: 'archived', tint: 'var(--dam-fg-weak, currentColor)' },
+    ]
+
+    /** 主区顶部工具栏（48 卷 L62–L75）。搜索框为本地态，暂不接过滤（不改 KanbanBoard）。 */
+    function DamRailToolbar(props) {
+      var zh = props.zh !== false
+      var qp = useState(function () { return '' })
+      var q = qp[0], setQ = qp[1]
+      var vp = useState(function () { return 'timeline' })
+      var view = vp[0], setView = vp[1]
+      var capsule = { height: '36px', borderRadius: 'var(--dam-radius-pill, 999px)', background: 'var(--dam-card-bg, transparent)', border: '1px solid var(--dam-border, rgba(128,128,128,.22))', color: 'var(--dam-fg-weak, inherit)', fontSize: 'var(--dam-fontsize-xs, 12px)', padding: '0 var(--dam-space-s3, 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--dam-space-s1, 4px)', whiteSpace: 'nowrap', cursor: 'pointer' }
+      var btn = function (it) {
+        var on = it.key === view
+        return h('div', {
+          key: it.key,
+          'data-dam-view-btn': it.key,
+          'data-dam-view-active': on ? '1' : '0',
+          title: it.label,
+          onClick: function () { setView(it.key) },
+          style: { width: '44px', height: '36px', borderRadius: 'var(--dam-radius-pill, 999px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 'var(--dam-fontsize-xs, 12px)', background: on ? 'var(--dam-accent-2, currentColor)' : 'transparent', color: on ? 'var(--dam-fg-on-accent, inherit)' : 'var(--dam-fg-weak, inherit)' },
+        }, it.label.slice(0, 2))
+      }
+      return h('div', { 'data-dam-toolbar': '', style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--dam-space-s3, 12px)', paddingBottom: 'var(--dam-space-s4, 16px)' } }, [
+        h('div', { style: { minWidth: '0', flex: '1 1 200px' } }, [
+          h('div', { style: { fontSize: 'var(--dam-fontsize-xxl, 26px)', fontWeight: 600, lineHeight: 1.2 } }, zh ? '工作流时间轴' : 'Workflow timeline'),
+          h('div', { style: { fontSize: 'var(--dam-fontsize-sm, 13px)', color: 'var(--dam-fg-weak, inherit)' } }, zh ? '谁 · 在什么时候 · 做了什么' : 'who · when · did what'),
+        ]),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 'var(--dam-space-s2, 8px)', flexWrap: 'wrap' } }, [
+          h('input', {
+            'data-dam-search': '',
+            type: 'search',
+            value: q,
+            placeholder: zh ? '搜索谁在什么时候做了什么…' : 'search…',
+            onChange: function (e) { setQ(e && e.target ? e.target.value : '') },
+            style: { width: '300px', maxWidth: '100%', height: '36px', boxSizing: 'border-box', borderRadius: 'var(--dam-radius-pill, 999px)', background: 'var(--dam-card-bg, transparent)', border: '1px solid var(--dam-border, rgba(128,128,128,.22))', color: 'var(--dam-fg, inherit)', fontSize: 'var(--dam-fontsize-sm, 13px)', padding: '0 var(--dam-space-s3, 12px)' },
+          }),
+          h('div', { 'data-dam-filter': 'actor', style: capsule }, (zh ? '全部成员' : 'All members') + ' ▾'),
+          h('div', { 'data-dam-filter': 'lane', style: capsule }, (zh ? '全部泳道' : 'All lanes') + ' ▾'),
+          h('div', { 'data-dam-viewgroup': '', style: { display: 'flex', height: '36px', borderRadius: 'var(--dam-radius-pill, 999px)', background: 'var(--dam-surface, transparent)', border: '1px solid var(--dam-border, rgba(128,128,128,.22))', overflow: 'hidden' } }, DAM_TOOLBAR_VIEWS.map(btn)),
+        ]),
+      ])
+    }
+
+    /** 统计条 4 张卡（48 卷 L78–L89 / 46 卷 L80–L85）。数据取自宿主 stats.cards4。 */
+    function DamStatBar(props) {
+      var st = props.stats || {}
+      var list = Array.isArray(st.cards4) ? st.cards4 : []
+      if (!list.length) return null
+      var byKey = {}
+      for (var i = 0; i < list.length; i++) byKey[list[i].key] = list[i]
+      var card = function (m) {
+        var c = byKey[m.key]
+        if (!c) return null
+        return h('div', {
+          key: m.key,
+          'data-dam-stat': m.key,
+          style: { flex: '1 1 200px', maxWidth: '281px', minWidth: '180px', height: '88px', boxSizing: 'border-box', borderRadius: 'var(--dam-radius-lg, 12px)', background: 'var(--dam-card-bg, transparent)', border: '1px solid var(--dam-border, rgba(128,128,128,.22))', padding: 'var(--dam-space-s3, 12px)', display: 'flex', alignItems: 'center', gap: 'var(--dam-space-s3, 12px)' },
+        }, [
+          h('span', { 'aria-hidden': 'true', style: { width: '40px', height: '40px', flex: '0 0 auto', display: 'inline-block', borderRadius: 'var(--dam-radius-lg, 12px)', background: m.tint, opacity: 0.18 } }),
+          h('div', { style: { minWidth: '0' } }, [
+            h('div', { style: { fontSize: 'var(--dam-fontsize-xs, 12px)', color: 'var(--dam-fg-weak, inherit)', whiteSpace: 'nowrap' } }, c.label),
+            h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 'var(--dam-space-s1, 4px)' } }, [
+              h('span', { style: { fontSize: 'var(--dam-fontsize-xxl, 28px)', fontWeight: 700, lineHeight: 1.1 } }, String(c.value)),
+              h('span', { style: { fontSize: 'var(--dam-fontsize-xs, 12px)', color: 'var(--dam-fg-weak, inherit)' } }, c.unit),
+            ]),
+          ]),
+        ])
+      }
+      return h('div', { 'data-dam-statbar': '', style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--dam-space-s4, 16px)', paddingBottom: 'var(--dam-space-s4, 16px)' } }, DAM_STAT_META.map(card))
+    }
+
+    /** 底部折叠条（46 卷 L122–L124）：左右各 60px 细线 + 中间胶囊 999px。 */
+    function DamFoldBar(props) {
+      var zh = props.zh !== false
+      var f = props.fold
+      if (!f || typeof f !== 'object') return null
+      var count = Number(f.count) || 0
+      var days = Number(f.days) || 0
+      var hasMore = !!f.hasMore
+      if (!count && !hasMore) return null
+      var line = { flex: '1 1 60px', minWidth: '60px', height: '1px', background: 'var(--dam-border, rgba(128,128,128,.22))' }
+      var text = zh
+        ? ('展开更早的 ' + days + ' 天（' + count.toLocaleString('en-US') + ' 条活动）')
+        : ('expand ' + days + ' more days (' + count + ' entries)')
+      return h('div', { 'data-dam-foldbar': '', style: { display: 'flex', alignItems: 'center', gap: 'var(--dam-space-s3, 12px)', padding: 'var(--dam-space-s4, 16px) 0' } }, [
+        h('span', { 'aria-hidden': 'true', style: line }),
+        h('div', {
+          'data-dam-fold-pill': '',
+          'data-dam-fold-days': String(days),
+          'data-dam-fold-count': String(count),
+          style: { flex: '0 0 auto', height: '36px', borderRadius: 'var(--dam-radius-pill, 999px)', background: 'var(--dam-card-bg, transparent)', border: '1px solid var(--dam-border, rgba(128,128,128,.22))', color: 'var(--dam-fg-weak, inherit)', fontSize: 'var(--dam-fontsize-xs, 12px)', padding: '0 var(--dam-space-s4, 16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--dam-space-s2, 8px)', whiteSpace: 'nowrap' },
+        }, text + ' ▾'),
+        h('span', { 'aria-hidden': 'true', style: line }),
+      ])
+    }

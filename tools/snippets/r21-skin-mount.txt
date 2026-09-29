@@ -1,0 +1,52 @@
+    // ═══════════ R21 皮肤视觉重构 A：6 槽位**真实页面挂载**（12 卷 §二）═══════════
+    // 纪律一（12 卷 §四）：代码只认 key，不认文件 —— 本段**零路径字面量**；
+    //   取图一律经 skinAssetUrl(key) ⇒ 宿主只读路由；换图只改 skin-assets.js 的 file 一行。
+    // 纪律二：图未就绪 / 加载失败 ⇒ 复用 SkinImg 的确定性占位（同尺寸、不塌、不留白）。
+    // 纪律三：尺寸只在宿主数据表声明，本段不重复写尺寸字面量。
+    // ★结构层边界（R10 计数锁）：`data-dam-block`/`data-dam-kind` 是**结构层 block 锚点**，
+    //   只标在共享层那 10 个 block 节点上；皮肤**挂载点**不得引入 block 锚（语义扩张）。
+
+    /**
+     * SkinSlot —— 通用**挂载点**组件（区别于设置页的预览卡）。
+     * 与 SkinImg 的差别：SkinSlot 带版位与语义锚点（data-dam-skin-slot），供真实页面消费；
+     * 两者共用同一条取数通道 skinAssetUrl ⇒ **单一数据源**（宿主只读路由）。
+     */
+    function SkinSlot(props) {
+      var key = props && props.slot
+      var kind = (props && props.kind) || 'hero'
+      var size = (props && props.size) || []
+      var wrap = {
+        'data-dam-skin-slot': String(key || ''),
+        'data-dam-skin-kind': kind,
+        className: 'dam-skin-slot dam-skin-slot-' + kind,
+      }
+      if (size.length === 2) { wrap.style = { aspectRatio: String(size[0]) + ' / ' + String(size[1]) } }
+      return h('div', wrap, h(SkinImg, { slot: key, deep: props && props.deep, label: (props && props.label) || key }))
+    }
+
+    /**
+     * SkinEmpty —— 空状态插画挂载件：**保留原文案**再追加图（不得用图替换文案）。
+     * 12 卷 §二：空状态是「用户第一次打开产品的第一印象」。
+     */
+    function SkinEmpty(props) {
+      return h('div', { 'data-dam-skin-empty': String((props && props.slot) || ''), className: 'dam-skin-empty' },[
+        h(SkinSlot, { slot: props && props.slot, kind: 'empty', size: (props && props.size) || [], deep: props && props.deep }),
+        h('div', { className: 'dam-skin-empty-text' }, (props && props.children) || null),
+      ])
+    }
+
+    /** 宿主数据表的尺寸（纪律三：客户端只做展示，尺寸真源仍在 skin-assets.js）。 */
+    var SKIN_SLOT_SIZE = {
+      'hero.welcome': [1600, 1000],
+      'empty.library': [800, 600],
+      'empty.timeline': [800, 600],
+      'empty.recall': [800, 600],
+    };
+    function skinSlotSize(key) { return SKIN_SLOT_SIZE[String(key || '')] || [] }
+
+    /** 首屏主视觉（hero.welcome）：左 40% 留白由图片构图承担，版位按 16:10 预留。 */
+    function SkinHero(props) {
+      return h('div', { 'data-dam-skin-hero': String((props && props.slot) || 'hero.welcome'), className: 'dam-skin-hero' },
+        h(SkinSlot, { slot: (props && props.slot) || 'hero.welcome', kind: 'hero', size: skinSlotSize('hero.welcome'), deep: props && props.deep }))
+    }
+    // ===================== S2-skin:end =====================

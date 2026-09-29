@@ -1,0 +1,13 @@
+    const raw = by === 'title' ? c.title : (c.section || c.title)
+    const label = String(raw || '').trim()
+    // ★R11c（复合键）：归并键必须含 kind —— 归档卡与活跃卡**不得**并进同一组。
+    //   实测（448 篇真实数据）4 组混 kind：汇报口径=plan+archive；
+    //   已试方案与失败原因 / 进度与下一步 / 关键文件 = ledger+archive。
+    //   分隔符用 \u0000：section 文本不含它 ⇒ **无碰撞**；
+    //   节名含冒号/竖线是常态（如「当前状态(2026-09-10 18:0x)」）⇒ 不可用 ':' 或 '|'。
+    //   label 仍保持**纯节名**（title 拼接与 section 语义都靠它）。
+    const key = label ? (String(c.kind || '') + '\u0000' + label) : ''
+    if (!key) continue
+    let g = groups.get(key)
+    if (!g) {
+      g = { key: label, head: c, count: 0, sources: [], dates: [] }

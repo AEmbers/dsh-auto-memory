@@ -1,0 +1,144 @@
+    // ═══════════════ fe02 八屏契约 · 屏①–④（R18）═══════════════
+    // 形态裁定：新增锚点一律用契约逐字的独立属性名 data-dam-team-<name>；
+    // 既有 24 个值枚举锚点（data-dam-team="xxx"）保留不动（追加式，零删除）。
+
+    var TEAM_PHASE_ZH = { synced: '已同步', syncing: '同步中', offline: '离线', conflict: '有冲突', paused: '已暂停' }
+    var TEAM_PHASE_EN = { synced: 'Synced', syncing: 'Syncing', offline: 'Offline', conflict: 'Conflict', paused: 'Paused' }
+    function teamPhaseOf(team) {
+      if (!team) return 'offline'
+      // fe02 §2：phase 由后端 state.phase 给（五值）；派生仅作兜底，不做本地判定
+      if (team.phase && TEAM_PHASE_ZH[team.phase]) return team.phase
+      if (team.paused === true) return 'paused'
+      if ((team.conflicts || 0) > 0) return 'conflict'
+      if ((team.queue || 0) > 0) return 'syncing'
+      return 'synced'
+    }
+
+    // —— 屏① 同步状态总览（契约 §2：statusbar / state / queue / lastsync / conflict-badge / pause）——
+    function TeamSyncStatusBar(props) {
+      var team = props && props.team
+      if (!team) return null
+      var zh = locale === 'zh'
+      var phase = teamPhaseOf(team)
+      var q = team.queue || 0
+      var c = team.conflicts || 0
+      var stateTxt = (zh ? TEAM_PHASE_ZH : TEAM_PHASE_EN)[phase] || phase
+      return h('div', { className: 'dam-team-statusbar', 'data-dam-team-statusbar': '' },
+        h('button', { 'data-dam-team-state': phase, 'data-dam-btn': '', className: 'dam-team-state' }, stateTxt),
+        h('span', { 'data-dam-team-queue': String(q) }, q + (zh ? ' 待同步' : ' pending')),
+        h('span', { 'data-dam-team-lastsync': String(team.syncAt || 0) }, fmtAgoShort(team.syncAt)),
+        c > 0 ? h('button', { 'data-dam-team-conflict-badge': String(c), 'data-dam-btn': '' }, c + (zh ? ' 待裁决' : ' open')) : null,
+        h('label', { className: 'dam-team-pause' },
+          h('input', { type: 'checkbox', 'data-dam-team-pause': 'x', checked: team.paused === true,
+            onChange: function (e) { if (props && props.onPause) props.onPause(e.target.checked) } }),
+          zh ? '暂停同步' : 'Pause'))
+    }
+
+    // —— 屏② 成员与在场（契约 §3：members / member / member-self / presence / presence-dot / member-filter）——
+    function TeamMembersScreen(props) {
+      var team = props && props.team
+      var zh = locale === 'zh'
+      var list = (team && team.members) || []
+      var pres = (team && team.presence) || {}
+      var me = (team && team.me) || null
+      if (!list.length) {
+        return h('div', { 'data-dam-team-members': 'empty', className: 'dam-team-members' },
+          h('span', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, zh ? '未加入团队' : 'Not joined yet'))
+      }
+      return h('div', { 'data-dam-team-members': 'ready', className: 'dam-team-members' },
+        list.map(function (m) {
+          var st = (pres[m.id] && pres[m.id].state) || 'offline'
+          var isSelf = !!(me && me.id === m.id) || m.isSelf === true
+          var attrs = { key: m.id, 'data-dam-team-member': String(m.id), 'data-dam-team-presence': st, className: 'dam-team-member' }
+          if (isSelf) attrs['data-dam-team-member-self'] = 'true'
+          return h('div', attrs,
+            h('span', { 'data-dam-team-presence-dot': st, className: 'dam-team-presence-dot' }),
+            h('span', null, m.name || m.id))
+        }),
+        h('select', { 'data-dam-team-member-filter': String((props && props.filterActor) || ''), className: 'dam-team-member-filter',
+          onChange: function (e) { if (props && props.onFilter) props.onFilter(e.target.value) } },
+          [h('option', { key: '', value: '' }, zh ? '全部成员' : 'All members')].concat(
+            list.map(function (m) { return h('option', { key: m.id, value: m.id }, m.name || m.id) }))))
+    }
+
+    // —— 屏③ 记忆库筛选条（契约 §4：filterbar / filter-author / filter-source / filter-sync / badge / badge-scope）——
+    function TeamFilterBar(props) {
+      var zh = locale === 'zh'
+      var f = (props && props.filter) || {}
+      var mk = function (attr, label, opts, cur, onPick) {
+        var o = { key: attr, className: 'dam-team-filter' }
+        o[attr] = String(cur || '')
+        if (onPick) o.onChange = function (e) { onPick(e.target.value) }
+        return h('label', { key: attr, className: 'dam-team-filter-wrap' },
+          h('span', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, label),
+          h('select', o, opts.map(function (v) { return h('option', { key: v.v, value: v.v }, v.t) })))
+      }
+      return h('div', { 'data-dam-team-filterbar': 'ready', className: 'dam-team-filterbar' },
+        mk('data-dam-team-filter-author', zh ? '按作者' : 'By author', (props && props.authorOptions) || [], f.author, props && props.onAuthor),
+        mk('data-dam-team-filter-source', zh ? '按来源' : 'By source', [
+          { v: '', t: zh ? '全部来源' : 'All sources' }, { v: 'local', t: zh ? '本机' : 'Local' },
+          { v: 'team', t: zh ? '团队' : 'Team' }, { v: 'imported', t: zh ? '外部导入' : 'Imported' }], f.source, props && props.onSource),
+        mk('data-dam-team-filter-sync', zh ? '按同步状态' : 'By sync state', [
+          { v: '', t: zh ? '全部状态' : 'All states' }, { v: 'synced', t: zh ? '已同步' : 'Synced' },
+          { v: 'pending', t: zh ? '待同步' : 'Pending' }, { v: 'conflicted', t: zh ? '有冲突' : 'Conflicted' }], f.sync, props && props.onSync))
+    }
+    function TeamBadgeScoped(props) {
+      var scope = (props && props.scope) || 'local'
+      var nm = (props && props.name) || ''
+      return h('span', { 'data-dam-team-badge-scope': scope, 'data-dam-team-badge': String(nm), className: 'dam-team-badge-scope' },
+        h(TeamBadge, { name: nm }))
+    }
+
+    // —— 屏④ 冲突中心（契约 §5.1：conflicts / conflict / conflict-head / diff×4 / verdict×5）——
+    function TeamConflictScreen(props) {
+      var items = (props && props.items) || []
+      var zh = locale === 'zh'
+      var armPair = useState(null)
+      var armed = armPair[0]
+      var setArmed = armPair[1]
+      if (!items.length) {
+        return h('div', { 'data-dam-team-conflicts': 'empty', className: 'dam-team-conflicts' },
+          h('span', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, zh ? '暂无待裁决冲突' : 'No conflicts to resolve'))
+      }
+      var fire = function (id, choice) {
+        if (choice === 'local' || choice === 'remote') {
+          if (armed !== id + ':' + choice) { setArmed(id + ':' + choice); return }
+        }
+        if (props && props.onResolve) props.onResolve(id, choice)
+        setArmed(null)
+      };
+      return h('div', { 'data-dam-team-conflicts': 'ready', className: 'dam-team-conflicts' },
+        items.map(function (it) {
+          var lines = it.diff || []
+          return h('div', { key: it.id, 'data-dam-team-conflict': String(it.id), className: 'dam-team-conflict' },
+            h('div', { 'data-dam-team-conflict-head': String(it.kind || ''), className: 'dam-team-conflict-head' },
+              h('span', null, it.title || it.id)),
+            h('div', { 'data-dam-team-diff': 'x', className: 'dam-team-diff' },
+              h('pre', { 'data-dam-team-diff-local': 'x', className: 'dam-team-diff-local' }, it.local || ''),
+              h('pre', { 'data-dam-team-diff-remote': 'x', className: 'dam-team-diff-remote' }, it.remote || ''),
+              lines.length ? h('div', { className: 'dam-team-diff-lines' },
+                lines.map(function (ln, i2) { return h('div', { key: i2, 'data-dam-team-diff-line': String(ln.op || 'same') }, ln.text || '') })) : null),
+            h('div', { 'data-dam-team-verdict': 'x', className: 'dam-team-verdict' },
+              h('button', { 'data-dam-team-verdict-keep-local': armed === it.id + ':local' ? 'armed' : 'idle', 'data-dam-btn': '',
+                onClick: function () { fire(it.id, 'local') } }, zh ? '采用本机' : 'Keep local'),
+              h('button', { 'data-dam-team-verdict-keep-remote': armed === it.id + ':remote' ? 'armed' : 'idle', 'data-dam-btn': '',
+                onClick: function () { fire(it.id, 'remote') } }, zh ? '采用团队' : 'Keep team'),
+              h('button', { 'data-dam-team-verdict-merge': 'idle', 'data-dam-btn': '',
+                onClick: function () { fire(it.id, 'merge') } }, zh ? '手工合并' : 'Merge'),
+              h('button', { 'data-dam-team-verdict-ask': 'idle', 'data-dam-btn': '',
+                onClick: function () { fire(it.id, 'delegate') } }, zh ? '指派他人' : 'Delegate')))
+        }))
+    }
+
+    // —— R18 屏组装配（单一接线点：TeamTab 内只追加一次）——
+    function TeamScreensR18(props) {
+      var team = props && props.team
+      if (!team) return null
+      var flt = (props && props.filter) || {}
+      return h('div', { className: 'dam-team-screens', 'data-dam-team-screens': 'r18' },
+        h(TeamSyncStatusBar, { team: team, onPause: props && props.onPause }),
+        h(TeamMembersScreen, { team: team, filterActor: flt.actor, onFilter: props && props.onFilterActor }),
+        h(TeamFilterBar, { filter: flt, authorOptions: (props && props.authorOptions) || [],
+          onAuthor: props && props.onFilterAuthor, onSource: props && props.onFilterSource, onSync: props && props.onFilterSync }),
+        h(TeamConflictScreen, { items: (props && props.conflicts) || [], onResolve: props && props.onResolve }))
+    }

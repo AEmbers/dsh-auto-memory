@@ -1,0 +1,5 @@
+        try {
+          applyLayoutRegionsPre(state && state.layoutConfig)      // R7：order + 显隐
+          applyLayoutRegionSizesPre(state && state.layoutConfig)  // R8a：--dam-region-w/h/min
+          applyLayoutTokensPre(state && state.layoutConfig)       // R8b：--dam-* / --skin-* token
+        } catch (e) {}

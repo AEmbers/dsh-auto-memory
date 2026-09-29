@@ -1,0 +1,48 @@
+/**
+ * ★R15d（48 卷 L94–L97 日期分组行 · 49 卷 §四数据映射）：把卡片按**本地日期**分组。
+ *
+ * 48 卷 L95 逐字：「2026-09-27 · 星期日」15px semibold ⇒ 本函数只产出**结构化日期**
+ * （`day` 字符串 + `weekday` 0–6），中文/英文星期标签由前端映射（双语纪律）。
+ *
+ * ★守恒（套件判据）：`Σ groups[i].count === 有效卡数`，且 `groups[i].cards.length === groups[i].count`。
+ * ★确定性：组按 `day` **降序**（最近在前）；组内 **mtime 降序 → id 升序**破平（与 buildKanbanPre 同款）。
+ * ★纯函数：零 IO、零 DOM、不修改入参元素（只新建分组容器）。
+ */
+export function groupByDayPre(cards, opts = {}) {
+  const o = (opts && typeof opts === 'object') ? opts : {}
+  void o
+  const list = Array.isArray(cards) ? cards : []
+  const pad = (n) => (n < 10 ? '0' + n : String(n))
+  const map = new Map()
+  let total = 0
+  for (const c of list) {
+    if (!c || typeof c !== 'object') continue
+    const m = Number(c.mtime) || 0
+    const d = new Date(m)
+    const y = d.getFullYear()
+    const mo = d.getMonth()
+    const dd = d.getDate()
+    const key = y + '-' + pad(mo + 1) + '-' + pad(dd)
+    let g = map.get(key)
+    if (!g) {
+      g = { day: key, weekday: new Date(y, mo, dd).getDay(), count: 0, cards: [] }
+      map.set(key, g)
+    }
+    g.cards.push(c)
+    g.count += 1
+    total += 1
+  }
+  const groups = Array.from(map.values())
+  for (const g of groups) {
+    g.cards.sort((a, b) => {
+      const am = Number(a && a.mtime) || 0
+      const bm = Number(b && b.mtime) || 0
+      if (am !== bm) return bm - am
+      const aid = String((a && a.id) || '')
+      const bid = String((b && b.id) || '')
+      return aid < bid ? -1 : aid > bid ? 1 : 0
+    })
+  }
+  groups.sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
+  return { groups, total, days: groups.length }
+}

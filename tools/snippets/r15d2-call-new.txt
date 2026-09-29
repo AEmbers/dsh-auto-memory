@@ -1,0 +1,8 @@
+        h('div', null, [
+          h(DamRailToolbar, { zh: zh, view: tview, onView: setTview }),
+          h(DamStatBar, { stats: (props.data && props.data.stats) || {} }),
+          tview === 'timeline'
+            ? h(DamTimelineList, { data: props.data, zh: zh })
+            : h(KanbanBoard, { data: props.data }),
+          h(DamFoldBar, { zh: zh, fold: (props.data && props.data.stats && props.data.stats.fold) || null }),
+        ]))

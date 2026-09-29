@@ -1,0 +1,50 @@
+/**
+ * ★R12（48 卷 L78–L89 统计条）：卡片集合 → **四张统计卡**数值（纯函数，零 IO，可复算）。
+ *
+ * 口径（48 卷图上是「今日活动 12 条 / 本周交接 5 次 / 协作成员 4 人 / 历史归档 292 篇」）：
+ *   ① 今日活动：mtime 落在 opts.now 当天 [00:00, 24:00) 的**卡数**（单位「条」⇒ 数卡）
+ *   ② 本周交接：本周（**周一起**）有 mtime 的**不同 source 文档数**（单位「次」= 交了几篇账本）
+ *   ③ 协作成员：卡上 member/actor/author 去重数；**个人版无此字段 ⇒ 恒 0**（44 卷 §二：没有 teamwork 就不用写谁）
+ *   ④ 历史归档：archive/ 目录的 **.md 篇数**（由 opts.archiveCount 传入；宿主 readdir 计数，**不读内容**，守拍板 C）
+ *
+ * @param {Array} cards buildSectionCardsPre/dedupeCardsPre 的输出
+ * @param {{now?:string|number|Date, archiveCount?:number}} opts
+ * @returns {{cards:Array<{key,label,unit,value}>, values:Object}}
+ */
+export function buildStatCardsPre(cards, opts = {}) {
+  const o = (opts && typeof opts === 'object') ? opts : {}
+  const list = Array.isArray(cards) ? cards : []
+  const nowRaw = o.now === undefined || o.now === null ? Date.now() : o.now
+  const now = nowRaw instanceof Date ? nowRaw.getTime() : (typeof nowRaw === 'number' ? nowRaw : Date.parse(String(nowRaw)))
+  const t = Number.isFinite(now) ? now : 0
+  const d = new Date(t)
+  const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const dayEnd = dayStart + 86400000
+  // 本周起点 = 周一 00:00（getDay(): 0=周日 ⇒ 周一偏移 ((day+6)%7) 天）
+  const weekStart = dayStart - (((d.getDay() + 6) % 7) * 86400000)
+  let today = 0
+  const weekDocs = new Set()
+  const members = new Set()
+  for (const c of list) {
+    if (!c || typeof c !== 'object') continue
+    const m = Number(c.mtime) || 0
+    if (m >= dayStart && m < dayEnd) today += 1
+    if (m >= weekStart && m < dayEnd) {
+      const src = String(c.source || '').trim()
+      if (src) weekDocs.add(src)
+    }
+    for (const k of ['member', 'actor', 'author']) {
+      const v = String(c[k] || '').trim()
+      if (v) members.add(v)
+    }
+  }
+  const archCount = Number(o.archiveCount) > 0 ? Number(o.archiveCount) : 0
+  const values = { today, weekDocs: weekDocs.size, members: members.size, archived: archCount }
+  const cardsOut = [
+    { key: 'today', label: '今日活动', unit: '条', value: values.today },
+    { key: 'week', label: '本周交接', unit: '次', value: values.weekDocs },
+    { key: 'members', label: '协作成员', unit: '人', value: values.members },
+    { key: 'archived', label: '历史归档', unit: '篇', value: values.archived },
+  ]
+  return { cards: cardsOut, values }
+}

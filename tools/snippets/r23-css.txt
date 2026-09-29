@@ -1,0 +1,5 @@
+      // —— R23 皮肤中心（12 卷 §四令牌：全走 var(--dam-*)，零新增裸值）——
+      '.dam-skin-summary { display: flex; flex-wrap: wrap; gap: var(--dam-space-s3, 8px); font-size: calc(11.5px * var(--dam-scale)); opacity: .78; margin-bottom: var(--dam-space-s2, 6px); }',
+      '.dam-skin-layer, .dam-skin-row { display: flex; align-items: center; gap: var(--dam-space-s3, 8px); font-size: calc(11.5px * var(--dam-scale)); padding: 2px 0; }',
+      '.dam-skin-alert { display: flex; align-items: center; justify-content: space-between; gap: var(--dam-space-s3, 8px); border: 1px solid var(--dam-warn, #f59e0b); border-radius: var(--dam-radius-sm, 8px); padding: var(--dam-space-s2, 6px) var(--dam-space-s3, 8px); margin: var(--dam-space-s2, 6px) 0; font-size: calc(11.5px * var(--dam-scale)); }',
+      '.dam-skin-center [data-dam-skin-slot-status] { opacity: .7; }',

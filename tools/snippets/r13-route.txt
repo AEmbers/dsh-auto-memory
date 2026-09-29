@@ -1,0 +1,3 @@
+          const _fdRaw = url.searchParams.get('foldDays')
+          const _fd = (_fdRaw === null || _fdRaw === '') ? undefined : Number(_fdRaw)
+          return writeJson(res, 200, await engine.kanbanBoardData(url.searchParams.get('sessionId'), { includeArchive: url.searchParams.get('includeArchive') === '1', foldDays: Number.isFinite(_fd) ? _fd : undefined }))

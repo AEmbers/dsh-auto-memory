@@ -1,0 +1,10 @@
+      // —— fe02 屏⑤–⑧ 样式（R19）：全部 token 化、零字面色值 ——
+      '.dam-team-skills, .dam-team-ledger, .dam-team-debug { display: flex; flex-direction: column; gap: var(--dam-space-s2, 6px); padding: var(--dam-space-s2, 6px) 0; }',
+      '.dam-team-skill { display: flex; flex-direction: column; gap: var(--dam-space-s1, 4px); padding: var(--dam-space-s2, 6px); border: 1px solid var(--dam-border); border-radius: var(--dam-radius-sm, 8px); }',
+      '.dam-team-skill-head { display: flex; align-items: center; justify-content: space-between; }',
+      '.dam-team-skill-acts, .dam-team-chain-row { display: flex; align-items: center; gap: var(--dam-space-s2, 6px); }',
+      // ★按人分色（契约 §5.3）：色相来自行内 --dam-team-actor-hue，禁写死色值
+      '[data-dam-team-ledger-seg][data-actor] { border-left: 3px solid hsl(var(--dam-team-actor-hue, 0) 62% 52%); padding-left: var(--dam-space-s3, 8px); }',
+      '.dam-team-chain-link { opacity: .55; }',
+      '.dam-team-field { display: flex; align-items: center; gap: var(--dam-space-s3, 8px); padding: var(--dam-space-s1, 4px) 0; }',
+      '.dam-team-field-label { flex: 0 0 auto; min-width: 168px; font-size: var(--dam-fontsize-base, 12px); opacity: .86; }',

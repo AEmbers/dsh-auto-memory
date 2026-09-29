@@ -1,0 +1,5 @@
+      // ★R7 配置层消费 A：state 每次更新（首拉到 / 30s 轮询 / nonce 刷新）后重算并应用区域 order/显隐。
+      // 无 layoutConfig（老宿主）或未配置 ⇒ plan 为空 ⇒ 不动任何 DOM，天然向后兼容。
+      useEffect(function () {
+        try { applyLayoutRegionsPre(state && state.layoutConfig) } catch (e) {}
+      }, [state])

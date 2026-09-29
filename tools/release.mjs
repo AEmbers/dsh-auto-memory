@@ -117,6 +117,23 @@ for (const toolFile of 'run-smoke.mjs,release.mjs'.split(',')) {
 if (existsSync(path.join(DEV, 'tools', 'lib'))) {
   cpSync(path.join(DEV, 'tools', 'lib'), path.join(REL, 'tools', 'lib'), { recursive: true })
 }
+// ★2026-09-29（与上面 tools/lib 同一类漏网，发版前实测抓到）：`tools/build-iter5-skin.mjs` 是
+//   新款皮肤的**生成器**（把 skins/iter5/ 嵌入 lib/client.js 的受控区间），本仓另有**三处**在
+//   发布树里引用它，此前一处都不在拷贝清单 ⇒ 全部必然断：
+//   ① `tests/smoke/smoke-test-iter5-skin.mjs` 末段用它在临时目录里跑「LF/CRLF 幂等」自证
+//      ⇒ 发布树里必然 ENOENT（实测：staging 内直接跑该套件即报 open …\tools\build-iter5-skin.mjs）；
+//   ② `skins/iter5/README.md`（§源码与生成）把 `node tools/build-iter5-skin.mjs` 写成**再生成入口**，
+//      而 skins/ 随包发布 ⇒ 第三方照做即断；
+//   ③ `docs/SKIN-GUIDE.md` 的验收纪律同样要求跑它。
+//   即：皮肤源码进了包，**重新生成它的工具却没进** —— 与 appearance-scan 完全同型（发布物自相矛盾）。
+//   闸门安全性（已核对）：残留闸门 scanTargets 与凭据闸门 walk 面都不含 tools/，且 tools/ 不在
+//   transformFiles 里 ⇒ 本文件以原样入包；其内不写字面 `-pre.js` 引用，不会触发残留判断。
+for (const toolFile of 'build-iter5-skin.mjs'.split(',')) {
+  const src = path.join(DEV, 'tools', toolFile)
+  if (!existsSync(src)) { console.error('[release] ❌ tools/' + toolFile + ' 缺失 — 发布树将无法重新生成皮肤'); process.exit(1) }
+  mkdirSync(path.join(REL, 'tools'), { recursive: true })
+  cpSync(src, path.join(REL, 'tools', toolFile))
+}
 
 // ---------- 3. pre → 正式 反转(精确替换;转换输入一律 _pre,禁止 _dev) ----------
 // lib 内部模块文件名重命名(xxx-pre.js → xxx.js;先文件后导入,m4-/m7- 前缀模块同步去前缀段内 -pre)
@@ -279,41 +296,33 @@ for (const [from, to] of libRenameMap) {
     process.exit(1)
   }
 }
-// python 文件名重命名(worker_pre_v1.py → worker_v1.py 等) + 相互 import 改写
-const pyRenameMap = [
-  ['worker_semantic_pre_v1.py', 'worker_semantic_v1.py'],
-  ['worker_pre_v1.py', 'worker_v1.py'],
-  ['m7_embedding_pre_v1.py', 'm7_embedding_v1.py'],
-  ['m7_activation_features_pre_v2.py', 'm7_activation_features_v2.py'],
-]
+// ★2026-09-28 去 pre 收官：**源码名即发布名，发布退化为纯拷贝**。
+//   本段原做两件事：①python 四个文件 `*_pre_vN.py` → `*_vN.py` 并改写相互 import；
+//   ②策略工件 `*_pre_vN.json` → `*_vN.json`。留着它是**有害**的：
+//     · 改名那半仍会跑，改写那半（下方 textReplace 替换表）已空 ⇒ **文件改名了、代码引用没改**
+//       —— 发布包里 20 处引用指向不存在的 `*_pre_*` 文件（实证：已发布 3.2.1 的
+//       `lib/python-sidecar-client.js` 默认路径 `worker_pre_v1.py` 不存在 ⇒ sidecar spawn ENOENT
+//       → 静默降级 unavailable；`lib/index.js` 策略两处候选路径全落空 → JS 语义臂静默拿不到策略）。
+//     · 现在源码树里已无任何 pre 文件（文件与引用一并清除，configHash 已按 Python 同款算法重算），
+//       改名逻辑失去对象，只剩「把别人改坏」的风险。
+//   保留一行**哨兵**：若将来 pre 文件意外回流，此处立即报错而不是悄悄改名。
+const preLeftovers = []
 if (existsSync(path.join(REL, 'python'))) {
   for (const f of readdirSync(path.join(REL, 'python'))) {
-    if (!f.endsWith('.py')) continue
-    const p2 = path.join(REL, 'python', f)
-    let t = readFileSync(p2, 'utf8')
-    let changed = false
-    for (const [from, to] of pyRenameMap) {
-      const stemFrom = from.replace(/\.py$/, '')
-      const stemTo = to.replace(/\.py$/, '')
-      if (t.includes(stemFrom)) { t = t.split(stemFrom).join(stemTo); changed = true }
-    }
-    if (changed) writeFileSync(p2, t)
+    if (/_pre_v\d/.test(f)) preLeftovers.push('python/' + f)
   }
-  for (const [from, to] of pyRenameMap) {
-    const fp = path.join(REL, 'python', from)
-    if (existsSync(fp)) { cpSync(fp, path.join(REL, 'python', to)); rmSync(fp) }
-  }
-  // 策略工件文件名(recall_intent_lr_pre_v1.json / activation_policy_pre_v2.json)
-  // 同时覆盖 lib/policies/ 与 python/policies/ 两处副本
   for (const polDir of [path.join(REL, 'lib', 'policies'), path.join(REL, 'python', 'policies')]) {
     if (!existsSync(polDir)) continue
     for (const f of readdirSync(polDir)) {
-      if (f.includes('_pre_')) {
-        cpSync(path.join(polDir, f), path.join(polDir, f.replace(/_pre_v(\d)/g, '_v$1')))
-        rmSync(path.join(polDir, f))
-      }
+      if (f.includes('_pre_')) preLeftovers.push(path.relative(REL, path.join(polDir, f)))
     }
   }
+}
+if (preLeftovers.length) {
+  console.error('[release] ❌ 源码树出现 pre 残留(发布线已不再改名，这些文件不会被自动转换):')
+  for (const f of preLeftovers) console.error('   ' + f)
+  console.error('   处置:按「源码名即发布名」直接改名为裸名,并同步所有引用与策略 configHash。')
+  process.exit(1)
 }
 let totalReplaced = 0
 // 转换面 = 两个主文件 + 4 个根 smoke + 全部 lib 模块 + 策略工件 + 全部 python 文件
@@ -382,7 +391,12 @@ const relPkg = {
   //   ② 原 `!docs/**/*.bak` 与 `!docs/**/*.bak-*` 两条**依赖 npm 的 glob 语义**，而 `docs/**`
   //      中途另起一段的写法在部分 npm 版本上不生效 ⇒ 统一用 `!**/*.bak*` 一条兜住所有层级
   //      （`.bak` 与 `.bak-*` 都被覆盖），再补一条 `!lib/*.m8b*bak` 覆盖上述无点形态。
-  files: ['lib', 'python', 'docs', 'skins', 'cordis.patch.yml', '!python/bench', '!python/__pycache__', '!docs/internal', '!**/*.bak*', '!lib/*.m8b*bak*'],
+  files: ['lib', 'python', 'docs', 'skins', 'cordis.patch.yml', '!python/bench', '!python/__pycache__', '!docs/internal',
+    // ★2026-09-28 跟进社区作者 PR #146：补七条**设计稿/演示稿**排除（防止本地未跟踪材料随包发布）。
+    //   与 package.json 的 files 同源，两处必须一致 —— 发布包由本文件的 files 决定，package.json 是给 npm 的声明。
+    '!docs/ui-demo-*', '!docs/ui-demo', '!docs/ui-redesign-*', '!docs/ui-rebuild-handoff-*',
+    '!docs/teamwork-impl/concept', '!docs/teamwork-impl/_shots', '!**/node_modules',
+    '!**/*.bak*', '!lib/*.m8b*bak*'],
   dsh: {
     bundle: { patch: './cordis.patch.yml' },
     client: {

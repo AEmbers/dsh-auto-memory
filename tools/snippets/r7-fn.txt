@@ -1,0 +1,56 @@
+    // ───────────────── R7:配置层对外消费 A（region order + hidden）─────────────────
+    // 依据 56 卷 §二（客户能做的第 1 件事「改区域排版顺序」、第 3 件事「隐藏/显示区域」）
+    //  与 68 卷 §八（前端把 normalize 结果消费成 CSS 变量 / order / display:none）、70 卷 R7。
+    // ★零视觉变化纪律（62 卷 §二 纪律 1）：只在**客户显式配置**时写 inline style；
+    //  默认配置（regions 全为 {}）⇒ plan 为空 ⇒ 一个属性都不写 ⇒ 视觉逐字节不变。
+    var LAYOUT_REGION_SEL = '[data-dam-region]'
+    /** 纯函数：把 normalize 结果映射成区域执行计划（无 DOM 依赖，可直接单测）。
+     *  负路径：入参非对象 / ok!==true / 结构异常 ⇒ 返回空数组，绝不抛（56 卷 §三「客户改错了不能崩」）。 */
+    function layoutRegionPlanPre(cfg) {
+      var out = []
+      try {
+        if (!cfg || cfg.ok !== true) return out
+        var c = cfg.config
+        if (!c || !c.regions || typeof c.regions !== 'object') return out
+        var names = Object.keys(c.regions)
+        for (var i = 0; i < names.length; i++) {
+          var name = names[i]
+          if (typeof name !== 'string' || !name) continue
+          var spec = c.regions[name]
+          if (!spec || typeof spec !== 'object') continue
+          var item = { name: name, order: null, hidden: false }
+          if (typeof spec.order === 'number' && isFinite(spec.order)) item.order = spec.order
+          if (spec.hidden === true) item.hidden = true
+          // ★只有显式配置过的项才进 plan（normalize 只对显式键写值，未配置的 region 恒为 {}）
+          if (item.order === null && item.hidden !== true) continue
+          out.push(item)
+        }
+      } catch (e) { return [] }
+      // 固定顺序，保证同输入同输出（可复算）
+      out.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0) })
+      return out
+    }
+    /** 把 plan 应用到 DOM：按 data-dam-region 批量写 inline order / display:none。
+     *  幂等（每次整批重算，重复调用结果一致）；任何异常静默返回，绝不让面板崩。 */
+    function applyLayoutRegionsPre(cfg) {
+      var plan = layoutRegionPlanPre(cfg)
+      var nodes
+      try { nodes = document.querySelectorAll(LAYOUT_REGION_SEL) } catch (e) { return 0 }
+      if (!nodes || !nodes.length) return 0
+      var want = {}
+      for (var i = 0; i < plan.length; i++) want[plan[i].name] = plan[i]
+      var applied = 0
+      for (var j = 0; j < nodes.length; j++) {
+        var el = nodes[j]
+        if (!el || !el.style) continue
+        var nm = null
+        try { nm = el.getAttribute('data-dam-region') } catch (e) { nm = null }
+        var it = nm ? want[nm] : null
+        if (it && it.order !== null) { el.style.order = String(it.order); applied++ }
+        else { el.style.order = '' }
+        if (it && it.hidden === true) el.style.display = 'none'
+        else { el.style.display = '' }
+      }
+      return applied
+    }
+

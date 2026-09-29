@@ -66,7 +66,7 @@
         // Move a stable portal container, not the React form. Drafts and focus survive.
         ;(expanded[0] ? document.body : slot.current).appendChild(target)
         var el = root.current
-        if (expanded[0] && el) {
+        if (expanded[0] && el && !dialogState && !document.querySelector('.i5-overlay-root')) {
           var previous = document.activeElement
           var close = el.querySelector('[data-i5-settings-return]')
           if (close) close.focus()
@@ -75,6 +75,8 @@
       }, [expanded[0]])
       useEffect(function () {
         function guard(e) {
+          // A sibling portal dialog owns focus and Escape until it closes.
+          if (document.querySelector('.i5-overlay-root')) return
           var el = root.current, dialog = slot.current && slot.current.closest('[role=dialog]')
           if (e.type === 'keydown' && e.key === 'Escape' && expanded[0] && !dialogState) {
             e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); expanded[1](false); return

@@ -385,9 +385,10 @@
     "reference": "C39-continue-confirm.png",
     "group": "编辑与弹窗",
     "source": "handoff",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "AutoContinueHost"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "messages-check.json",
+    "component": "AutoContinueHost",
+    "evidenceKind": "real-host-rendering-with-explicit-API-fixture"
   },
   {
     "id": "C40",
@@ -395,9 +396,10 @@
     "reference": "C40-continue-progress.png",
     "group": "编辑与弹窗",
     "source": "handoff",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "AutoContinueHost"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "messages-check.json",
+    "component": "AutoContinueHost",
+    "evidenceKind": "real-host-rendering-with-explicit-API-fixture"
   },
   {
     "id": "C41",
@@ -405,9 +407,10 @@
     "reference": "C41-workbench-init.png",
     "group": "编辑与弹窗",
     "source": "handoff",
-    "implementation": "implemented-awaiting-host-review",
-    "hostEvidence": null,
-    "component": "DialogHost / workbench"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "messages-check.json",
+    "component": "DialogHost / workbench",
+    "evidenceKind": "live-host-existing-state"
   },
   {
     "id": "C42",
@@ -435,9 +438,10 @@
     "reference": "C44-update.png",
     "group": "编辑与弹窗",
     "source": "settings",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "DialogHost / update"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "messages-check.json",
+    "component": "DialogHost / update",
+    "evidenceKind": "live-host-existing-state"
   },
   {
     "id": "C45",
@@ -515,9 +519,10 @@
     "reference": "C52-greeting.png",
     "group": "兼容与通知",
     "source": "panel",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "Greeting drawer / DialogHost"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "messages-check.json",
+    "component": "Greeting drawer / DialogHost",
+    "evidenceKind": "real-host-rendering-with-explicit-API-fixture"
   },
   {
     "id": "C53",
@@ -525,9 +530,10 @@
     "reference": "C53-summary.png",
     "group": "兼容与通知",
     "source": "panel",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "DialogHost / summary"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "messages-check.json",
+    "component": "DialogHost / summary",
+    "evidenceKind": "real-host-rendering-with-explicit-API-fixture"
   },
   {
     "id": "C54",
@@ -535,9 +541,10 @@
     "reference": "C54-notice.png",
     "group": "兼容与通知",
     "source": "panel",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
-    "component": "DialogHost / notice"
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "messages-check.json",
+    "component": "DialogHost / notice",
+    "evidenceKind": "real-host-rendering-with-explicit-API-fixture"
   },
   {
     "id": "C55",
@@ -545,7 +552,7 @@
     "reference": "C55-empty.png",
     "group": "通用状态",
     "source": "library",
-    "implementation": "pending-page-comparison",
+    "implementation": "asset-integrated-state-layout-pending",
     "hostEvidence": null,
     "component": "Iter5Empty"
   },

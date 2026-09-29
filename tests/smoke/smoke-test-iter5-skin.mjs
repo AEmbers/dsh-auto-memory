@@ -14,7 +14,7 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
   .replace("try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch')
   .replace('function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()', 'function DialogHost() {\n      var tickPair = useTick()')
   .replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })")
-assert.equal(createHash('sha256').update(classic).digest('hex'), '3668e9e63af4e42698c1905335ec27192094cb94b145077af5af54e1ca3e135b', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), '0bcd2df272813df1539d1bc7e5a98fc54b82cd3e4e6aee3167d4ce4a4ac99b40', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
@@ -46,7 +46,7 @@ const localStorage = { getItem: () => null, setItem() {}, removeItem() {}, lengt
 const document = { documentElement: { getAttribute: () => '', style: { setProperty() {} }, classList: { contains: () => false } }, querySelector: () => null, getElementById: () => null }
 const window = { localStorage, addEventListener() {}, removeEventListener() {}, confirm() { confirmCount++; return accept }, __ModuleLoader__: { load(def) { exposed = def.factory(name => { if (name === 'react') return React; throw Error('Test module unavailable: ' + name) }) } } }
 const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, requestAnimationFrame: fn=>fn(), setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
-vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { Iter5Storage: Iter5Storage, Iter5Migration: Iter5Migration, Iter5DeleteConfirmation: Iter5DeleteConfirmation, iter5WorkspaceLayout: iter5WorkspaceLayout, iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
+vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { Iter5Notice: Iter5Notice, Iter5Summary: Iter5Summary, Iter5AutoContinue: Iter5AutoContinue, Iter5Storage: Iter5Storage, Iter5Migration: Iter5Migration, Iter5DeleteConfirmation: Iter5DeleteConfirmation, iter5WorkspaceLayout: iter5WorkspaceLayout, iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
       transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
@@ -306,10 +306,18 @@ assert.equal(storageCalls[0].memoryId,'memory-fixture')
 console.log('PASS migration policy replans, pack changes invalidate preview, and deletion requires explicit confirmation')
 
 resetNative();test.setDialog({kind:'notice',notice:{title:'Host notice',message:'Actual message'}})
-const notice=renderNative(test.DialogHost,{})
-assert.equal(notice.props['data-native-dialog-overlay'],'notice')
+const noticeElement=renderNative(test.DialogHost,{})
+const notice=test.Iter5Notice(noticeElement.props)
+assert.equal(notice.props['data-native-dialog'],'notice')
 assert.equal(nodes(notice,n=>n.props?.['data-native-dialog']==='notice').length,1,'Sibling notices have an independently styleable native surface')
 test.setDialog(null)
+
+const summary=test.Iter5Summary({summary:{summary:'Actual host summary',works:Array.from({length:8},(_,i)=>({title:'Work '+i,points:['Point '+i]}))},onClose(){}})
+assert.equal(nodes(summary,n=>n.type==='li').length,8,'Summary retains every actual work item and its points')
+const progress=test.Iter5AutoContinue({executing:true,status:'Host is continuing',onDismiss(){}})
+assert.equal(nodes(progress,n=>n.props?.role==='progressbar').length,1)
+assert.equal(nodes(progress,n=>n.props?.['aria-valuenow']!==undefined).length,0,'No fake percentage when host does not report step progress')
+console.log('PASS summary retains all host work details and continuation uses indeterminate progress')
 
 // Git may check out skin sources as CRLF on Windows and LF on Linux.
 // Both must produce the same normalized bundle without doubled CR bytes.
@@ -318,7 +326,7 @@ try {
   for(const dir of ['lib','tools','skins/iter5'])mkdirSync(path.join(fixture,dir),{recursive:true})
   writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
   for(const newline of ['\n','\r\n']) {
-    for(const name of ['ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js','native-operations.css','native-skills.js','native-storage.js','native-team.js','native-map.js','native-secondary.css']) {
+    for(const name of ['ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js','native-operations.css','native-skills.js','native-storage.js','native-team.js','native-map.js','native-messages.js','native-secondary.css']) {
       const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
       writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
     }

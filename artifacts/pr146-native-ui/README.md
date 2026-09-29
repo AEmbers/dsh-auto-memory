@@ -89,3 +89,19 @@ editors-check.json 本轮 28 项通过：桌面/390笔记、日程、模型、�
 截图名 editor-note-*, editor-calendar-*, migration-export, migration-preview-*, delete-confirm, model-picker-*, path-browser-fallback-*, engine-install-ready, python-install-*。设置中长向导/预览需要真实滚动，单张截图可能只显示可见部分，不当作全长验收。最后模型辅助文字对比和选中样式已重截图。共享手写入口仅新增Python样式标记，冻结SHA更新为3668e9e63af4e42698c1905335ec27192094cb94b145077af5af54e1ca3e135b。
 
 组件smoke包含迁移换策略重算/换包清预览/删除确认行为并通过；migrate-pack 52/52、safe-import25/25、migrate-host-wiring24/24、ui-host-limits通过，生成器check、两个入口语法和diffcheck通过。仍未跑全量smoke。待继续C16/C17精细对照，C39/C40自动接续、C41触发、C44更新、C51经典、C52–C58通知/状态、C62–C64实际深色，以及最后全矩阵与finish流程。未推送PR。
+
+## 后续进展：接续与消息浮层
+
+native-messages.js 实现接续确认/不定进度、更新说明、阶段总结、通知和暂离返回；DialogHost/AutoContinueHost 继续驱动真实状态与动作，未修改触发/超时/执行算法。摘要完整展示所有works/points，不再硬截前6项。更新按实际版本内容分组折叠，关闭仍写当前版本已读。没有参考图中伪造的模型百分比、任务完成数或通知列表。欢迎返回的“打开记忆”连接原controller.open。
+
+messages-check.json：17项通过。真实宿主内容：手动更新日志、重看欢迎后的已存在记忆中枢状态（确认不会重复创建）。动态通知、阶段总结、暂离回归、接续确认/进度均使用明确标注的浏览器API状态夹具，真实DSH加载实际bundle、实际轮询/挂载/关闭；只能证明UI状态渲染，不能称为真实模型调用或端到端自动接续。截图均以fixture-*命名，与update-live-*、workbench-init-live区分。
+
+真实测试发现并修复：窄屏宿主设置自动展开抢走上层弹窗焦点，以及展开设置z-index高于新弹窗导致“DOM可见但屏幕被遮挡”。Iter5HostSettings在兄弟portal存在时不抢焦点/不截获Esc；Iter5Dialog与消息浮层统一置于展开设置上方。验收加入elementFromPoint遮挡检查，最新桌面与窄屏截图已逐张查看，更新日志窄屏旧的错误截图已覆盖。某些长弹窗需要滚动，截图仅覆盖可见区域。
+
+组件smoke通过并新增摘要不截断、进度不编造百分比检查；smoke-test-autocont-host.mjs 95/95通过。冻结SHA因共享消息入口改接新组件更新为0bcd2df272813df1539d1bc7e5a98fc54b82cd3e4e6aee3167d4ce4a4ac99b40。生成器仍CRLF/LF幂等。全量smoke、深色与缩放矩阵仍未完成。
+
+C55参考已查看。旧empty.library是树桩，当前手写SVG也不符合C55；已生成透明蓝白折页asset并替换empty.library，Iter5Empty使用真实素材。来源/prompt见empty-asset-manifest.json。1448×1086 RGBA，未覆盖生成原件。素材组件通过构建/语法，但**尚未重启宿主拍空态**；C55/C56/C57/C58布局/故障状态仍需继续。
+
+C16/C17已对照参考与前轮截图：白板仍是旧PlanTab长卡片，需要将PLAN/相关材料提为主布局、旧控制保留折叠；外部来源仍是卡片墙，需改列表与详情。**operations-外部来源.png显示自动扫描的其他工具个人记忆，虽为只读但不应提交/上传此截图。** 隔离DSH_HOME并未隔离externalScan中os.homedir()的其他工具目录（lib/index.js约11205）；下轮应使用额外隔离进程home与受控外部样本，或明确标注API夹具，替换该证据。不要将原截图加入PR。
+
+剩余优先：C16/C17实现；C51经典；C55–C58状态；C62–C64真实深色及最终比例/多实例矩阵；全量smoke对基线、finish reviewer/documenter、detector、asset prompt嵌入与包检查；再推送当前PR分支。当前QA宿主以host.pid/listener核实，新empty素材引用是最后修改，尚未重启载入。

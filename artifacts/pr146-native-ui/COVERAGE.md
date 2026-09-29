@@ -1,6 +1,6 @@
 # C 原生桌面 UI 逐页实施表
 
-基线 b5d5914。此表只记录本轮状态，旧 PR 验收不代表新布局已通过。
+基线 b5d5914。此表只记录本轮状态，旧 PR 验收不代表新布局已通过。夹具状态详见 coverage.json 与各检查报告。
 
 | 参考 | 页面 | 组件/入口 | 本轮状态 |
 |---|---|---|---|
@@ -42,12 +42,12 @@
 | C36 | 轻面板·展开分区 | MemoryPanel / MemoryTabBody | implemented-awaiting-final-host-review |
 | C37 | 追加笔记编辑区 | Iter5Note | implemented-awaiting-full-matrix |
 | C38 | 日程新增与编辑 | Iter5Calendar / Iter5Dialog | implemented-awaiting-full-matrix |
-| C39 | 自动接续确认 | AutoContinueHost | pending-page-comparison |
-| C40 | 接续执行进度 | AutoContinueHost | pending-page-comparison |
-| C41 | 记忆中枢初始化 | DialogHost / workbench | implemented-awaiting-host-review |
+| C39 | 自动接续确认 | AutoContinueHost | implemented-awaiting-full-matrix |
+| C40 | 接续执行进度 | AutoContinueHost | implemented-awaiting-full-matrix |
+| C41 | 记忆中枢初始化 | DialogHost / workbench | implemented-awaiting-full-matrix |
 | C42 | 内置模型安装与下载 | DialogHost / semantic install | implemented-awaiting-full-matrix |
 | C43 | 高级Python环境配置 | SettingsPage / Python setup | implemented-awaiting-full-matrix |
-| C44 | 版本与更新说明 | DialogHost / update | pending-page-comparison |
+| C44 | 版本与更新说明 | DialogHost / update | implemented-awaiting-full-matrix |
 | C45 | 诊断与调试中心 | DebugCenter | implemented-awaiting-full-matrix |
 | C46 | 记忆导出 | Iter5Migration | implemented-awaiting-full-matrix |
 | C47 | 记忆导入预览 | Iter5Migration | implemented-awaiting-full-matrix |
@@ -55,10 +55,10 @@
 | C49 | 模型与思考强度选择 | Iter5Settings / Iter5Dialog model picker | implemented-awaiting-full-matrix |
 | C50 | 目录选择 | Iter5Settings / Iter5Dialog directory fallback | implemented-awaiting-full-matrix |
 | C51 | 经典模式与回退 | MemoryPageView / MemoryTabBody | pending-page-comparison |
-| C52 | 暂离返回提示 | Greeting drawer / DialogHost | pending-page-comparison |
-| C53 | 阶段总结 | DialogHost / summary | pending-page-comparison |
-| C54 | 插件通知 | DialogHost / notice | pending-page-comparison |
-| C55 | 空数据状态 | Iter5Empty | pending-page-comparison |
+| C52 | 暂离返回提示 | Greeting drawer / DialogHost | implemented-awaiting-full-matrix |
+| C53 | 阶段总结 | DialogHost / summary | implemented-awaiting-full-matrix |
+| C54 | 插件通知 | DialogHost / notice | implemented-awaiting-full-matrix |
+| C55 | 空数据状态 | Iter5Empty | asset-integrated-state-layout-pending |
 | C56 | 加载状态 | Loading | pending-page-comparison |
 | C57 | 读取失败与重试 | Iter5Error | pending-page-comparison |
 | C58 | 权限不足状态 | existing permission/unavailable feedback | pending-page-comparison |

@@ -8,11 +8,7 @@
     }
     function Iter5Empty(props) {
       return h('div', { className: 'i5-empty-state' },
-        h('svg', { viewBox:'0 0 240 140',className:'i5-empty-art','aria-hidden':true },
-          h('ellipse',{cx:120,cy:122,rx:79,ry:9,fill:'var(--i5-soft)'}),h('circle',{cx:120,cy:67,r:55,fill:'var(--i5-bg)'}),
-          h('g',{transform:'rotate(-13 98 72)'},h('rect',{x:63,y:25,width:73,height:88,rx:12,fill:'var(--i5-soft)',stroke:'var(--i5-line)'})),
-          h('g',{transform:'rotate(9 134 74)'},h('rect',{x:92,y:23,width:76,height:96,rx:12,fill:'var(--i5-surface)',stroke:'var(--i5-line)'}),h('rect',{x:108,y:40,width:26,height:24,rx:6,fill:'var(--i5-soft)'}),h('path',{d:'M109 80h40M109 91h30M109 102h36',stroke:'var(--i5-fill)',strokeWidth:3,strokeLinecap:'round',opacity:.35})),
-          h('path',{d:'m181 27 3 9 9 3-9 3-3 9-3-9-9-3 9-3z',fill:'var(--i5-fill)',opacity:.6}),h('circle',{cx:48,cy:74,r:4,fill:'var(--i5-fill)',opacity:.3}),h('circle',{cx:190,cy:91,r:3,fill:'var(--i5-purple)',opacity:.2})),
+        h(Iter5Art, { slot: 'empty.library', className: 'i5-empty-art' }),
         h('h3', null, props.title || L('还没有记录', 'No records yet')), h('p', null, props.text || L('有了新的记录，它们会出现在这里。', 'New records will appear here.')), props.children)
     }
     function Iter5Document(props) {
@@ -42,7 +38,7 @@
         if (node) node.focus()
         return function () { if (before && before.isConnected && before.focus) before.focus() }
       }, [])
-      return kxPortal(h('div', { 'data-iter5': '', 'data-deep': deep ? 'true' : 'false', className: 'i5-overlay-root', style: { position: 'fixed', inset: 0, zIndex: 11000, height: 'auto', background: 'transparent', display: 'block' } }, h('div', { className: 'i5-dialog-backdrop', onMouseDown: function (e) { if (e.target === e.currentTarget) props.onClose() } },
+      return kxPortal(h('div', { 'data-iter5': '', 'data-deep': deep ? 'true' : 'false', className: 'i5-overlay-root', style: { position: 'fixed', inset: 0, zIndex: 2147483200, height: 'auto', background: 'transparent', display: 'block' } }, h('div', { className: 'i5-dialog-backdrop', onMouseDown: function (e) { if (e.target === e.currentTarget) props.onClose() } },
         h('section', { ref: ref, className: 'i5-dialog', role: 'dialog', 'aria-modal': true, 'aria-label': props.title, onKeyDown: function (e) {
           if (e.key === 'Escape') { e.stopPropagation(); props.onClose() }
           if (e.key !== 'Tab') return

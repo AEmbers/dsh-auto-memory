@@ -233,7 +233,7 @@
         if (!menu[0] || !root.current) return
         var close = root.current.querySelector('[data-i5-close-nav]'); if (close) close.focus()
       }, [menu[0]])
-      return h('div', { ref: root, 'data-iter5': '', 'data-deep': deep ? 'true' : 'false', 'data-focus': String(focus[0]), role: focus[0] ? 'dialog' : undefined, 'aria-modal': focus[0] ? true : undefined, 'aria-label': focus[0] ? L('记忆工作台', 'Memory workbench') : undefined, onKeyDown: function (e) {
+      return h('div', { ref: root, 'data-iter5': '', 'data-native-workbench': '', 'data-deep': deep ? 'true' : 'false', 'data-focus': String(focus[0]), role: focus[0] ? 'dialog' : undefined, 'aria-modal': focus[0] ? true : undefined, 'aria-label': focus[0] ? L('记忆工作台', 'Memory workbench') : undefined, onKeyDown: function (e) {
         if (!focus[0]) return
         if (e.key === 'Escape' && !menu[0] && !root.current.querySelector('.i5-dialog')) { e.stopPropagation(); focus[1](false) }
         if (e.key === 'Tab') {
@@ -243,6 +243,7 @@
           else if (!e.shiftKey && document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus() }
         }
       }, style: { '--dam-user-scale': FONT_SCALE_VALUES[fontScale] || '1', '--i5-blue': accentTheme !== 'deepseek' && ACCENT_VALUES[accentTheme] ? 'color-mix(in srgb, ' + ACCENT_VALUES[accentTheme] + ' 70%, var(--i5-text))' : undefined, '--i5-fill': accentTheme !== 'deepseek' ? ACCENT_VALUES[accentTheme] : undefined } },
+        h('header', { className: 'i5-window-bar' }, h(Iter5Icon, { name: 'library' }), h('strong', null, 'dsh-auto-memory')),
         h('button', { className: 'i5-mobile-menu', ref: menuButton, 'aria-expanded': menu[0], 'aria-label': L('打开导航', 'Open navigation'), onClick: function () { menu[1](!menu[0]) } }, '☰ ', L('记忆中枢', 'Memory')),
         menu[0] ? h('div', { className: 'i5-nav-backdrop', onClick: closeMenu }) : null,
         h('aside', { className: 'i5-sidebar', 'data-open': menu[0] ? 'true' : 'false', onKeyDown: function (e) {
@@ -255,10 +256,9 @@
           }
         } },
           h('button', { className: 'i5-close-nav', 'data-i5-close-nav': '', onClick: closeMenu }, L('关闭导航', 'Close navigation')),
-          h('div', { className: 'i5-brand' }, h('span', { className: 'i5-brand-mark', 'aria-hidden': true }, h(Iter5Icon, { name: 'spark' })), h('div', null, h('strong', null, 'dsh-auto-memory'), h('small', null, L('让重要的事持久被记住', 'Keep what matters')))),
-          h('nav', { 'aria-label': L('记忆导航', 'Memory navigation') }, ITER5_PAGES.map(function (p, i) { return h(React.Fragment, { key: p[0] }, i === 0 || i === 4 ? h('small', { className: 'i5-nav-label' }, i === 0 ? L('工作', 'Work') : L('扩展', 'More')) : null,
+          h('nav', { 'aria-label': L('记忆导航', 'Memory navigation') }, ITER5_PAGES.map(function (p, i) { return h(React.Fragment, { key: p[0] }, i === 4 ? h('small', { className: 'i5-nav-label' }, i === 0 ? L('工作', 'Work') : L('扩展', 'More')) : null,
             h('button', { 'data-i5-nav': p[0], 'aria-current': page[0] === p[0] ? 'page' : undefined, onClick: function () { nav(p[0]) } }, h('span', { className: 'i5-badge', 'data-hue': p[3] }, h(Iter5Icon, { name: p[0] })), L(p[1], p[2]))) })),
-          h('div', { className: 'i5-sidebar-foot' }, h('div', { className: 'i5-sidebar-art' }, h(Iter5Art, {})), h('div', { className: 'i5-side-caption' }, h('strong', null, L('记忆，在这里延续', 'Memory carries forward')), h('small', null, L('积累 · 回顾 · 接续', 'Keep · recall · continue'))), h('div', { className: 'i5-side-tools' }, h('button', { onClick: function () { nav('team') }, 'aria-current': page[0] === 'team' ? 'page' : undefined }, L('团队', 'Team')), h('button', { onClick: function () { nav('stats') }, 'aria-current': page[0] === 'stats' ? 'page' : undefined }, L('统计', 'Stats'))),
+          h('div', { className: 'i5-sidebar-foot' }, h('div', { className: 'i5-side-tools' }, h('button', { onClick: function () { nav('team') }, 'aria-current': page[0] === 'team' ? 'page' : undefined }, h(Iter5Icon, { name: 'mindmap' }), L('团队', 'Team')), h('button', { onClick: function () { nav('stats') }, 'aria-current': page[0] === 'stats' ? 'page' : undefined }, h(Iter5Icon, { name: 'pulse' }), L('统计', 'Stats'))),
             h('button', { 'data-dam-skin-v4-exit': '', onClick: function () {
               if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定切回经典？', 'Discard unsaved changes and return to classic?'))) return
               if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']
@@ -268,5 +268,6 @@
           h('header', { className: 'i5-page-head' }, h('div', null, h('h1', null, title), h('p', null, locale === 'zh' ? ({ home: '查看最近记录、今日日程与当前会话，继续手头的工作。', library: '集中查看用户偏好、项目笔记、每日日志与反思记录。', handoff: '让当前的目标、进度与经验，在下一段会话中继续。', calendar: '把待办与重要时刻放在一起，让每一天更从容。', recall: '回顾每一次记忆唤起，查看判定依据并留下反馈。', skills: '让反复验证的经验，沉淀为可复用的工作方法。', mindmap: '从工作区与记忆之间，发现持续连接的脉络。', storage: '查看记忆语料、维护索引，以及迁移你的积累。', settings: '决定记忆如何记录、唤回与接续，让它更适合你。' }[page[0]] || '记忆与任务，按当前工作区呈现') : 'Memory and tasks for the current workspace')),
             h('div', { className: 'i5-page-actions' }, h('button', { 'aria-label': focus[0] ? L('退出专注查看', 'Exit focused view') : L('专注查看', 'Focused view'), 'aria-pressed': focus[0], onClick: function () { focus[1](!focus[0]) } }, focus[0] ? L('返回会话', 'Back to conversation') : L('专注查看', 'Focused view')), h('button', { 'aria-label': L('刷新当前页', 'Refresh current page'), onClick: function () { if (root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('刷新会放弃未保存修改，继续？', 'Discard changes and refresh?'))) return; if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']; refresh[1](refresh[0] + 1) } }, L('刷新', 'Refresh')))),
           h('div', { className: ['team', 'stats'].indexOf(page[0]) >= 0 ? 'i5-card i5-hosted' : '' }, h(Component, { key: page[0] + ':' + nonce + ':' + JSON.stringify(intent[0]), nonce: nonce, onNav: nav, intent: intent[0] })),
-          page[0] === 'storage' ? h('details', { className: 'i5-card' }, h('summary', null, L('调试中心', 'Diagnostics')), h(DebugCenter), h('button', { onClick: function () { nav('settings', { group: 'behavior' }) } }, L('检查更新与高级设置', 'Updates and advanced settings'))) : null))
+          page[0] === 'storage' ? h('details', { className: 'i5-card' }, h('summary', null, L('调试中心', 'Diagnostics')), h(DebugCenter), h('button', { onClick: function () { nav('settings', { group: 'behavior' }) } }, L('检查更新与高级设置', 'Updates and advanced settings'))) : null),
+        h('footer', { className: 'i5-statusbar' }, h(Iter5Icon, { name: 'folder' }), h('span', { title: currentWs() || '' }, L('工作区：', 'Workspace: ') + (currentWs() ? pathName(currentWs()) : L('尚未选择', 'Not selected')))))
     }

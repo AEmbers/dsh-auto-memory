@@ -84,6 +84,11 @@ settings = replaceOnce(settings, "      function field(label, control, hint) {\n
         if (control && (control.type === 'input' || control.type === 'select' || control.type === 'textarea')) control = React.cloneElement(control, { 'aria-label': label, disabled: busy || control.props.disabled, role: control.type === 'input' && control.props.type === 'checkbox' ? 'switch' : undefined })
         return`)
 settings = replaceOnce(settings, "return h('div', { 'data-dam-settings-row': '' },", "return h('div', { 'data-dam-settings-row': '', 'data-i5-field': label },")
+settings = replaceOnce(settings,
+  "h('div', { 'data-dam-slot': 'list', 'data-dam-row': '' }, h('label', null, label), control),\n          hint ? h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint) : null)",
+  `h('div', { 'data-dam-slot': 'list', 'data-dam-row': '', className: 'i5-setting-field', 'data-wide': String(!!control && (control.type !== 'input' && control.type !== 'select' || control.props.type === 'text')) },
+            h('div', { className: 'i5-setting-copy' }, h('label', null, label), hint ? h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint) : null),
+            h('div', { className: 'i5-setting-control' }, control)))`)
 const modeStart = settings.indexOf('      function onEngineModeChange(e) {')
 const modeEnd = settings.indexOf('      var sectionLabels =', modeStart)
 settings = settings.slice(0, modeStart) + `      function onEngineModeChange(e) {
@@ -192,10 +197,10 @@ skills = replaceOnce(skills, "return h('div', { 'data-dam-slot': 'timeline', 'da
           return true
         })))`)
 const readSkin = name => readFileSync(path.join(root, 'skins/iter5', name), 'utf8').replace(/\r\n/g, '\n')
-const css = readSkin('skin.css').trim()
+const css = (readSkin('skin.css') + '\n' + readSkin('native-tour.css') + '\n' + readSkin('native-panel.css') + '\n' + readSkin('native-settings.css') + '\n' + readSkin('native-workbench.css') + '\n' + readSkin('native-library.css')).trim()
   .replace('[data-iter5]{--i5-blue:', '[data-iter5],[data-dam-theme]{--i5-blue:')
   .replace('[data-iter5][data-deep=true]{--i5-blue:', '[data-iter5][data-deep=true],[data-dam-theme][data-deep=true],[data-dam-theme][data-deep=true] [data-iter5]{--i5-blue:')
-const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd()
+const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd() + '\n' + readSkin('native-panel.js').trimEnd() + '\n' + readSkin('native-workbench.js').trimEnd() + '\n' + readSkin('native-search.js').trimEnd()
 const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + settings + storage + skills + end + '\n'
 const seam = '    // ===================== dam-skin:end (v4) ====================='
 client = replaceOnce(client, seam, generated + seam)

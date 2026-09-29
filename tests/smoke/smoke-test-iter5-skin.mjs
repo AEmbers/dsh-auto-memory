@@ -14,7 +14,7 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
   .replace("try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch')
   .replace('function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()', 'function DialogHost() {\n      var tickPair = useTick()')
   .replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })")
-assert.equal(createHash('sha256').update(classic).digest('hex'), 'ac0bea7a45643c9e0cda4f14862e3bbb1dff657284feaa71803b4c6e25b4e084', 'Reviewed shared-entry baseline stays unchanged outside generated skin (PR146 root wrappers, welcome composition, compact panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), '83903276ae560776ba4ce5ffbe3a450349bfa5252ed4c1f7375a5b81ffb97bb5', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
@@ -45,8 +45,8 @@ const React = {
 const localStorage = { getItem: () => null, setItem() {}, removeItem() {}, length: 0 }
 const document = { documentElement: { getAttribute: () => '', style: { setProperty() {} }, classList: { contains: () => false } }, querySelector: () => null, getElementById: () => null }
 const window = { localStorage, addEventListener() {}, removeEventListener() {}, confirm() { confirmCount++; return accept }, __ModuleLoader__: { load(def) { exposed = def.factory(name => { if (name === 'react') return React; throw Error('Test module unavailable: ' + name) }) } } }
-const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
-vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
+const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, requestAnimationFrame: fn=>fn(), setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
+vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
       transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
@@ -155,6 +155,10 @@ window['dsh-auto-memory.wizStatus']={loaded:true,ready:false,download:{phase:'id
 test.setDialog(null);test.DialogHost();const hiddenHooks=cursor
 cursor=0;test.setDialog({kind:'welcomeTour',manual:true});const tour=test.DialogHost()
 assert(tour,'Welcome tour renders')
+const nativeNav=nodes(tour,n=>n.props?.['data-native-tour-nav']==='')[0]
+assert(nativeNav,'Welcome provides the approved native step navigation')
+assert.equal(nodes(nativeNav,n=>n.type==='button').length,9,'All actual welcome steps remain reachable')
+assert.equal(nodes(nativeNav,n=>n.props?.['aria-current']==='step').length,1,'Exactly one step is current')
 const welcomeToggles=window['dsh-auto-memory.TOUR_STEPS'].flatMap(step=>step.toggles||[])
 assert(welcomeToggles.some(t=>t.key==='workbenchEnabled'))
 assert(!welcomeToggles.some(t=>t.key==='workbenchRoot'),'Directory setting cannot be written as a boolean')
@@ -183,7 +187,7 @@ console.log('PASS file transitions cannot display stale content under a new titl
 states=[];effects=[];cursor=0
 const home=test.Iter5Home({nonce:0,onNav(){}})
 assert.equal(nodes(home,n=>n.props?.className==='i5-daily-card').length,1,'Home retains its real calendar section')
-assert.equal(nodes(home,n=>n.props?.className==='i5-activity').length,1,'Home retains recent records')
+assert.equal(nodes(home,n=>n.props?.className==='i5-native-recent').length,1,'Home retains recent records')
 console.log('PASS refined home retains recent records and calendar entry points')
 
 states=[];effects=[];cursor=0
@@ -200,6 +204,46 @@ resolveOld('workspace-a');await new Promise(resolve=>setTimeout(resolve,0));curs
 assert.equal(test.useIter5Data(()=>Promise.resolve(null),[]).data,'workspace-b','Late prior-workspace data must not replace the active scope')
 console.log('PASS late results cannot cross session/workspace identity')
 
+
+// Execute panel draft and selectable search behavior through the shipped components.
+function renderNative(component, props) { cursor=0;const tree=component(props);effects.splice(0).forEach(fn=>fn());return tree }
+function resetNative() { states=[];effects=[];cursor=0 }
+resetNative();test.identity('note-session-a|workspace-a')
+let note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+nodes(note,n=>n.type==='textarea')[0].props.onChange({target:{value:'Keep this unsaved note'}})
+resetNative();test.identity('note-session-b|workspace-b')
+note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+assert.equal(nodes(note,n=>n.type==='textarea')[0].props.value,'','A different session never receives the panel draft')
+resetNative();test.identity('note-session-a|workspace-a')
+note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+assert.equal(nodes(note,n=>n.type==='textarea')[0].props.value,'Keep this unsaved note','Closing and remounting restores the same-session draft')
+test.transport(async()=>({}),async()=>({ok:true}))
+note.props.onSubmit({preventDefault(){}})
+await new Promise(resolve=>setTimeout(resolve,0))
+resetNative();note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+assert.equal(nodes(note,n=>n.type==='textarea')[0].props.value,'','A successful append clears the recovered draft')
+console.log('PASS panel drafts survive remount, isolate identities and clear only after append')
+resetNative()
+test.transport(async()=>({}),async()=>({answer:'Host summary',hits:[{where:'log-a.md',line:'First source passage'},{where:'log-b.md',line:'Second source passage'}],keywords:['source']}))
+let search=renderNative(test.Iter5Search,{nonce:0})
+nodes(search,n=>n.type==='input')[0].props.onChange({target:{value:'source'}})
+search=renderNative(test.Iter5Search,{nonce:0})
+nodes(search,n=>n.type==='form')[0].props.onSubmit({preventDefault(){}})
+await new Promise(resolve=>setTimeout(resolve,0))
+search=renderNative(test.Iter5Search,{nonce:0})
+const results=nodes(search,n=>n.props?.className==='i5-search-result')
+assert.equal(results.length,3,'The host summary and both source passages are independently selectable')
+results[1].props.onClick()
+search=renderNative(test.Iter5Search,{nonce:0})
+assert.equal(nodes(search,n=>n.props?.className==='i5-search-result'&&n.props['aria-current']==='true').length,1)
+assert.equal(nodes(search,n=>n.type==='h2')[0].props.children[0],'log-b.md','Selecting a source updates the detail heading')
+const lexical=test.iter5SearchEntries({result:'[记忆检索] 验收\n== 本地记忆文件命中 ==\n· log-a.md:\n  - exact source A\n· log-b.md:\n  - exact source B'},'recall')
+assert.equal(lexical.length,3)
+assert.equal(lexical[0].title,'log-a.md')
+assert.equal(lexical[1].text,'- exact source B')
+assert.equal(lexical[2].summary,true,'The complete host transcript remains available')
+console.log('PASS search renders real source passages as selectable results')
+
 // Git may check out skin sources as CRLF on Windows and LF on Linux.
 // Both must produce the same normalized bundle without doubled CR bytes.
 const fixture=mkdtempSync(path.join(tmpdir(),'iter5-generator-'))
@@ -207,7 +251,7 @@ try {
   for(const dir of ['lib','tools','skins/iter5'])mkdirSync(path.join(fixture,dir),{recursive:true})
   writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
   for(const newline of ['\n','\r\n']) {
-    for(const name of ['ui.js','views.js','surfaces.js','skin.css']) {
+    for(const name of ['ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js']) {
       const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
       writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
     }

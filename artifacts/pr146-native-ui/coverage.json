@@ -1,0 +1,642 @@
+[
+  {
+    "id": "C01",
+    "title": "欢迎使用",
+    "reference": "C01-welcome.png",
+    "group": "欢迎引导",
+    "source": "tour-1",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C02",
+    "title": "核心能力",
+    "reference": "C02-tour-core.png",
+    "group": "欢迎引导",
+    "source": "tour-2",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C03",
+    "title": "记忆快照",
+    "reference": "C03-tour-snapshot.png",
+    "group": "欢迎引导",
+    "source": "tour-3",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C04",
+    "title": "日常体验",
+    "reference": "C04-tour-daily.png",
+    "group": "欢迎引导",
+    "source": "tour-4",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C05",
+    "title": "每日助理",
+    "reference": "C05-tour-reflection.png",
+    "group": "欢迎引导",
+    "source": "tour-5",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C06",
+    "title": "外部记忆",
+    "reference": "C06-tour-external.png",
+    "group": "欢迎引导",
+    "source": "tour-6",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C07",
+    "title": "检索引擎",
+    "reference": "C07-tour-engine.png",
+    "group": "欢迎引导",
+    "source": "tour-7",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C08",
+    "title": "唤起与固化",
+    "reference": "C08-tour-recall.png",
+    "group": "欢迎引导",
+    "source": "tour-8",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C09",
+    "title": "欢迎完成",
+    "reference": "C09-tour-done.png",
+    "group": "欢迎引导",
+    "source": "tour-9",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / TOUR_STEPS"
+  },
+  {
+    "id": "C10",
+    "title": "工作台",
+    "reference": "C10-home.png",
+    "group": "工作台与内容",
+    "source": "home",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5Home"
+  },
+  {
+    "id": "C11",
+    "title": "记忆库·浏览",
+    "reference": "C11-library.png",
+    "group": "工作台与内容",
+    "source": "library",
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "pages-check.json",
+    "component": "Iter5Browse"
+  },
+  {
+    "id": "C12",
+    "title": "记忆库·日志",
+    "reference": "C12-logs.png",
+    "group": "工作台与内容",
+    "source": "library",
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "pages-check.json",
+    "component": "Iter5History (logs)"
+  },
+  {
+    "id": "C13",
+    "title": "记忆库·反思",
+    "reference": "C13-reflections.png",
+    "group": "工作台与内容",
+    "source": "library",
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "pages-check.json",
+    "component": "Iter5History (reflections)"
+  },
+  {
+    "id": "C14",
+    "title": "记忆库·检索",
+    "reference": "C14-search.png",
+    "group": "工作台与内容",
+    "source": "library",
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "pages-check.json",
+    "component": "Iter5Search"
+  },
+  {
+    "id": "C15",
+    "title": "接续·当前任务",
+    "reference": "C15-handoff-task.png",
+    "group": "接续与白板",
+    "source": "handoff",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Handoff"
+  },
+  {
+    "id": "C16",
+    "title": "接续·白板",
+    "reference": "C16-handoff-board.png",
+    "group": "接续与白板",
+    "source": "handoff",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "PlanTab"
+  },
+  {
+    "id": "C17",
+    "title": "接续·外部来源",
+    "reference": "C17-handoff-external.png",
+    "group": "接续与白板",
+    "source": "handoff",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5External"
+  },
+  {
+    "id": "C18",
+    "title": "日程",
+    "reference": "C18-calendar.png",
+    "group": "工作台与内容",
+    "source": "calendar",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Calendar"
+  },
+  {
+    "id": "C19",
+    "title": "技能",
+    "reference": "C19-skills.png",
+    "group": "工作台与内容",
+    "source": "skills",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Skills"
+  },
+  {
+    "id": "C20",
+    "title": "唤起回顾",
+    "reference": "C20-recall.png",
+    "group": "工作台与内容",
+    "source": "recall",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Recall"
+  },
+  {
+    "id": "C21",
+    "title": "工作区关系",
+    "reference": "C21-workspaces.png",
+    "group": "工作台与内容",
+    "source": "workspaces",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Workspaces"
+  },
+  {
+    "id": "C22",
+    "title": "存储与维护",
+    "reference": "C22-storage.png",
+    "group": "工作台与内容",
+    "source": "storage",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Storage"
+  },
+  {
+    "id": "C23",
+    "title": "团队协作",
+    "reference": "C23-team.png",
+    "group": "协作与统计",
+    "source": "team",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "TeamTab"
+  },
+  {
+    "id": "C24",
+    "title": "统计",
+    "reference": "C24-stats.png",
+    "group": "协作与统计",
+    "source": "stats",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "StatsTab"
+  },
+  {
+    "id": "C25",
+    "title": "白板看板",
+    "reference": "C25-kanban.png",
+    "group": "接续与白板",
+    "source": "kanban",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "KanbanView"
+  },
+  {
+    "id": "C26",
+    "title": "白板画布·可选入口",
+    "reference": "C26-canvas.png",
+    "group": "接续与白板",
+    "source": "kanban",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "WhiteboardGraphView"
+  },
+  {
+    "id": "C27",
+    "title": "工作台设置·引擎",
+    "reference": "C27-settings-engine.png",
+    "group": "工作台设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5Settings / engine"
+  },
+  {
+    "id": "C28",
+    "title": "工作台设置·记忆",
+    "reference": "C28-settings-memory.png",
+    "group": "工作台设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5Settings / memory"
+  },
+  {
+    "id": "C29",
+    "title": "工作台设置·外观与目录",
+    "reference": "C29-settings-appearance.png",
+    "group": "工作台设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5Settings / appearance"
+  },
+  {
+    "id": "C30",
+    "title": "工作台设置·行为与维护",
+    "reference": "C30-settings-behavior.png",
+    "group": "工作台设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5Settings / behavior"
+  },
+  {
+    "id": "C31",
+    "title": "DSH记忆设置·引擎",
+    "reference": "C31-host-engine.png",
+    "group": "宿主设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5HostSettings / engine"
+  },
+  {
+    "id": "C32",
+    "title": "DSH记忆设置·记忆",
+    "reference": "C32-host-memory.png",
+    "group": "宿主设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5HostSettings / memory"
+  },
+  {
+    "id": "C33",
+    "title": "DSH记忆设置·外观与目录",
+    "reference": "C33-host-appearance.png",
+    "group": "宿主设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5HostSettings / appearance"
+  },
+  {
+    "id": "C34",
+    "title": "DSH记忆设置·行为与维护",
+    "reference": "C34-host-behavior.png",
+    "group": "宿主设置",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5HostSettings / behavior"
+  },
+  {
+    "id": "C35",
+    "title": "轻面板·概览",
+    "reference": "C35-panel-compact.png",
+    "group": "轻面板",
+    "source": "panel",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5QuickPanel"
+  },
+  {
+    "id": "C36",
+    "title": "轻面板·展开分区",
+    "reference": "C36-panel-expanded.png",
+    "group": "轻面板",
+    "source": "panel",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "MemoryPanel / MemoryTabBody"
+  },
+  {
+    "id": "C37",
+    "title": "追加笔记编辑区",
+    "reference": "C37-note-editor.png",
+    "group": "编辑与弹窗",
+    "source": "library",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5Note"
+  },
+  {
+    "id": "C38",
+    "title": "日程新增与编辑",
+    "reference": "C38-calendar-editor.png",
+    "group": "编辑与弹窗",
+    "source": "calendar",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Calendar / Iter5Dialog"
+  },
+  {
+    "id": "C39",
+    "title": "自动接续确认",
+    "reference": "C39-continue-confirm.png",
+    "group": "编辑与弹窗",
+    "source": "handoff",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "AutoContinueHost"
+  },
+  {
+    "id": "C40",
+    "title": "接续执行进度",
+    "reference": "C40-continue-progress.png",
+    "group": "编辑与弹窗",
+    "source": "handoff",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "AutoContinueHost"
+  },
+  {
+    "id": "C41",
+    "title": "记忆中枢初始化",
+    "reference": "C41-workbench-init.png",
+    "group": "编辑与弹窗",
+    "source": "handoff",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "DialogHost / workbench"
+  },
+  {
+    "id": "C42",
+    "title": "内置模型安装与下载",
+    "reference": "C42-model-download.png",
+    "group": "编辑与弹窗",
+    "source": "settings",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "DialogHost / semantic install"
+  },
+  {
+    "id": "C43",
+    "title": "高级Python环境配置",
+    "reference": "C43-python-install.png",
+    "group": "编辑与弹窗",
+    "source": "settings",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "SettingsPage / Python setup"
+  },
+  {
+    "id": "C44",
+    "title": "版本与更新说明",
+    "reference": "C44-update.png",
+    "group": "编辑与弹窗",
+    "source": "settings",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "DialogHost / update"
+  },
+  {
+    "id": "C45",
+    "title": "诊断与调试中心",
+    "reference": "C45-diagnostics.png",
+    "group": "编辑与弹窗",
+    "source": "storage",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "DebugCenter"
+  },
+  {
+    "id": "C46",
+    "title": "记忆导出",
+    "reference": "C46-export.png",
+    "group": "编辑与弹窗",
+    "source": "storage",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Storage / export"
+  },
+  {
+    "id": "C47",
+    "title": "记忆导入预览",
+    "reference": "C47-import-preview.png",
+    "group": "编辑与弹窗",
+    "source": "storage",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Storage / import"
+  },
+  {
+    "id": "C48",
+    "title": "危险操作确认",
+    "reference": "C48-delete-confirm.png",
+    "group": "编辑与弹窗",
+    "source": "storage",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "window.confirm (native host behavior retained)"
+  },
+  {
+    "id": "C49",
+    "title": "模型与思考强度选择",
+    "reference": "C49-model-picker.png",
+    "group": "编辑与弹窗",
+    "source": "settings",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "model picker (verify exact component)"
+  },
+  {
+    "id": "C50",
+    "title": "目录选择",
+    "reference": "C50-path-browser.png",
+    "group": "编辑与弹窗",
+    "source": "settings",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "settings path browser (verify exact component)"
+  },
+  {
+    "id": "C51",
+    "title": "经典模式与回退",
+    "reference": "C51-classic.png",
+    "group": "兼容与通知",
+    "source": "home",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "MemoryPageView / MemoryTabBody"
+  },
+  {
+    "id": "C52",
+    "title": "暂离返回提示",
+    "reference": "C52-greeting.png",
+    "group": "兼容与通知",
+    "source": "panel",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Greeting drawer / DialogHost"
+  },
+  {
+    "id": "C53",
+    "title": "阶段总结",
+    "reference": "C53-summary.png",
+    "group": "兼容与通知",
+    "source": "panel",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "DialogHost / summary"
+  },
+  {
+    "id": "C54",
+    "title": "插件通知",
+    "reference": "C54-notice.png",
+    "group": "兼容与通知",
+    "source": "panel",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "DialogHost / notice"
+  },
+  {
+    "id": "C55",
+    "title": "空数据状态",
+    "reference": "C55-empty.png",
+    "group": "通用状态",
+    "source": "library",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Empty"
+  },
+  {
+    "id": "C56",
+    "title": "加载状态",
+    "reference": "C56-loading.png",
+    "group": "通用状态",
+    "source": "library",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Loading"
+  },
+  {
+    "id": "C57",
+    "title": "读取失败与重试",
+    "reference": "C57-error.png",
+    "group": "通用状态",
+    "source": "library",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "Iter5Error"
+  },
+  {
+    "id": "C58",
+    "title": "权限不足状态",
+    "reference": "C58-permission.png",
+    "group": "通用状态",
+    "source": "team",
+    "implementation": "pending-page-comparison",
+    "hostEvidence": null,
+    "component": "existing permission/unavailable feedback"
+  },
+  {
+    "id": "C59",
+    "title": "窄屏工作台",
+    "reference": "C59-mobile-workbench.png",
+    "group": "窄屏适配",
+    "source": "home",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5Page"
+  },
+  {
+    "id": "C60",
+    "title": "窄屏展开记忆设置",
+    "reference": "C60-mobile-settings.png",
+    "group": "窄屏适配",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5HostSettings"
+  },
+  {
+    "id": "C61",
+    "title": "窄屏轻面板",
+    "reference": "C61-mobile-panel.png",
+    "group": "窄屏适配",
+    "source": "panel",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5QuickPanel"
+  },
+  {
+    "id": "C62",
+    "title": "深色欢迎页",
+    "reference": "C62-dark-welcome.png",
+    "group": "深色主题",
+    "source": "tour-1",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "DialogHost / welcomeTour"
+  },
+  {
+    "id": "C63",
+    "title": "深色记忆设置",
+    "reference": "C63-dark-settings.png",
+    "group": "深色主题",
+    "source": "settings",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5HostSettings"
+  },
+  {
+    "id": "C64",
+    "title": "深色轻面板",
+    "reference": "C64-dark-panel.png",
+    "group": "深色主题",
+    "source": "panel",
+    "implementation": "implemented-awaiting-final-host-review",
+    "hostEvidence": null,
+    "component": "Iter5QuickPanel"
+  }
+]

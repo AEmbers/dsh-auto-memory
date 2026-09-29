@@ -8,13 +8,16 @@
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib",
     "python",
     "docs",
+    "locale",
     "skins",
+    "icon.svg",
     "cordis.patch.yml",
     "!python/bench",
     "!python/__pycache__",
@@ -64,5 +67,6 @@
   "optionalDependencies": {
     "@huggingface/transformers": "^3.7.6"
   },
-  "license": "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "icon": "./icon.svg"
 }

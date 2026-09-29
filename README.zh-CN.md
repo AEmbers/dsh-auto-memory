@@ -1,9 +1,10 @@
-# 无问自忆 · 记忆不断线
+# 潜藏追忆，如影随形
 
 **dsh-auto-memory** — *She remembers, unbidden.*
 
-> **中文** 现在，换窗口也不必。跨窗口 · 跨会话 · 跨工具，记忆不断线
-> **EN** She remembers, unbidden — now, across windows, too. Context that survives windows, sessions, and tools
+> **中文** 该想起的，自己浮现。跨窗口 · 跨会话 · 跨工具，记忆不断线
+>
+> **EN** Now, across windows, too. Context that survives windows, sessions, and tools
 
 <p align="center">
   <a href="https://htmlpreview.github.io/?https://github.com/Aik358/dsh-auto-memory/blob/preview/docs/landing/index.html"><strong>🌐 宣传主页（功能全景 · 数据流 · 论文 · 截图）</strong></a>
@@ -108,6 +109,10 @@
 全部 24 张真机截图见
 <a href="docs/SKIN-GUIDE.md"><strong>皮肤白皮书</strong></a>。
 </sub></p>
+
+> [!NOTE]
+> **🧭 为官方长期记忆做好准备**
+> 针对官方长期记忆系统的适配与预研正在进行中——正式上线后，本插件将**第一时间**提供与之配套的**语义唤回**与**跨窗口接续**。本插件一切皆开关，稳定性与灵活性充足：届时将自动适配、灵活辅助官方长期记忆体系，你的记忆无缝延续，无需任何迁移。
 
 ---
 

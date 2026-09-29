@@ -4,6 +4,51 @@ All notable changes to dsh-auto-memory.
 
 ---
 
+## [3.2.4] — 2026-09-30 · 插件图标与本地化元数据 + Python 档「真跑通」判据 + C2 增量嵌入
+
+> **三条主线**：①插件图标与本地化元数据（纯打包/元数据改动）；②Python 高级引擎「静默失效」链路修复 + 运行时「真跑通」判据（判据=真反馈，不再拿文件存在性冒充就绪）；③C2 内置语义引擎增量嵌入（纯省 CPU，检索结果逐条一致）。本版含宿主侧改动，需**重启 dsh web** 后生效。
+
+### ★ 新增：插件行图标
+
+- **机制（宿主新接口）**：宿主新增插件元数据读取（`@deepseek-ai/dsh-app-boot` 的 `readPluginMeta` / `iconOf` / `dictionariesOf`）——插件在自己的 `package.json` 里声明 `icon`（相对包目录的路径），宿主读盘后转成 data URL 渲染到设置页的插件行。这就是其他插件陆续有图标的原因。
+- **契约（宿主定的，已逐条对齐）**：必须**相对路径**（绝对路径 / `file:` / `data:` 一律拒绝）；仅 `.svg / .png / .jpg / .jpeg / .webp`；**≤ 256 KiB**；必须留在 package.json 所在目录内（realpath 校验，防 `..` 逃逸）。
+- **本插件图标**：圆角菱形 + 中心微光（36×36 viewBox，与官方插件图标同规格；形状语言与「新款」皮肤的视觉同源），900 字节。
+
+### ★ 新增：中英双语标题与描述
+
+`locale/zh.json` + `locale/en.json` 提供 `meta.title` / `meta.description`，随界面语言切换：中文「主动联想记忆 / 未问先答：说话前就把相关记忆注入上下文；交接账本、白板与水位感知让上下文跨窗口续命」，英文 Proactive Recall。
+
+### ★ 修复：Python 高级引擎「静默失效」整条链路（真机事故：连续 8 天 4126 次失败）
+
+三层问题叠加，面板却始终显示「就绪」：
+
+- **worker 脚本死链**：「去 pre」改名后（`worker_semantic_pre_v1.py` → `worker_semantic_v1.py`），配置里的旧路径成为死链 ⇒ spawn ENOENT 被 `unavailable` 这个合法降级码吞掉（与「用户没配 Python」无法区分）。
+- **解释器配置丢失**：配置文件名迁移只做「逐键补齐」，救不了「键在但值已失效」；解释器回落到缺依赖的系统 Python。
+- **判据过浅**：检测面板只查 `model_int8.onnx` 是否存在——文件在就报「就绪」，实际每次检索都在词法兜底。
+
+修复：解释器与 worker 路径均有**探测链自愈**（配置值 → 用户位 venv → 开发树 venv → 系统 PATH，逐个实测依赖；严格形态判定，绝不覆盖合法自定义路径）。
+
+### ★ 新增：Python 档「真跑通」判据（用户三原则：判据=真反馈 · 健壮降级 · 开发值识别）
+
+- **判据升级**：解释器逐候选实测依赖（`import transformers/onnxruntime/numpy`），并起短命 worker 发 health 帧读回 **embedding 真实加载状态**——「有没有获得反馈、有没有跑通」才决定就绪，模型文件存在只算资产层。
+- **三态面板**：`✓ 就绪（已实测启动）` / `⚠ 有文件但未能启动`（附具体报错）/ `✗ 未安装`；档位解析与面板**同源同判**（worker 反馈失败时档位诚实降为 C1，不再出现「面板 ⚠ 未能启动 vs 档位 C3」同屏矛盾）。
+- **健壮降级**：探测链逐候选往下试、失败不中止，全失败也返回结构化结果；「一切就绪」绿灯需运行时真值放行。
+- **开发值识别**：命中开发树路径（bench venv 等）时提示「检测到开发值，欢迎开发者」。
+- **判据修正（真机取证）**：worker 的 `embedding.ready` = 非 stale 向量数 > 0，而 stale 是常态（等下一次 index_sync 重建）——健康 worker 也会 ready=false；改看 embedder 是否真加载成功（`enabled && !error`），向量新鲜度另列如实报告。
+
+### ★ 新增：C2 内置语义引擎增量嵌入
+
+语料变化时只重新计算**输入文本变了**的条目（按内容哈希复用向量池，与 l0-index 同源的两级复用）。同输入必得同向量，检索结果与全量重算**逐条一致**，纯省 CPU：实测追加一行日志时复用率 100%（0 条重算），全量重算约 0.9 秒 → 增量约 0–16 毫秒。设置页可关（`semanticEmbedIncremental`，默认开）。
+
+### 打包与构建线（这才是图标真能生效的前提）
+
+- `package.json`：补 `icon` 字段、`exports` 放行 `./locale/*.json`、`files` 白名单补 `icon.svg` 与 `locale`（npm 只打包白名单，漏了等于没做）。
+- `tools/release.mjs`：补两处漏网 —— 文件复制清单（`icon.svg` / `locale`）与**发布包 package.json 模板**（该模板是重建而非拷贝，不补则发布包里仍无 `icon` 字段与 locale 出口）。
+- `tests/smoke/smoke-test-plugin-icon.mjs`：新增 33 条契约锁，逐条复刻宿主判据（相对路径 / 格式白名单 / 体积上限 / 目录内 / base64 往返 / 词典文件名与字段 / files 与 exports 接线），防将来重构静默打破（宿主侧判据不符会抛错 ⇒ 图标直接消失）。
+- 新增守卫：`smoke-test-depre-residue.mjs`（去 pre 残留六面扫描 + 死链自愈反例）、`smoke-test-embed-incremental.mjs`（增量等价性红线）、`smoke-test-py-runtime-probe.mjs`（真跑通判据 + 三态 + 开发值）。
+
+---
+
 ## [3.2.3] — 2026-09-29 · sessions 检索兜底 + 写入门语种盲区修复 + 报错可诊断化
 
 > **本版改动含宿主（`lib/index.js`）：需重启 dsh web 后生效**（只刷新页面不够）。

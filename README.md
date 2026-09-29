@@ -1,8 +1,9 @@
-# 无问自忆 · 记忆不断线
+# Ambient Recall · 「潜藏追忆，如影随形」
 
 **dsh-auto-memory** — *She remembers, unbidden.*
 
 > **EN** Now, across windows, too. Context that survives windows, sessions, and tools
+>
 > **中文** 该想起的，自己浮现。跨窗口 · 跨会话 · 跨工具，记忆不断线
 
 <p align="center">
@@ -112,6 +113,10 @@ Switch to it from the memory panel header button — the classic skin is untouch
 and always one click away. All 24 real-host screenshots live in the
 <a href="docs/SKIN-GUIDE.md"><strong>Skin guide</strong></a>.
 </sub></p>
+
+> [!NOTE]
+> **🧭 Getting ready for the official long-term memory**
+> Adaptation and pre-research for DeepSeek Harness's official long-term memory system are underway — when it ships, this plugin will offer **semantic recall** and **cross-window continuation** for official memories from day one. Everything here is a toggle: with ample stability and flexibility built in, the plugin will auto-adapt to and flexibly complement the official memory stack. Your memory stays seamless — no migration needed.
 
 ---
 

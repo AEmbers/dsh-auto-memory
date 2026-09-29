@@ -50,4 +50,3 @@ check('no runtime errors',errors.length===0)
  fs.writeFileSync(path.join(__dirname,'pages-check.json'),JSON.stringify({checks,errors},null,2));console.log(JSON.stringify({passed:checks.length,errors}))
  }catch(e){console.log('Visible dialogs:',(await page.locator('[role=dialog]').allTextContents()).map(t=>t.slice(0,200)));throw e}finally{await browser.close()}
 })().catch(e=>{console.error(e.message);process.exitCode=1})
-

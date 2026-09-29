@@ -6,7 +6,7 @@
 - 实施分支：codex/iter5-ui-integration。
 - 工作区：C:/Users/李云龙/.codex/worktrees/native-ui/dsh-auto-memory。
 - 原始参考：C:/Users/李云龙/dsh-auto-memory/artifacts/pr146-all-ui-references-20260929/images。
-- 64 项入口映射见 COVERAGE.md / coverage.json。全部完成仍未证明，尚未提交或推送本轮变更。
+- 64 项入口映射见 COVERAGE.md / coverage.json。全部完成仍未证明，首批实现已提交 dd242a0，尚未推送；全量复刻仍在进行。
 
 ## 已写入代码
 
@@ -49,3 +49,11 @@ C11–C14 的浏览、日志、反思和检索已在真实隔离会话中打开�
 轻面板草稿采用进程内、会话/工作区隔离缓存，关闭重开恢复，确认放弃或成功保存清除；不写浏览器存储。组件回归同时覆盖身份隔离与成功清除。新入口源 SHA 仅因给 QuickPanel 添加身份 key 而更新，冻结断言保留。
 
 当前 native-search.js/native-library.css 已进入生成器及 LF/CRLF 回归；所有上述专项回归和 build/check 通过。后续请继续 C15–C26、C37–C58 逐图实现，不重复已通过的同一检查，除非相关源码变化。当前宿主 PID 以 host.pid 及真实 listener 为准。
+
+## 后续进展：接续、日程、技能、维护、团队与统计
+
+新增 native-skills.js / native-storage.js / native-team.js / native-operations.css。接续主动作移至顶部，月历/事项成为日程主布局；技能采用可搜索列表与详情，原始 gated action React 节点继续承载审批、晋升、置顶和归属操作；存储来源改为真实表格，逐来源修复沿用宿主 act，索引未启用时禁用，危险删除单独着色；团队采用真实归属表格，成员/冲突/同步等完整旧工具在可展开区域保留；统计从原 StatsTab 生成 Iter5Stats，保留 15 秒轮询、全部三通路与详细图表、清理入口。
+
+最新 operations-check.json 为 36 项真实宿主检查：九个工作页桌面与 390px 无主区域横向溢出/渲染异常，来源表格、技能布局、接续单一主动作、日程统计折叠和两个接续子页签。截图已查看桌面接续/日程/技能/维护/团队/统计/回顾/关系图，以及窄屏技能。其他窄屏截图还需逐张视觉检查。技能真实宿主目前是零数据，非空详情和动作复用目前只有组件测试，远端团队同样未验收。
+
+**发现仍未解决的实际视觉问题：C21 工作区关系图沿用旧 WorkspaceGraph，画布内节点明显裁切且“适应”只是重置比例，下一轮需重做布局/真实适配；不得标此页完成。** C16/C17 子页签已实际打开但尚未完成参考图精细对照。C25/C26、C37–C58 与浅深/缩放/全回归/finish reviewer/documenter 仍待继续。

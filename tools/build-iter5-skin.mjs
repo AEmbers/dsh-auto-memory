@@ -168,13 +168,17 @@ storage = replaceOnce(storage, "      function act(action, payload, onDone) {\n 
         setMsg('')`)
 storage = replaceOnce(storage, "            setMsg(action + ': ' + reason)\n            if (onDone) onDone(j)", `            setMsg(action + ': ' + reason + (j && j.cascade ? ' · cascade: ' + JSON.stringify(j.cascade) : ''))
             if (j && j.ok !== false && onDone) onDone(j)`)
+const sourcesStart = storage.indexOf("          (data.sources || []).map(function (s) {")
+const sourcesEnd = storage.indexOf("          h('div', { style: { display: 'flex', gap: '6px', marginTop: '8px' } },", sourcesStart)
+if (sourcesStart < 0 || sourcesEnd < 0) throw Error('Storage source-list boundary not found')
+storage = storage.slice(0, sourcesStart) + "          h(Iter5StorageSources, { data: data, act: act }),\n" + storage.slice(sourcesEnd)
 storage = replaceOnce(storage, "return h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows)", `return h('div', { className: 'i5-storage-view' },
         h('div', { className: 'i5-stats i5-stats-four' },
           h(Iter5Stat, { icon: 'storage', hue: 'blue', label: L('扫描来源', 'Scanned sources'), value: data.counts ? counts.total : null, hint: L('当前语料来源数', 'Current corpus sources') }),
           h(Iter5Stat, { icon: 'check', hue: 'green', label: L('索引一致', 'Consistent'), value: data.indexEnabled === false ? null : data.counts ? counts.ok : null, hint: data.indexEnabled === false ? L('索引尚未启用', 'Index disabled') : L('正文与索引校验一致', 'Source and index agree') }),
           h(Iter5Stat, { icon: 'pulse', hue: 'orange', label: L('等待修复', 'Needs repair'), value: data.indexEnabled === false ? null : data.counts ? counts.stale : null, hint: L('可以重建的索引副本', 'Rebuildable index copies') }),
           h(Iter5Stat, { icon: 'note', hue: 'purple', label: L('需人工检查', 'Needs inspection'), value: data.indexEnabled === false ? null : data.counts ? counts.unrepairable : null, hint: L('无法自动修复的来源', 'Sources needing manual review') })),
-        h('div', { className: 'i5-hosted i5-maintenance-grid', 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows))`)
+        h('div', { className: 'i5-hosted i5-maintenance-grid', 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows.map(function (node, i) { return node && node.props && node.props.title === L('删除记忆(三联动)', 'Delete memory (cascading)') ? h('div', { key: i, className: 'i5-maintenance-danger' }, node) : node })))`)
 let skills = client.slice(client.indexOf('    function MemoryHubTab(props) {'), client.indexOf('    function StorageTab(props) {'))
 skills = replaceOnce(skills, 'function MemoryHubTab(props)', 'function Iter5Skills(props)')
 skills = replaceOnce(skills, "      function hubAct(action, procedureId, v) {", `      function hubAct(action, procedureId, v) {
@@ -188,20 +192,18 @@ skills = replaceOnce(skills, "return h('div', { 'data-dam-slot': 'timeline', 'da
           h(Iter5Stat, { icon: 'pulse', hue: 'orange', label: L('观察与审批', 'Under review'), value: procs ? pipeline.length : null, hint: L('等待积累或人工确认', 'Awaiting evidence or approval') }),
           h(Iter5Stat, { icon: 'library', hue: 'blue', label: L('事实记忆', 'Facts'), value: facts ? facts.size : null, hint: L('宿主提取的事实记录', 'Facts extracted by the host') }),
           h(Iter5Stat, { icon: 'timeline', hue: 'purple', label: L('经历记录', 'Episodes'), value: epis ? epis.size : null, hint: L('已有的执行与反馈经验', 'Recorded actions and outcomes') })),
-        h('div', { className: 'i5-filter-chips', role: 'group', 'aria-label': L('技能筛选', 'Skill filter') }, [['all', L('全部', 'All')], ['pending', L('观察与审批', 'Under review')], ['active', L('已生效', 'Active')]].map(function (r) { return h('button', { key: r[0], 'aria-pressed': i5Filter[0] === r[0], onClick: function () { i5Filter[1](r[0]) } }, r[1]) })),
-        h('div', { className: 'i5-hosted i5-skills-grid', 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows.filter(function (node) {
-          var title = node && node.props && node.props.title
-          if (typeof title !== 'string') return true
-          if (i5Filter[0] === 'pending' && title.indexOf(t('hubSkills')) === 0) return false
-          if (i5Filter[0] === 'active' && title.indexOf(L('技能审批队列', 'Skill approval queue')) === 0) return false
-          return true
-        })))`)
+        h(Iter5SkillBrowser, { active: activeList, pipeline: pipeline, rows: rows }))`)
+let stats = client.slice(client.indexOf('function StatsTab() {'), client.indexOf('function WorkspaceTab() {'))
+stats = replaceOnce(stats, 'function StatsTab()', 'function Iter5Stats()')
+stats = replaceOnce(stats, "return h('div', null,\n    h(Card, { title: t('statsTitle') },", "return h('div', { className: 'i5-native-stats' },\n    h(Iter5StatsOverview, null,")
+stats = replaceOnce(stats, "h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4 } },", "h('div', { className: 'i5-native-stat-metrics' },")
+stats = replaceOnce(stats, "return h(Card, { title: m.name },", "return h(Iter5Card, { title: m.name, icon: id === 'model' ? 'search' : id === 'inject' ? 'library' : 'recall', className: 'i5-native-stat-card' },")
 const readSkin = name => readFileSync(path.join(root, 'skins/iter5', name), 'utf8').replace(/\r\n/g, '\n')
-const css = (readSkin('skin.css') + '\n' + readSkin('native-tour.css') + '\n' + readSkin('native-panel.css') + '\n' + readSkin('native-settings.css') + '\n' + readSkin('native-workbench.css') + '\n' + readSkin('native-library.css')).trim()
+const css = (readSkin('skin.css') + '\n' + readSkin('native-tour.css') + '\n' + readSkin('native-panel.css') + '\n' + readSkin('native-settings.css') + '\n' + readSkin('native-workbench.css') + '\n' + readSkin('native-library.css') + '\n' + readSkin('native-operations.css')).trim()
   .replace('[data-iter5]{--i5-blue:', '[data-iter5],[data-dam-theme]{--i5-blue:')
   .replace('[data-iter5][data-deep=true]{--i5-blue:', '[data-iter5][data-deep=true],[data-dam-theme][data-deep=true],[data-dam-theme][data-deep=true] [data-iter5]{--i5-blue:')
-const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd() + '\n' + readSkin('native-panel.js').trimEnd() + '\n' + readSkin('native-workbench.js').trimEnd() + '\n' + readSkin('native-search.js').trimEnd()
-const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + settings + storage + skills + end + '\n'
+const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd() + '\n' + readSkin('native-panel.js').trimEnd() + '\n' + readSkin('native-workbench.js').trimEnd() + '\n' + readSkin('native-search.js').trimEnd() + '\n' + readSkin('native-skills.js').trimEnd() + '\n' + readSkin('native-storage.js').trimEnd() + '\n' + readSkin('native-team.js').trimEnd()
+const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + settings + storage + skills + stats + end + '\n'
 const seam = '    // ===================== dam-skin:end (v4) ====================='
 client = replaceOnce(client, seam, generated + seam)
 // Only the opt-in skin mount and its stylesheet gain the new implementation.

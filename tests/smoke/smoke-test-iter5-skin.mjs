@@ -46,7 +46,7 @@ const localStorage = { getItem: () => null, setItem() {}, removeItem() {}, lengt
 const document = { documentElement: { getAttribute: () => '', style: { setProperty() {} }, classList: { contains: () => false } }, querySelector: () => null, getElementById: () => null }
 const window = { localStorage, addEventListener() {}, removeEventListener() {}, confirm() { confirmCount++; return accept }, __ModuleLoader__: { load(def) { exposed = def.factory(name => { if (name === 'react') return React; throw Error('Test module unavailable: ' + name) }) } } }
 const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, requestAnimationFrame: fn=>fn(), setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
-vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
+vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
       transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
@@ -244,6 +244,19 @@ assert.equal(lexical[1].text,'- exact source B')
 assert.equal(lexical[2].summary,true,'The complete host transcript remains available')
 console.log('PASS search renders real source passages as selectable results')
 
+
+resetNative()
+const actionNode={key:'skill-1',props:{'data-dam-content':'',children:[{type:'button',props:{children:['Approve'],onClick(){}}}]}}
+const skillRows=[{props:{title:'Skill group',children:[actionNode]}}]
+assert.equal(test.iter5SkillContent(skillRows,'skill-1'),actionNode,'Original gated action node is reused without reimplementing its handlers')
+let skillTree=renderNative(test.Iter5SkillBrowser,{active:[],pipeline:[{procedureId:'skill-1',title:'Reviewed process',stage:'candidate',steps:['Actual step'],successCriteria:['Actual criterion']}],rows:skillRows})
+assert.equal(nodes(skillTree,n=>n.props?.className==='i5-native-skill-row').length,1)
+assert.equal(nodes(skillTree,n=>n.type==='li')[0].props.children[0],'Actual step')
+nodes(skillTree,n=>n.type==='input')[0].props.onChange({target:{value:'absent'}})
+skillTree=renderNative(test.Iter5SkillBrowser,{active:[],pipeline:[{procedureId:'skill-1',title:'Reviewed process'}],rows:skillRows})
+assert.equal(nodes(skillTree,n=>n.props?.className==='i5-native-skill-row').length,0)
+console.log('PASS native skills preserve gated action content and title filtering')
+
 // Git may check out skin sources as CRLF on Windows and LF on Linux.
 // Both must produce the same normalized bundle without doubled CR bytes.
 const fixture=mkdtempSync(path.join(tmpdir(),'iter5-generator-'))
@@ -251,7 +264,7 @@ try {
   for(const dir of ['lib','tools','skins/iter5'])mkdirSync(path.join(fixture,dir),{recursive:true})
   writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
   for(const newline of ['\n','\r\n']) {
-    for(const name of ['ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js']) {
+    for(const name of ['ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js','native-operations.css','native-skills.js','native-storage.js','native-team.js']) {
       const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
       writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
     }

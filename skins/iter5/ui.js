@@ -226,7 +226,7 @@
       var meta = ITER5_PAGES.filter(function (p) { return p[0] === page[0] })[0]
       var title = meta ? L(meta[1], meta[2]) : page[0] === 'team' ? L('团队协作', 'Teamwork') : L('统计', 'Statistics')
       var nonce = String(props.nonce || 0) + ':' + refresh[0]
-      var components = { home: Iter5Home, library: Iter5Memory, handoff: Iter5Continue, calendar: Iter5Calendar, skills: Iter5Skills, recall: Iter5Recall, mindmap: Iter5Workspaces, storage: Iter5Storage, settings: Iter5Settings, team: TeamTab, stats: StatsTab }
+      var components = { home: Iter5Home, library: Iter5Memory, handoff: Iter5Continue, calendar: Iter5Calendar, skills: Iter5Skills, recall: Iter5Recall, mindmap: Iter5Workspaces, storage: Iter5Storage, settings: Iter5Settings, team: Iter5Team, stats: Iter5Stats }
       var Component = components[page[0]] || Iter5Home
       function closeMenu() { menu[1](false); if (menuButton.current) menuButton.current.focus() }
       useEffect(function () {
@@ -267,7 +267,7 @@
         h('main', { ref: content, className: 'i5-main', key: identity, 'aria-label': title },
           h('header', { className: 'i5-page-head' }, h('div', null, h('h1', null, title), h('p', null, locale === 'zh' ? ({ home: '查看最近记录、今日日程与当前会话，继续手头的工作。', library: '集中查看用户偏好、项目笔记、每日日志与反思记录。', handoff: '让当前的目标、进度与经验，在下一段会话中继续。', calendar: '把待办与重要时刻放在一起，让每一天更从容。', recall: '回顾每一次记忆唤起，查看判定依据并留下反馈。', skills: '让反复验证的经验，沉淀为可复用的工作方法。', mindmap: '从工作区与记忆之间，发现持续连接的脉络。', storage: '查看记忆语料、维护索引，以及迁移你的积累。', settings: '决定记忆如何记录、唤回与接续，让它更适合你。' }[page[0]] || '记忆与任务，按当前工作区呈现') : 'Memory and tasks for the current workspace')),
             h('div', { className: 'i5-page-actions' }, h('button', { 'aria-label': focus[0] ? L('退出专注查看', 'Exit focused view') : L('专注查看', 'Focused view'), 'aria-pressed': focus[0], onClick: function () { focus[1](!focus[0]) } }, focus[0] ? L('返回会话', 'Back to conversation') : L('专注查看', 'Focused view')), h('button', { 'aria-label': L('刷新当前页', 'Refresh current page'), onClick: function () { if (root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('刷新会放弃未保存修改，继续？', 'Discard changes and refresh?'))) return; if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']; refresh[1](refresh[0] + 1) } }, L('刷新', 'Refresh')))),
-          h('div', { className: ['team', 'stats'].indexOf(page[0]) >= 0 ? 'i5-card i5-hosted' : '' }, h(Component, { key: page[0] + ':' + nonce + ':' + JSON.stringify(intent[0]), nonce: nonce, onNav: nav, intent: intent[0] })),
+          h('div', { className: '' }, h(Component, { key: page[0] + ':' + nonce + ':' + JSON.stringify(intent[0]), nonce: nonce, onNav: nav, intent: intent[0] })),
           page[0] === 'storage' ? h('details', { className: 'i5-card' }, h('summary', null, L('调试中心', 'Diagnostics')), h(DebugCenter), h('button', { onClick: function () { nav('settings', { group: 'behavior' }) } }, L('检查更新与高级设置', 'Updates and advanced settings'))) : null),
         h('footer', { className: 'i5-statusbar' }, h(Iter5Icon, { name: 'folder' }), h('span', { title: currentWs() || '' }, L('工作区：', 'Workspace: ') + (currentWs() ? pathName(currentWs()) : L('尚未选择', 'Not selected')))))
     }

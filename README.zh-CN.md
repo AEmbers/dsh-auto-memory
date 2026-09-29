@@ -88,13 +88,18 @@
   <a href="https://github.com/Minervaowl7"><strong>@Minervaowl7</strong></a> 完整开发
 </h3>
 
-<p align="center"><img width="680" alt="新款 · 记忆工作台" src="docs/skin-figures/skin-home-zh.png"></p>
+<p align="center">
+  <a href="docs/skin-figures/skin-theme-compare.gif"><img width="720" alt="暗色与亮色主题滑动对比" src="docs/skin-figures/skin-theme-compare.gif"></a>
+</p>
+<p align="center"><sub>
+暗色 ⇄ 亮色滑动对比 · 自动循环预览（GitHub README 不支持真实拖动；面板右上角可实时切换 <strong>暗色 / 亮色 / 跟随系统</strong>）。
+</sub></p>
 
 <p align="center">
-  <img width="158" alt="记忆库" src="docs/skin-figures/skin-library-zh.png">
-  <img width="158" alt="设置" src="docs/skin-figures/skin-settings-zh.png">
-  <img width="158" alt="深色" src="docs/skin-figures/skin-home-dark-zh.png">
-  <img width="158" alt="窄屏" src="docs/skin-figures/skin-home-narrow-zh.png">
+  <img width="172" alt="记忆库" src="docs/skin-figures/skin-library-zh.png">
+  &nbsp;<img width="172" alt="设置" src="docs/skin-figures/skin-settings-zh.png">
+  &nbsp;<img width="172" alt="专注查看" src="docs/skin-figures/skin-tour-zh.png">
+  &nbsp;<img width="172" alt="紧凑布局" src="docs/skin-figures/skin-compact-zh.png">
 </p>
 
 <p align="center"><sub>

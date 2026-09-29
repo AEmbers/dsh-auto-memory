@@ -90,13 +90,19 @@
   <a href="https://github.com/Minervaowl7"><strong>@Minervaowl7</strong></a>
 </h3>
 
-<p align="center"><img width="680" alt="new UI workbench" src="docs/skin-figures/skin-home-zh.png"></p>
+<p align="center">
+  <a href="docs/skin-figures/skin-theme-compare.gif"><img width="720" alt="dark and light theme slider preview" src="docs/skin-figures/skin-theme-compare.gif"></a>
+</p>
+<p align="center"><sub>
+Dark ⇄ Light slider preview · auto-playing loop (GitHub READMEs can't run a real drag widget) —
+in the app, switch <strong>Dark / Light / Follow system</strong> from the panel header.
+</sub></p>
 
 <p align="center">
-  <img width="158" alt="memory library" src="docs/skin-figures/skin-library-zh.png">
-  <img width="158" alt="settings" src="docs/skin-figures/skin-settings-zh.png">
-  <img width="158" alt="dark mode" src="docs/skin-figures/skin-home-dark-zh.png">
-  <img width="158" alt="narrow screen" src="docs/skin-figures/skin-home-narrow-zh.png">
+  <img width="172" alt="memory library" src="docs/skin-figures/skin-library-zh.png">
+  &nbsp;<img width="172" alt="settings" src="docs/skin-figures/skin-settings-zh.png">
+  &nbsp;<img width="172" alt="focus view" src="docs/skin-figures/skin-tour-zh.png">
+  &nbsp;<img width="172" alt="compact layout" src="docs/skin-figures/skin-compact-zh.png">
 </p>
 
 <p align="center"><sub>

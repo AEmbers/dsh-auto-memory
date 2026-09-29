@@ -65,7 +65,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@a9i5k4/dsh-auto-memory"><img alt="npm" src="https://img.shields.io/npm/v/@a9i5k4/dsh-auto-memory"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-BSD--3--Clause-yellow.svg"></a>
-  <img alt="Runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-0-brightgreen">
+  <a href="https://www.npmjs.com/package/@a9i5k4/dsh-auto-memory"><img alt="npm downloads" src="https://img.shields.io/npm/dt/@a9i5k4/dsh-auto-memory"></a>
   <img alt="Platform" src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey">
 </p>
 
@@ -82,6 +82,27 @@
   <a href="https://htmlpreview.github.io/?https://github.com/Aik358/dsh-auto-memory/blob/main/docs/CONTRIBUTORS.html">贡献者与赞助</a> ·
   <a href="https://qm.qq.com/q/v7Asxn6vPa">QQ 交流群</a>
 </p>
+
+<h3 align="center">
+  <a href="docs/SKIN-GUIDE.md">新款 <code>New UI</code></a> &nbsp;·&nbsp; 由
+  <a href="https://github.com/Minervaowl7"><strong>@Minervaowl7</strong></a> 完整开发
+</h3>
+
+<p align="center"><img width="680" alt="新款 · 记忆工作台" src="docs/skin-figures/skin-home-zh.png"></p>
+
+<p align="center">
+  <img width="158" alt="记忆库" src="docs/skin-figures/skin-library-zh.png">
+  <img width="158" alt="设置" src="docs/skin-figures/skin-settings-zh.png">
+  <img width="158" alt="深色" src="docs/skin-figures/skin-home-dark-zh.png">
+  <img width="158" alt="窄屏" src="docs/skin-figures/skin-home-narrow-zh.png">
+</p>
+
+<p align="center"><sub>
+一套参考图风格的记忆工作台：九页主导航、列表与详情分栏、四组设置分区、
+专注查看、深色适配与窄屏布局。在记忆面板右上角即可切换 —— 经典皮肤一字未改，随时切回。
+全部 24 张真机截图见
+<a href="docs/SKIN-GUIDE.md"><strong>皮肤白皮书</strong></a>。
+</sub></p>
 
 ---
 

@@ -24,20 +24,7 @@
 </p>
 <p align="center"><sub>Promo gallery · seven frames · click any thumbnail to view full size</sub></p>
 
-### New UI (`新款`) — rebuilt frontend · contributed by [@Minervaowl7](https://github.com/Minervaowl7)
 
-A reference-style memory workbench: nine-page navigation, list & detail views, four settings groups,
-focus view, dark mode and narrow-screen layouts. Switch to it from the memory panel header button —
-the classic skin is untouched and always one click away.
-
-<p align="center"><img width="640" alt="new UI workbench" src="docs/skin-figures/skin-home-zh.png"></p>
-
-<p align="center">
-  <img width="205" alt="memory library" src="docs/skin-figures/skin-library-zh.png">
-  <img width="205" alt="settings" src="docs/skin-figures/skin-settings-zh.png">
-  <img width="205" alt="dark mode" src="docs/skin-figures/skin-home-dark-zh.png">
-</p>
-<p align="center"><sub>All 24 real-host screenshots live in the <a href="docs/SKIN-GUIDE.md">Skin guide</a></sub></p>
 
 <details>
 <summary><b>Promo gallery, frame by frame</b> (expand and flip through)</summary>
@@ -80,7 +67,7 @@ the classic skin is untouched and always one click away.
 <p align="center">
   <a href="https://www.npmjs.com/package/@a9i5k4/dsh-auto-memory"><img alt="npm" src="https://img.shields.io/npm/v/@a9i5k4/dsh-auto-memory"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-BSD--3--Clause-yellow.svg"></a>
-  <img alt="Runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-0-brightgreen">
+  <a href="https://www.npmjs.com/package/@a9i5k4/dsh-auto-memory"><img alt="npm downloads" src="https://img.shields.io/npm/dt/@a9i5k4/dsh-auto-memory"></a>
   <img alt="Platform" src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey">
 </p>
 
@@ -97,6 +84,28 @@ the classic skin is untouched and always one click away.
   <a href="https://htmlpreview.github.io/?https://github.com/Aik358/dsh-auto-memory/blob/main/docs/CONTRIBUTORS.html">Contributors &amp; Sponsors</a> ·
   <a href="https://qm.qq.com/q/v7Asxn6vPa">QQ group</a>
 </p>
+
+<h3 align="center">
+  <a href="docs/SKIN-GUIDE.md">New UI <code>新款</code></a> &nbsp;·&nbsp; built by
+  <a href="https://github.com/Minervaowl7"><strong>@Minervaowl7</strong></a>
+</h3>
+
+<p align="center"><img width="680" alt="new UI workbench" src="docs/skin-figures/skin-home-zh.png"></p>
+
+<p align="center">
+  <img width="158" alt="memory library" src="docs/skin-figures/skin-library-zh.png">
+  <img width="158" alt="settings" src="docs/skin-figures/skin-settings-zh.png">
+  <img width="158" alt="dark mode" src="docs/skin-figures/skin-home-dark-zh.png">
+  <img width="158" alt="narrow screen" src="docs/skin-figures/skin-home-narrow-zh.png">
+</p>
+
+<p align="center"><sub>
+A reference-style memory workbench: nine-page navigation, list &amp; detail views,
+four settings groups, focus view, dark mode and narrow-screen layouts.
+Switch to it from the memory panel header button — the classic skin is untouched
+and always one click away. All 24 real-host screenshots live in the
+<a href="docs/SKIN-GUIDE.md"><strong>Skin guide</strong></a>.
+</sub></p>
 
 ---
 
@@ -531,13 +540,6 @@ Most of this release adds no new buttons. It changes *what makes a memory trustw
 ---
 
 ## UI gallery
-
-### New UI (`新款`) · rebuilt frontend, contributed by [@Minervaowl7](https://github.com/Minervaowl7)
-
-A reference-style memory workbench — nine-page navigation, list & detail views, four settings groups,
-focus view, dark mode and narrow-screen layouts. See the [Skin guide](docs/SKIN-GUIDE.md) for all 24
-screenshots; the skin source lives in [`skins/iter5/`](skins/iter5/README.md) and is embedded into
-`lib/client.js` by a generator.
 
 ### Memory panel · Overview (away greeting + AI period summaries)
 

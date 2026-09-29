@@ -37,6 +37,7 @@
         mindmap: 'M4 4h5v5H4zM15 15h5v5h-5zM4 15h5v5H4zM6 9v6M9 6h8v9',
         storage: 'M4 5h16v5H4zM4 14h16v5H4zM7 7h2M7 16h2',
         settings: 'M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6',
+        lock: 'M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4M12 14v3',
       }
       return h('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, h('path', { d: paths[props.name] || paths.library }))
     }
@@ -54,7 +55,14 @@
       }))
     }
     function Iter5Card(props) { return h('section', { className: 'i5-card ' + (props.className || '') }, props.title ? h('h2', { className: 'i5-card-title' }, props.icon ? h('span', { className: 'i5-badge', 'data-hue': props.hue || 'blue' }, h(Iter5Icon, { name: props.icon })) : null, props.title) : null, props.children) }
-    function Iter5Error(props) { return h('div', { className: 'i5-error', role: 'alert' }, props.error, props.retry ? h('button', { type: 'button', onClick: props.retry }, L('重试', 'Retry')) : null) }
+    function Iter5Error(props) {
+      // Only an explicit denial identifies this state; an unavailable service is not a permission failure.
+      var denied = /\b(?:EACCES|EPERM|forbidden)\b|HTTP 403\b|权限不足|拒绝访问/i.test(String(props.error || ''))
+      return h('div', { className: 'i5-error', 'data-denied': denied ? 'true' : undefined, role: 'alert' },
+        denied ? h(Iter5Icon, { name: 'lock' }) : null,
+        h('div', { className: 'i5-error-copy' }, h('strong', null, denied ? L('访问被拒绝', 'Access denied') : props.title || L('操作未完成', 'Action incomplete')), h('p', null, props.error), denied ? h('p', null, L('请核对当前目录和宿主的访问权限；权限恢复后可重试。', 'Check the current directory and host access permissions, then retry once access is restored.')) : null),
+        props.retry ? h('button', { type: 'button', onClick: props.retry }, L('重试', 'Retry')) : null)
+    }
     // Never accept a response issued for a different session/workspace or an unmounted view.
     function useIter5Data(loader, deps) {
       var pair = useState({ data: null, error: '', loading: true })
@@ -131,7 +139,7 @@
         })
       }
       if (rowsData.error) return h(Iter5Error, { error: rowsData.error, retry: rowsData.retry })
-      if (rowsData.loading) return h(Loading)
+      if (rowsData.loading) return h(Iter5MemoryLoading)
       if (append[0]) return h('section', { className: 'i5-note-page' },
         h('h2', null, L('追加项目笔记', 'Append project note')),
         h('p', { className: 'i5-muted' }, L('记录决定、补充信息与下一步行动。', 'Record decisions, supporting details and next actions.')),
@@ -142,14 +150,14 @@
           h('select', { 'aria-label': L('记忆范围', 'Memory scope'), value: scope[0], onChange: function (e) { scope[1](e.target.value) } }, [['all', L('全部范围', 'All scopes')], ['user', L('用户级', 'User')], ['project', L('本项目', 'This project')]].map(function (x) { return h('option', { key: x[0], value: x[0] }, x[1]) })),
           h('select', { 'aria-label': L('记忆分类', 'Memory category'), value: filter[0], onChange: function (e) { filter[1](e.target.value) } }, [['all', L('全部分类', 'All categories')], ['user', L('用户偏好', 'Preferences')], ['notes', L('项目笔记', 'Notes')], ['logs', L('日志', 'Logs')], ['reflections', L('反思', 'Reflections')]].map(function (x) { return h('option', { key: x[0], value: x[0] }, x[1]) })),
           h('button', { onClick: function () { if (append[0] && !window.confirm(L('关闭笔记编辑区？未保存的内容将丢失。', 'Close the note editor and discard unsaved text?'))) return; append[1](!append[0]) }, 'aria-expanded': append[0] }, L('追加笔记', 'Append note'))),
-        h('div', { className: 'i5-list-detail' },
+        h('div', { className: 'i5-list-detail', 'data-empty': String(rows.length === 0) },
           h('div', { className: 'i5-card i5-file-list', 'aria-label': L('记忆文件', 'Memory files') }, rows.length ? rows.map(function (r) {
               return h('button', { key: r.path, className: 'i5-file', 'aria-current': r.path === path ? 'true' : undefined, onClick: function () { selectFile(r.path) } }, h('span', { className: 'i5-badge i5-badge-lg', 'data-hue': r.kind === 'user' ? 'pink' : r.kind === 'reflections' ? 'purple' : 'blue' }, h(Iter5Icon, { name: r.kind === 'user' ? 'heart' : 'note' })), h('span', { className: 'i5-file-copy' }, h('strong', null, r.label), h('small', null, r.kind === 'user' ? L('长期偏好与规则', 'Lasting preferences and rules') : r.kind === 'notes' ? L('项目笔记', 'Project notes') : r.kind === 'logs' ? L('每日日志', 'Daily log') : L('反思记录', 'Reflection')), h('span', { className: 'i5-tag' }, r.scope === 'user' ? L('用户级', 'User') : L('本项目', 'Workspace'))), h('small', null, fmtSize(r.size)))
           }) : h('p', { className: 'i5-empty' }, L('没有符合条件的记忆文件', 'No matching memory files'))),
           h('section', { ref: reader, className: 'i5-card i5-source-card', 'aria-label': L('记忆详情', 'Memory detail') },
             h('div', { className: 'i5-source-heading' }, h('span', { className: 'i5-badge', 'data-hue': 'blue' }, h(Iter5Icon, { name: 'note' })), h('h2', { tabIndex: -1 }, chosen ? chosen.label : L('记忆详情', 'Memory detail'))),
             chosen ? h('div', { className: 'i5-source-meta' }, h('span', { className: 'i5-tag' }, chosen.scope === 'user' ? L('用户偏好', 'User preferences') : L('项目记忆', 'Project memory')), h('span', null, fmtSize(chosen.size))) : null,
-            file.error ? h(Iter5Error, { error: file.error, retry: file.retry }) : file.loading && path ? h(Loading) : chosen && file.data ? h(Iter5Document, { text: file.data.content || L('文件暂无内容。', 'This file is empty.') }) : h(Iter5Empty, { title: rows.length ? L('选择一段记忆', 'Select a memory') : L('没有符合条件的记忆文件', 'No matching memory files'), text: L('调整筛选条件，或追加新的项目笔记。', 'Adjust the filters or append a project note.') }),
+            file.error ? h(Iter5Error, { title: L('读取失败', 'Unable to read'), error: file.error, retry: file.retry }) : file.loading && path ? h(Loading) : chosen && file.data ? h(Iter5Document, { text: file.data.content || L('文件暂无内容。', 'This file is empty.') }) : h(Iter5Empty, { title: query[0] || filter[0] !== 'all' || scope[0] !== 'all' ? L('没有符合条件的记忆文件', 'No matching memory files') : L('暂无记忆记录', 'No memory records yet'), text: L('调整筛选条件，或追加新的项目笔记。', 'Adjust the filters or append a project note.') }, h('button', { className: 'i5-primary', onClick: function () { append[1](true) } }, L('追加笔记', 'Append note'))),
             chosen ? h('div', { className: 'i5-source-origin' }, h('strong', null, L('文件来源', 'Source file')), h('small', null, file.data && file.data.path || path)) : null)))
     }
     function Iter5Memory(props) {
@@ -166,9 +174,7 @@
       var items = [['task', L('当前任务', 'Current task')], ['board', L('白板', 'Whiteboard')], ['external', L('外部来源', 'External sources')]]
       return h('div', null, h(Iter5Tabs, { id: 'i5-continue', label: L('接续分区', 'Continuation sections'), items: items, value: tab[0], onChange: tab[1] }),
         h('div', { role: 'tabpanel', id: 'i5-continue-panel', 'aria-labelledby': 'i5-continue-tab-' + tab[0], className: 'i5-hosted' },
-          tab[0] === 'external' ? h(Iter5External, { nonce: props.nonce }) : tab[0] === 'task' ? h(Iter5Handoff, { nonce: props.nonce }) : h('div', { className: 'i5-card' },
-            tab[0] === 'board' ? h('p', { className: 'i5-muted' }, L('白板原文只读；编辑和接续执行由宿主负责。', 'Whiteboard source is read-only; the host manages editing and continuation.')) : null,
-            h(PlanTab, { key: tab[0], nonce: props.nonce }))))
+          tab[0] === 'external' ? h(Iter5External, { nonce: props.nonce }) : h(Iter5Handoff, { key: tab[0], nonce: props.nonce, boardOnly: tab[0] === 'board' })))
     }
     function Iter5Page(props) {
       var page = useState(function () { return iter5PageForTab(controller.panelTab()) })

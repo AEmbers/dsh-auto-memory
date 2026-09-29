@@ -313,7 +313,7 @@
 [data-iter5] .i5-ledger-row strong{font-size:calc(13px * var(--dam-user-scale,1));line-height:1.7;display:block;overflow-wrap:anywhere;}
 [data-iter5] .i5-ledger-row small{display:block;margin-top:5px;font-size:calc(11px * var(--dam-user-scale,1));}
 [data-iter5] .i5-handoff-document .i5-document{max-height:60vh;}
-[data-iter5] .i5-handoff-document .i5-document h3{border-left:3px solid var(--i5-fill);padding-left:10px;margin-top:22px;}
+[data-iter5] .i5-handoff-document .i5-document h3{border-left:0;padding-left:10px;margin-top:22px;}
 [data-iter5] .i5-handoff-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--i5-line);margin-top:20px;padding-top:18px;}
 [data-iter5] .i5-handoff-actions small{flex:1;min-width:160px;}
 [data-iter5] .i5-source-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}

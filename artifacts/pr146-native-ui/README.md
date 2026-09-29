@@ -105,3 +105,35 @@ C55参考已查看。旧empty.library是树桩，当前手写SVG也不符合C55�
 C16/C17已对照参考与前轮截图：白板仍是旧PlanTab长卡片，需要将PLAN/相关材料提为主布局、旧控制保留折叠；外部来源仍是卡片墙，需改列表与详情。**operations-外部来源.png显示自动扫描的其他工具个人记忆，虽为只读但不应提交/上传此截图。** 隔离DSH_HOME并未隔离externalScan中os.homedir()的其他工具目录（lib/index.js约11205）；下轮应使用额外隔离进程home与受控外部样本，或明确标注API夹具，替换该证据。不要将原截图加入PR。
 
 剩余优先：C16/C17实现；C51经典；C55–C58状态；C62–C64真实深色及最终比例/多实例矩阵；全量smoke对基线、finish reviewer/documenter、detector、asset prompt嵌入与包检查；再推送当前PR分支。当前QA宿主以host.pid/listener核实，新empty素材引用是最后修改，尚未重启载入。
+
+## 后续进展：白板、外部来源、经典回退与通用状态
+
+C16 以真实 PLAN/材料索引为主，原控制保留折叠。C17 改为真实来源列表/详情，保留导入、移除、搜索和开关。handoff-sources-check 的12项通过。宿主除隔离 DSH_HOME 外，现以子进程 USERPROFILE 指向该QA目录的 external-home，使 os.homedir() 扫描到的也仅为受控文件；WorkBuddy两文件均明确标注测试样本。没有执行导入或移除。external-isolated-* 替代含私人内容的 operations-外部来源.png，后者禁止提交上传。
+
+C55 真实无匹配筛选使用蓝白折页素材；C56 延迟 list 请求验证加载；C57 注入读取503并恢复真实响应验证重试。states-theme-check 的17项通过，实际DSH主题按钮切换深色，完成欢迎/设置/轻面板截图，finally之外正常流程恢复浅色。390文件列表限制为280px滚动，使详情更易到达；错误状态窄屏截图为滚动后的详情视口，不当作完整首屏。
+
+C51 保留独立经典组件和导航，统一原生底色、导航、文字、间距。classic-permission-check 的11项通过，实际切回经典再回新工作台；未通过真实抛错注入验证自动回退。C58 仅当错误含明确 EACCES/EPERM/forbidden/HTTP403/权限不足/拒绝访问时给出访问被拒绝提示；没有根据普通网络失败推断权限。403测试为API夹具，不证明真实远端团队ACL。参考中的会议记录编辑和角色权限后端不存在，没有新增虚构按钮。
+
+全量同环境对照首次为基线197PASS/24FAIL，本轮194PASS/27FAIL，新增3项均为旧源码结构断言：全文件空态调用次数、全文件channels次数、重复关闭回调变量名。已改为分别校验经典/原生作用域及共享onClose路径，原行为检查保持，三套定向通过；最终全量正在运行。旧缺失模块/模型文件等失败不归入本轮通过。
+
+impeccable detector仅运行一次，唯一旧文档标题3px左框已从源CSS删除。两张新素材已嵌入精确生成prompt，未改图像像素；现有旧素材仍有缺失来源元数据，扫描留档，未凭空补其原始生成信息。独立设计复核进行中。
+
+## 收尾修正（独立设计复核第一批）
+
+用户明确选择 C 原生桌面；没有随机抽取设计方向，没有计算 comp-diff 像素相似度。设计复核为18张实际截图/13张参考的有限抽查，不声称全64图获得该审查通过。coverage.json/COVERAGE.md现逐项列实现、实际截图、夹具种类及未验证内容。
+
+设置高级逐段控制移到组末，保留真实开关；保存区成为滚动正文的兄弟节点。第一次网格限制高度发生行压缩重叠，截图和脚本定位后设置max-content行高，再发现保存条原在正文内部，已在生成器明确移出。最新host-check35项通过，含四组不重叠、保存按钮在视口、390展开设置；最新截图host-记忆及host-memory-390可见固定保存区。经典概览仅用既有字段重新分组，窄屏键值上下排列，未添加参考中的假日程与计数。
+
+深色欢迎新增独立透明蓝色folio，来源/prompt见dark-asset-manifest.json，精确prompt已嵌入PNG。真实截图发现旧路由忽略deep=1，已修复皮肤只读路由按主题选择素材，保留白名单和根目录边界。新增smoke-test-native-skin-dark-route覆盖深浅选择、缺深色回退、越界拒绝、MIME；S2皮肤68项通过。states-theme-check增至19项，校验实际dark URL及HTTP响应字节SHA256与深色PNG一致。
+
+轻面板展开原截图为动画未结束的帧；等待600ms重拍后computed opacity=1，文字rgb(16,32,68)、底色rgb(255,255,255)，未为截图问题乱改颜色。脚本等待实际records/empty/error出现，避免固定短延迟导致假失败。classic-permission11项、host35项、states-theme19项最新通过，无浏览器运行异常。最后全量222套件：198PASS/24FAIL/0TIMEOUT；冻结基线221套件197PASS/24FAIL，无新增失败。保留旧失败明细，非全绿声明。
+
+旧素材来源元数据缺失仍在asset-provenance-scan.txt，本轮三张新素材均有prompt。旧素材保留，不虚构它们的生成来源。实测素材路由、截图均为隔离DSH运行；未调用真实收费模型。最终审查修正评分与设计文档待记录于本目录。
+
+## Kimi 视觉重构轮（2026-09-29 下午）：构图级修正 + 经典动效取长补短
+
+用户拒绝后按 rejection-review 做构图级重构，不做广撒补丁。欢迎页：插图限高 340px 底部对齐、标题 40px/说明 17px、步骤导航恢复圆形+纵向连接轨、底部 dots 下补 01/09 计数、首步隐藏无效「上一步」、390 窄屏按内容高度排版（插图 200px）消除大段空白。宿主记忆设置：组头加一句真实目的说明、数字控件收窄为 124px 右对齐、长技术说明首句截断后收入可展开的「更多说明」（完整语义保留在 details 内）、tab 选中态回到下划线式。轻面板：展开态切换独立几何 min(960,vw-32)×min(760,vh-48) 并与紧凑几何分开持久化，展开 body 获得 data-iter5 主题作用域，日志页签复用工作台 Iter5History（列表+详情的 Iter5Browse），原 LogsTab 保留在其 details 内。首页：最近记录补真实正文首行摘要（与轻面板同款受控 apiGet 读取，仅前 8 条）、右栏日期+大小双行、卡片粘性组头+限高滚动。
+
+美化轮经用户明确授权自由发挥：欢迎页插图加径向光晕与投影、入场动效；圆点选中变长 pill；面板渐变头部、记录卡片悬浮提升、图标渐变底；设置组卡片化带柔和投影、输入焦点蓝色光晕、开关过渡；首页统计带渐变。动效配方直接借自主仓库 main 经典体系：dam-rise(translateY(7px) scale(.988)) 250ms、easeOut cubic-bezier(.22,1,.36,1)、卡片阴影 0 1px 2px + 0 10px 28px 的 token 化版本。为防截图抓到中间帧，入场动画只加在静态壳（统计带/列卡），数据行不加。
+
+验证：host-check 35 项、operations-check 36 项、states-theme-check 19 项、panel-logs-check 2 项全过；iter5 smoke 22/22；全量 222 套件 198 PASS/24 FAIL 与冻结基线逐件相同，无新增失败。手写区三处经审阅改动（向导计数 span、面板几何助手、分组标题精简 + MemoryTabBody 日志改挂 Iter5History + 展开 body data-iter5），smoke-test-iter5-skin.mjs 的源码 sha256 基线已按流程重登记。新增 panel-logs-check.cjs 补拍 C36 日志列表+详情态证据（panel-expanded-logs.png）。

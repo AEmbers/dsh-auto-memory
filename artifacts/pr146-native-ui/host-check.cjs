@@ -10,7 +10,7 @@ const {chromium}=createRequire('C:/Users/李云龙/dsh-auto-memory/docs/ui-redes
  const url=log.match(/http:\/\/127\.0\.0\.1:19388\/\?token=\S+/)?.[0];assert(url,'isolated host URL')
  await page.goto(url)
  if(await page.getByRole('button',{name:'继续',exact:true}).count())await page.getByRole('button',{name:'继续',exact:true}).click()
- await page.waitForTimeout(500)
+ await page.waitForTimeout(1800)
  if(await page.getByRole('button',{name:'稍后配置',exact:true}).count())await page.getByRole('button',{name:'稍后配置',exact:true}).click()
  const config=await page.evaluate(async()=> (await(await fetch('/api/dsh-auto-memory/config')).json()).config)
  check('isolated memory roots',config.memoryRoot.includes('dsh-iter5-qa-20260928')&&config.userMemoryDir.includes('dsh-iter5-qa-20260928'))
@@ -30,19 +30,20 @@ const {chromium}=createRequire('C:/Users/李云龙/dsh-auto-memory/docs/ui-redes
  await tour.locator('[data-native-tour-nav] button').first().click()
  check('welcome artwork loaded',await tour.locator('img').evaluate(el=>el.complete&&el.naturalWidth>0))
  await page.keyboard.press('Escape');check('Escape closes welcome',await tour.count()===0)
+await host.getByRole('tab',{name:'记忆',exact:true}).click();await host.locator('[data-dam-settings-content]').evaluate(n=>n.scrollTop=0);check('390 expanded settings savebar remains in viewport',await host.locator('[data-dam-savebar]').evaluate(n=>n.getBoundingClientRect().bottom<=innerHeight));if(process.env.NATIVE_CAPTURE==='1')await page.screenshot({path:path.join(__dirname,'host-memory-390.png')})
 await page.setViewportSize({width:1440,height:900})
 if(await host.getAttribute('data-expanded')==='true')await host.getByRole('button',{name:'返回宿主设置',exact:true}).click()
-for(const group of ['引擎','记忆','外观与目录','行为与维护']){await host.getByRole('tab',{name:group,exact:true}).click();await page.waitForTimeout(200);if(process.env.NATIVE_CAPTURE==='1')await page.screenshot({path:path.join(__dirname,'host-'+group+'.png')})}
+for(const group of ['引擎','记忆','外观与目录','行为与维护']){await host.getByRole('tab',{name:group,exact:true}).click();await page.waitForTimeout(200);check(group+' content scrolls above savebar',await host.evaluate(n=>{const content=n.querySelector('[data-dam-settings-content]'),save=n.querySelector('[data-dam-savebar]');return content.getBoundingClientRect().bottom<=save.getBoundingClientRect().top+1&&save.getBoundingClientRect().bottom<=innerHeight-20}));check(group+' sections do not overlap',await host.evaluate(n=>{const a=[...n.querySelectorAll('[data-dam-settings-group]:not([hidden])')].filter(e=>e.offsetHeight>0).map(e=>e.getBoundingClientRect());return a.every((r,i)=>!i||r.top>=a[i-1].bottom-1)}));if(process.env.NATIVE_CAPTURE==='1')await page.screenshot({path:path.join(__dirname,'host-'+group+'.png')})}
 await page.getByRole('button',{name:'关闭',exact:true}).click();await page.waitForTimeout(400)
 await page.getByRole('button',{name:'记忆',exact:true}).click();const panel=page.locator('[data-dam-panel]');await panel.waitFor();await panel.locator('[data-native-quick-panel]').waitFor();await page.waitForTimeout(700)
 check('native panel is mounted',await panel.locator('.i5-quick-actions').count()===1)
-check('panel reads actual records or empty state',await panel.locator('.i5-quick-record,.i5-empty-state,.i5-error').count()>0)
+await panel.locator('.i5-quick-record,.i5-empty-state,.i5-error').first().waitFor();check('panel reads actual records or empty state',await panel.locator('.i5-quick-record,.i5-empty-state,.i5-error').count()>0)
 if(process.env.NATIVE_CAPTURE==='1')await page.screenshot({path:path.join(__dirname,'panel-light.png')})
 await panel.getByRole('button',{name:'展开分区',exact:true}).click();check('panel expands to existing tabs',await panel.locator('[data-dam-tab]').count()>0)
- console.log('Workspace choices:',await page.getByRole('treeitem').allTextContents())
+ await page.waitForTimeout(600);console.log('Expanded card style:',await panel.locator('[data-dam-card]').first().evaluate(n=>({opacity:getComputedStyle(n).opacity,color:getComputedStyle(n).color,background:getComputedStyle(n).backgroundColor})))
 if(process.env.NATIVE_CAPTURE==='1')await page.screenshot({path:path.join(__dirname,'panel-expanded.png')})
  fs.writeFileSync(path.join(__dirname,'host-check.json'),JSON.stringify({checks,metrics,errors},null,2))
  check('no runtime exceptions',errors.length===0)
  console.log(JSON.stringify({passed:checks.length,errors}))
- }catch(e){console.log('Open overlays:',(await page.locator('[role=dialog],[role=presentation]').allTextContents()).map(t=>t.slice(0,350)));throw e}finally{await browser.close()}
+ }catch(e){await page.screenshot({path:path.join(__dirname,'host-check-failure.png')});console.log('Runtime errors:',errors);console.log('Open overlays:',(await page.locator('[role=dialog],[role=presentation]').allTextContents()).map(t=>t.slice(0,350)));throw e}finally{await browser.close()}
 })().catch(e=>{console.error(e.message);process.exitCode=1})

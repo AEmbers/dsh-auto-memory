@@ -1,0 +1,825 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-29T05:01:50.701088+00:00",
+  "title": "Design System: DSH Auto Memory · C 原生桌面",
+  "extensions": {
+    "colorMeta": {
+      "i5-blue": {
+        "role": "primary",
+        "displayName": "i5-blue",
+        "canonical": "#1764FF",
+        "tonalRamp": [
+          "oklch(15.00% 0.24107 262.27)",
+          "oklch(26.43% 0.24107 262.27)",
+          "oklch(37.86% 0.24107 262.27)",
+          "oklch(49.29% 0.24107 262.27)",
+          "oklch(60.71% 0.24107 262.27)",
+          "oklch(72.14% 0.24107 262.27)",
+          "oklch(83.57% 0.24107 262.27)",
+          "oklch(95.00% 0.24107 262.27)"
+        ]
+      },
+      "i5-fill": {
+        "role": "primary",
+        "displayName": "i5-fill",
+        "canonical": "#1764FF",
+        "tonalRamp": [
+          "oklch(15.00% 0.24107 262.27)",
+          "oklch(26.43% 0.24107 262.27)",
+          "oklch(37.86% 0.24107 262.27)",
+          "oklch(49.29% 0.24107 262.27)",
+          "oklch(60.71% 0.24107 262.27)",
+          "oklch(72.14% 0.24107 262.27)",
+          "oklch(83.57% 0.24107 262.27)",
+          "oklch(95.00% 0.24107 262.27)"
+        ]
+      },
+      "i5-primary": {
+        "role": "primary",
+        "displayName": "i5-primary",
+        "canonical": "#1764FF",
+        "tonalRamp": [
+          "oklch(15.00% 0.24107 262.27)",
+          "oklch(26.43% 0.24107 262.27)",
+          "oklch(37.86% 0.24107 262.27)",
+          "oklch(49.29% 0.24107 262.27)",
+          "oklch(60.71% 0.24107 262.27)",
+          "oklch(72.14% 0.24107 262.27)",
+          "oklch(83.57% 0.24107 262.27)",
+          "oklch(95.00% 0.24107 262.27)"
+        ]
+      },
+      "i5-on-accent": {
+        "role": "neutral",
+        "displayName": "i5-on-accent",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ]
+      },
+      "i5-bg": {
+        "role": "neutral",
+        "displayName": "i5-bg",
+        "canonical": "#F5FAFF",
+        "tonalRamp": [
+          "oklch(15.00% 0.00854 247.91)",
+          "oklch(26.43% 0.00854 247.91)",
+          "oklch(37.86% 0.00854 247.91)",
+          "oklch(49.29% 0.00854 247.91)",
+          "oklch(60.71% 0.00854 247.91)",
+          "oklch(72.14% 0.00854 247.91)",
+          "oklch(83.57% 0.00854 247.91)",
+          "oklch(95.00% 0.00854 247.91)"
+        ]
+      },
+      "i5-surface": {
+        "role": "neutral",
+        "displayName": "i5-surface",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ]
+      },
+      "i5-side": {
+        "role": "neutral",
+        "displayName": "i5-side",
+        "canonical": "#F2F8FF",
+        "tonalRamp": [
+          "oklch(15.00% 0.01133 252.09)",
+          "oklch(26.43% 0.01133 252.09)",
+          "oklch(37.86% 0.01133 252.09)",
+          "oklch(49.29% 0.01133 252.09)",
+          "oklch(60.71% 0.01133 252.09)",
+          "oklch(72.14% 0.01133 252.09)",
+          "oklch(83.57% 0.01133 252.09)",
+          "oklch(95.00% 0.01133 252.09)"
+        ]
+      },
+      "i5-soft": {
+        "role": "neutral",
+        "displayName": "i5-soft",
+        "canonical": "#EAF2FE",
+        "tonalRamp": [
+          "oklch(15.00% 0.01827 258.35)",
+          "oklch(26.43% 0.01827 258.35)",
+          "oklch(37.86% 0.01827 258.35)",
+          "oklch(49.29% 0.01827 258.35)",
+          "oklch(60.71% 0.01827 258.35)",
+          "oklch(72.14% 0.01827 258.35)",
+          "oklch(83.57% 0.01827 258.35)",
+          "oklch(95.00% 0.01827 258.35)"
+        ]
+      },
+      "i5-text": {
+        "role": "neutral",
+        "displayName": "i5-text",
+        "canonical": "#102044",
+        "tonalRamp": [
+          "oklch(15.00% 0.07123 263.98)",
+          "oklch(26.43% 0.07123 263.98)",
+          "oklch(37.86% 0.07123 263.98)",
+          "oklch(49.29% 0.07123 263.98)",
+          "oklch(60.71% 0.07123 263.98)",
+          "oklch(72.14% 0.07123 263.98)",
+          "oklch(83.57% 0.07123 263.98)",
+          "oklch(95.00% 0.07123 263.98)"
+        ]
+      },
+      "i5-secondary": {
+        "role": "neutral",
+        "displayName": "i5-secondary",
+        "canonical": "#4E6080",
+        "tonalRamp": [
+          "oklch(15.00% 0.05630 261.69)",
+          "oklch(26.43% 0.05630 261.69)",
+          "oklch(37.86% 0.05630 261.69)",
+          "oklch(49.29% 0.05630 261.69)",
+          "oklch(60.71% 0.05630 261.69)",
+          "oklch(72.14% 0.05630 261.69)",
+          "oklch(83.57% 0.05630 261.69)",
+          "oklch(95.00% 0.05630 261.69)"
+        ]
+      },
+      "i5-muted": {
+        "role": "neutral",
+        "displayName": "i5-muted",
+        "canonical": "#5B6B85",
+        "tonalRamp": [
+          "oklch(15.00% 0.04557 260.04)",
+          "oklch(26.43% 0.04557 260.04)",
+          "oklch(37.86% 0.04557 260.04)",
+          "oklch(49.29% 0.04557 260.04)",
+          "oklch(60.71% 0.04557 260.04)",
+          "oklch(72.14% 0.04557 260.04)",
+          "oklch(83.57% 0.04557 260.04)",
+          "oklch(95.00% 0.04557 260.04)"
+        ]
+      },
+      "i5-line": {
+        "role": "neutral",
+        "displayName": "i5-line",
+        "canonical": "#DCE8F7",
+        "tonalRamp": [
+          "oklch(15.00% 0.02413 253.95)",
+          "oklch(26.43% 0.02413 253.95)",
+          "oklch(37.86% 0.02413 253.95)",
+          "oklch(49.29% 0.02413 253.95)",
+          "oklch(60.71% 0.02413 253.95)",
+          "oklch(72.14% 0.02413 253.95)",
+          "oklch(83.57% 0.02413 253.95)",
+          "oklch(95.00% 0.02413 253.95)"
+        ]
+      },
+      "i5-ok": {
+        "role": "secondary",
+        "displayName": "i5-ok",
+        "canonical": "#1F7A4D",
+        "tonalRamp": [
+          "oklch(15.00% 0.11020 156.80)",
+          "oklch(26.43% 0.11020 156.80)",
+          "oklch(37.86% 0.11020 156.80)",
+          "oklch(49.29% 0.11020 156.80)",
+          "oklch(60.71% 0.11020 156.80)",
+          "oklch(72.14% 0.11020 156.80)",
+          "oklch(83.57% 0.11020 156.80)",
+          "oklch(95.00% 0.11020 156.80)"
+        ]
+      },
+      "i5-error": {
+        "role": "secondary",
+        "displayName": "i5-error",
+        "canonical": "#B42338",
+        "tonalRamp": [
+          "oklch(15.00% 0.17903 19.48)",
+          "oklch(26.43% 0.17903 19.48)",
+          "oklch(37.86% 0.17903 19.48)",
+          "oklch(49.29% 0.17903 19.48)",
+          "oklch(60.71% 0.17903 19.48)",
+          "oklch(72.14% 0.17903 19.48)",
+          "oklch(83.57% 0.17903 19.48)",
+          "oklch(95.00% 0.17903 19.48)"
+        ]
+      },
+      "i5-warning": {
+        "role": "secondary",
+        "displayName": "i5-warning",
+        "canonical": "#8A5A0E",
+        "tonalRamp": [
+          "oklch(15.00% 0.10400 71.52)",
+          "oklch(26.43% 0.10400 71.52)",
+          "oklch(37.86% 0.10400 71.52)",
+          "oklch(49.29% 0.10400 71.52)",
+          "oklch(60.71% 0.10400 71.52)",
+          "oklch(72.14% 0.10400 71.52)",
+          "oklch(83.57% 0.10400 71.52)",
+          "oklch(95.00% 0.10400 71.52)"
+        ]
+      },
+      "i5-indigo": {
+        "role": "secondary",
+        "displayName": "i5-indigo",
+        "canonical": "#4F46E5",
+        "tonalRamp": [
+          "oklch(15.00% 0.23005 276.97)",
+          "oklch(26.43% 0.23005 276.97)",
+          "oklch(37.86% 0.23005 276.97)",
+          "oklch(49.29% 0.23005 276.97)",
+          "oklch(60.71% 0.23005 276.97)",
+          "oklch(72.14% 0.23005 276.97)",
+          "oklch(83.57% 0.23005 276.97)",
+          "oklch(95.00% 0.23005 276.97)"
+        ]
+      },
+      "i5-purple": {
+        "role": "secondary",
+        "displayName": "i5-purple",
+        "canonical": "#7C3AED",
+        "tonalRamp": [
+          "oklch(15.00% 0.24659 293.01)",
+          "oklch(26.43% 0.24659 293.01)",
+          "oklch(37.86% 0.24659 293.01)",
+          "oklch(49.29% 0.24659 293.01)",
+          "oklch(60.71% 0.24659 293.01)",
+          "oklch(72.14% 0.24659 293.01)",
+          "oklch(83.57% 0.24659 293.01)",
+          "oklch(95.00% 0.24659 293.01)"
+        ]
+      },
+      "i5-green": {
+        "role": "secondary",
+        "displayName": "i5-green",
+        "canonical": "#047857",
+        "tonalRamp": [
+          "oklch(15.00% 0.10494 165.61)",
+          "oklch(26.43% 0.10494 165.61)",
+          "oklch(37.86% 0.10494 165.61)",
+          "oklch(49.29% 0.10494 165.61)",
+          "oklch(60.71% 0.10494 165.61)",
+          "oklch(72.14% 0.10494 165.61)",
+          "oklch(83.57% 0.10494 165.61)",
+          "oklch(95.00% 0.10494 165.61)"
+        ]
+      },
+      "i5-orange": {
+        "role": "secondary",
+        "displayName": "i5-orange",
+        "canonical": "#B45309",
+        "tonalRamp": [
+          "oklch(15.00% 0.14551 49.00)",
+          "oklch(26.43% 0.14551 49.00)",
+          "oklch(37.86% 0.14551 49.00)",
+          "oklch(49.29% 0.14551 49.00)",
+          "oklch(60.71% 0.14551 49.00)",
+          "oklch(72.14% 0.14551 49.00)",
+          "oklch(83.57% 0.14551 49.00)",
+          "oklch(95.00% 0.14551 49.00)"
+        ]
+      },
+      "i5-pink": {
+        "role": "secondary",
+        "displayName": "i5-pink",
+        "canonical": "#BE123C",
+        "tonalRamp": [
+          "oklch(15.00% 0.19781 16.93)",
+          "oklch(26.43% 0.19781 16.93)",
+          "oklch(37.86% 0.19781 16.93)",
+          "oklch(49.29% 0.19781 16.93)",
+          "oklch(60.71% 0.19781 16.93)",
+          "oklch(72.14% 0.19781 16.93)",
+          "oklch(83.57% 0.19781 16.93)",
+          "oklch(95.00% 0.19781 16.93)"
+        ]
+      },
+      "i5-cyan": {
+        "role": "secondary",
+        "displayName": "i5-cyan",
+        "canonical": "#0E7490",
+        "tonalRamp": [
+          "oklch(15.00% 0.09357 223.13)",
+          "oklch(26.43% 0.09357 223.13)",
+          "oklch(37.86% 0.09357 223.13)",
+          "oklch(49.29% 0.09357 223.13)",
+          "oklch(60.71% 0.09357 223.13)",
+          "oklch(72.14% 0.09357 223.13)",
+          "oklch(83.57% 0.09357 223.13)",
+          "oklch(95.00% 0.09357 223.13)"
+        ]
+      },
+      "i5-slate": {
+        "role": "secondary",
+        "displayName": "i5-slate",
+        "canonical": "#475569",
+        "tonalRamp": [
+          "oklch(15.00% 0.03745 257.28)",
+          "oklch(26.43% 0.03745 257.28)",
+          "oklch(37.86% 0.03745 257.28)",
+          "oklch(49.29% 0.03745 257.28)",
+          "oklch(60.71% 0.03745 257.28)",
+          "oklch(72.14% 0.03745 257.28)",
+          "oklch(83.57% 0.03745 257.28)",
+          "oklch(95.00% 0.03745 257.28)"
+        ]
+      },
+      "i5-blue-dark": {
+        "role": "primary",
+        "displayName": "i5-blue-dark",
+        "canonical": "#9ABEFF",
+        "tonalRamp": [
+          "oklch(15.00% 0.10079 261.92)",
+          "oklch(26.43% 0.10079 261.92)",
+          "oklch(37.86% 0.10079 261.92)",
+          "oklch(49.29% 0.10079 261.92)",
+          "oklch(60.71% 0.10079 261.92)",
+          "oklch(72.14% 0.10079 261.92)",
+          "oklch(83.57% 0.10079 261.92)",
+          "oklch(95.00% 0.10079 261.92)"
+        ]
+      },
+      "i5-fill-dark": {
+        "role": "primary",
+        "displayName": "i5-fill-dark",
+        "canonical": "#77A9FF",
+        "tonalRamp": [
+          "oklch(15.00% 0.13644 260.73)",
+          "oklch(26.43% 0.13644 260.73)",
+          "oklch(37.86% 0.13644 260.73)",
+          "oklch(49.29% 0.13644 260.73)",
+          "oklch(60.71% 0.13644 260.73)",
+          "oklch(72.14% 0.13644 260.73)",
+          "oklch(83.57% 0.13644 260.73)",
+          "oklch(95.00% 0.13644 260.73)"
+        ]
+      },
+      "i5-bg-dark": {
+        "role": "neutral",
+        "displayName": "i5-bg-dark",
+        "canonical": "#151D2C",
+        "tonalRamp": [
+          "oklch(15.00% 0.03156 262.53)",
+          "oklch(26.43% 0.03156 262.53)",
+          "oklch(37.86% 0.03156 262.53)",
+          "oklch(49.29% 0.03156 262.53)",
+          "oklch(60.71% 0.03156 262.53)",
+          "oklch(72.14% 0.03156 262.53)",
+          "oklch(83.57% 0.03156 262.53)",
+          "oklch(95.00% 0.03156 262.53)"
+        ]
+      },
+      "i5-surface-dark": {
+        "role": "neutral",
+        "displayName": "i5-surface-dark",
+        "canonical": "#1D293D",
+        "tonalRamp": [
+          "oklch(15.00% 0.04077 260.33)",
+          "oklch(26.43% 0.04077 260.33)",
+          "oklch(37.86% 0.04077 260.33)",
+          "oklch(49.29% 0.04077 260.33)",
+          "oklch(60.71% 0.04077 260.33)",
+          "oklch(72.14% 0.04077 260.33)",
+          "oklch(83.57% 0.04077 260.33)",
+          "oklch(95.00% 0.04077 260.33)"
+        ]
+      },
+      "i5-side-dark": {
+        "role": "neutral",
+        "displayName": "i5-side-dark",
+        "canonical": "#172338",
+        "tonalRamp": [
+          "oklch(15.00% 0.04335 261.11)",
+          "oklch(26.43% 0.04335 261.11)",
+          "oklch(37.86% 0.04335 261.11)",
+          "oklch(49.29% 0.04335 261.11)",
+          "oklch(60.71% 0.04335 261.11)",
+          "oklch(72.14% 0.04335 261.11)",
+          "oklch(83.57% 0.04335 261.11)",
+          "oklch(95.00% 0.04335 261.11)"
+        ]
+      },
+      "i5-soft-dark": {
+        "role": "neutral",
+        "displayName": "i5-soft-dark",
+        "canonical": "#283F61",
+        "tonalRamp": [
+          "oklch(15.00% 0.06584 258.00)",
+          "oklch(26.43% 0.06584 258.00)",
+          "oklch(37.86% 0.06584 258.00)",
+          "oklch(49.29% 0.06584 258.00)",
+          "oklch(60.71% 0.06584 258.00)",
+          "oklch(72.14% 0.06584 258.00)",
+          "oklch(83.57% 0.06584 258.00)",
+          "oklch(95.00% 0.06584 258.00)"
+        ]
+      },
+      "i5-text-dark": {
+        "role": "neutral",
+        "displayName": "i5-text-dark",
+        "canonical": "#ECF2FF",
+        "tonalRamp": [
+          "oklch(15.00% 0.01860 265.98)",
+          "oklch(26.43% 0.01860 265.98)",
+          "oklch(37.86% 0.01860 265.98)",
+          "oklch(49.29% 0.01860 265.98)",
+          "oklch(60.71% 0.01860 265.98)",
+          "oklch(72.14% 0.01860 265.98)",
+          "oklch(83.57% 0.01860 265.98)",
+          "oklch(95.00% 0.01860 265.98)"
+        ]
+      },
+      "i5-secondary-dark": {
+        "role": "neutral",
+        "displayName": "i5-secondary-dark",
+        "canonical": "#C4D1E8",
+        "tonalRamp": [
+          "oklch(15.00% 0.03499 261.95)",
+          "oklch(26.43% 0.03499 261.95)",
+          "oklch(37.86% 0.03499 261.95)",
+          "oklch(49.29% 0.03499 261.95)",
+          "oklch(60.71% 0.03499 261.95)",
+          "oklch(72.14% 0.03499 261.95)",
+          "oklch(83.57% 0.03499 261.95)",
+          "oklch(95.00% 0.03499 261.95)"
+        ]
+      },
+      "i5-muted-dark": {
+        "role": "neutral",
+        "displayName": "i5-muted-dark",
+        "canonical": "#B2C3DE",
+        "tonalRamp": [
+          "oklch(15.00% 0.04251 259.64)",
+          "oklch(26.43% 0.04251 259.64)",
+          "oklch(37.86% 0.04251 259.64)",
+          "oklch(49.29% 0.04251 259.64)",
+          "oklch(60.71% 0.04251 259.64)",
+          "oklch(72.14% 0.04251 259.64)",
+          "oklch(83.57% 0.04251 259.64)",
+          "oklch(95.00% 0.04251 259.64)"
+        ]
+      },
+      "i5-line-dark": {
+        "role": "neutral",
+        "displayName": "i5-line-dark",
+        "canonical": "#3B4D67",
+        "tonalRamp": [
+          "oklch(15.00% 0.04933 257.53)",
+          "oklch(26.43% 0.04933 257.53)",
+          "oklch(37.86% 0.04933 257.53)",
+          "oklch(49.29% 0.04933 257.53)",
+          "oklch(60.71% 0.04933 257.53)",
+          "oklch(72.14% 0.04933 257.53)",
+          "oklch(83.57% 0.04933 257.53)",
+          "oklch(95.00% 0.04933 257.53)"
+        ]
+      },
+      "i5-ok-dark": {
+        "role": "secondary",
+        "displayName": "i5-ok-dark",
+        "canonical": "#8EDAAF",
+        "tonalRamp": [
+          "oklch(15.00% 0.09726 158.57)",
+          "oklch(26.43% 0.09726 158.57)",
+          "oklch(37.86% 0.09726 158.57)",
+          "oklch(49.29% 0.09726 158.57)",
+          "oklch(60.71% 0.09726 158.57)",
+          "oklch(72.14% 0.09726 158.57)",
+          "oklch(83.57% 0.09726 158.57)",
+          "oklch(95.00% 0.09726 158.57)"
+        ]
+      },
+      "i5-error-dark": {
+        "role": "secondary",
+        "displayName": "i5-error-dark",
+        "canonical": "#FFB2BC",
+        "tonalRamp": [
+          "oklch(15.00% 0.09063 10.63)",
+          "oklch(26.43% 0.09063 10.63)",
+          "oklch(37.86% 0.09063 10.63)",
+          "oklch(49.29% 0.09063 10.63)",
+          "oklch(60.71% 0.09063 10.63)",
+          "oklch(72.14% 0.09063 10.63)",
+          "oklch(83.57% 0.09063 10.63)",
+          "oklch(95.00% 0.09063 10.63)"
+        ]
+      },
+      "i5-warning-dark": {
+        "role": "secondary",
+        "displayName": "i5-warning-dark",
+        "canonical": "#F0CB8A",
+        "tonalRamp": [
+          "oklch(15.00% 0.09250 81.07)",
+          "oklch(26.43% 0.09250 81.07)",
+          "oklch(37.86% 0.09250 81.07)",
+          "oklch(49.29% 0.09250 81.07)",
+          "oklch(60.71% 0.09250 81.07)",
+          "oklch(72.14% 0.09250 81.07)",
+          "oklch(83.57% 0.09250 81.07)",
+          "oklch(95.00% 0.09250 81.07)"
+        ]
+      },
+      "i5-indigo-dark": {
+        "role": "secondary",
+        "displayName": "i5-indigo-dark",
+        "canonical": "#B6B1FF",
+        "tonalRamp": [
+          "oklch(15.00% 0.10977 286.54)",
+          "oklch(26.43% 0.10977 286.54)",
+          "oklch(37.86% 0.10977 286.54)",
+          "oklch(49.29% 0.10977 286.54)",
+          "oklch(60.71% 0.10977 286.54)",
+          "oklch(72.14% 0.10977 286.54)",
+          "oklch(83.57% 0.10977 286.54)",
+          "oklch(95.00% 0.10977 286.54)"
+        ]
+      },
+      "i5-purple-dark": {
+        "role": "secondary",
+        "displayName": "i5-purple-dark",
+        "canonical": "#CFADFF",
+        "tonalRamp": [
+          "oklch(15.00% 0.11845 302.87)",
+          "oklch(26.43% 0.11845 302.87)",
+          "oklch(37.86% 0.11845 302.87)",
+          "oklch(49.29% 0.11845 302.87)",
+          "oklch(60.71% 0.11845 302.87)",
+          "oklch(72.14% 0.11845 302.87)",
+          "oklch(83.57% 0.11845 302.87)",
+          "oklch(95.00% 0.11845 302.87)"
+        ]
+      },
+      "i5-green-dark": {
+        "role": "secondary",
+        "displayName": "i5-green-dark",
+        "canonical": "#8EDAAF",
+        "tonalRamp": [
+          "oklch(15.00% 0.09726 158.57)",
+          "oklch(26.43% 0.09726 158.57)",
+          "oklch(37.86% 0.09726 158.57)",
+          "oklch(49.29% 0.09726 158.57)",
+          "oklch(60.71% 0.09726 158.57)",
+          "oklch(72.14% 0.09726 158.57)",
+          "oklch(83.57% 0.09726 158.57)",
+          "oklch(95.00% 0.09726 158.57)"
+        ]
+      },
+      "i5-orange-dark": {
+        "role": "secondary",
+        "displayName": "i5-orange-dark",
+        "canonical": "#F0CB8A",
+        "tonalRamp": [
+          "oklch(15.00% 0.09250 81.07)",
+          "oklch(26.43% 0.09250 81.07)",
+          "oklch(37.86% 0.09250 81.07)",
+          "oklch(49.29% 0.09250 81.07)",
+          "oklch(60.71% 0.09250 81.07)",
+          "oklch(72.14% 0.09250 81.07)",
+          "oklch(83.57% 0.09250 81.07)",
+          "oklch(95.00% 0.09250 81.07)"
+        ]
+      },
+      "i5-pink-dark": {
+        "role": "secondary",
+        "displayName": "i5-pink-dark",
+        "canonical": "#FFB3C7",
+        "tonalRamp": [
+          "oklch(15.00% 0.09158 1.97)",
+          "oklch(26.43% 0.09158 1.97)",
+          "oklch(37.86% 0.09158 1.97)",
+          "oklch(49.29% 0.09158 1.97)",
+          "oklch(60.71% 0.09158 1.97)",
+          "oklch(72.14% 0.09158 1.97)",
+          "oklch(83.57% 0.09158 1.97)",
+          "oklch(95.00% 0.09158 1.97)"
+        ]
+      },
+      "i5-cyan-dark": {
+        "role": "secondary",
+        "displayName": "i5-cyan-dark",
+        "canonical": "#8FD6E7",
+        "tonalRamp": [
+          "oklch(15.00% 0.07464 214.44)",
+          "oklch(26.43% 0.07464 214.44)",
+          "oklch(37.86% 0.07464 214.44)",
+          "oklch(49.29% 0.07464 214.44)",
+          "oklch(60.71% 0.07464 214.44)",
+          "oklch(72.14% 0.07464 214.44)",
+          "oklch(83.57% 0.07464 214.44)",
+          "oklch(95.00% 0.07464 214.44)"
+        ]
+      },
+      "i5-slate-dark": {
+        "role": "secondary",
+        "displayName": "i5-slate-dark",
+        "canonical": "#C4D1E8",
+        "tonalRamp": [
+          "oklch(15.00% 0.03499 261.95)",
+          "oklch(26.43% 0.03499 261.95)",
+          "oklch(37.86% 0.03499 261.95)",
+          "oklch(49.29% 0.03499 261.95)",
+          "oklch(60.71% 0.03499 261.95)",
+          "oklch(72.14% 0.03499 261.95)",
+          "oklch(83.57% 0.03499 261.95)",
+          "oklch(95.00% 0.03499 261.95)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "headline",
+        "purpose": "工作页标题"
+      },
+      "title": {
+        "displayName": "title",
+        "purpose": "分区标题"
+      },
+      "body": {
+        "displayName": "body",
+        "purpose": "正文与控件"
+      },
+      "label": {
+        "displayName": "label",
+        "purpose": "辅助说明"
+      },
+      "mono": {
+        "displayName": "mono",
+        "purpose": "代码原文"
+      }
+    },
+    "shadows": [
+      {
+        "name": "i5-shadow",
+        "value": "none",
+        "purpose": "常规卡片"
+      },
+      {
+        "name": "shared-overlay",
+        "value": "0 16px 48px color-mix(in srgb,var(--i5-text) 16%,transparent)",
+        "purpose": "共享浮层 !important 规则"
+      }
+    ],
+    "motion": [
+      {
+        "name": "i5-native-tour-enter",
+        "value": "160ms ease-out",
+        "purpose": "欢迎步骤透明度 .7 至 1；减少动态效果时禁用"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "viewport-navigation",
+        "value": "900px"
+      },
+      {
+        "name": "viewport-native",
+        "value": "720px"
+      },
+      {
+        "name": "viewport-small",
+        "value": "600px"
+      },
+      {
+        "name": "container-home",
+        "value": "780px"
+      },
+      {
+        "name": "container-settings",
+        "value": "520px"
+      }
+    ],
+    "provenance": {
+      "tokens": "skins/iter5/skin.css",
+      "components": [
+        "skins/iter5/skin.css",
+        "skins/iter5/native-workbench.css",
+        "skins/iter5/native-panel.css"
+      ],
+      "tonalRamps": "Synthesized OKLCH preview only; not runtime tokens.",
+      "themeMapping": "-dark keys document data-deep=true overrides; primary and on-accent retain light definitions.",
+      "density": {
+        "cssVariable": "--i5-compact-control",
+        "value": "34px"
+      }
+    },
+    "acceptance": {
+      "status": "current implementation inventory / not visually accepted",
+      "reason": "用户明确拒绝当前视觉结果，认为未达到 C 参考复刻目标；等待新的完整视觉复核。"
+    }
+  },
+  "components": [
+    {
+      "name": "次操作",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<button class=\"ds-button-secondary\" >取消</button>",
+      "css": ".ds-button-secondary{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:8px;background:#FFFFFF;padding:6px 12px;min-height:34px;cursor:pointer;line-height:1.4;}.ds-button-secondary:hover{background:#EAF2FE;}.ds-button-secondary:disabled{opacity:.55;cursor:not-allowed;}.ds-button-secondary:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    },
+    {
+      "name": "工作台主操作",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<button class=\"ds-button-primary\" >追加笔记</button>",
+      "css": ".ds-button-primary{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:8px;background:#FFFFFF;padding:6px 12px;min-height:34px;cursor:pointer;line-height:1.4;border-color:#1764FF;background:linear-gradient(120deg,#1764FF,color-mix(in srgb,#1764FF 85%,#102044));color:#FFFFFF;box-shadow:0 4px 10px color-mix(in srgb,#1764FF 15%,transparent);}.ds-button-primary:hover{background:linear-gradient(120deg,#1764FF,color-mix(in srgb,#1764FF 85%,#102044));}.ds-button-primary:disabled{opacity:.55;cursor:not-allowed;}.ds-button-primary:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    },
+    {
+      "name": "轻主操作",
+      "kind": "button",
+      "refersTo": "button-primary-soft",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<button class=\"ds-button-primary-soft\" >查看详情</button>",
+      "css": ".ds-button-primary-soft{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:8px;background:#FFFFFF;padding:6px 12px;min-height:34px;cursor:pointer;line-height:1.4;color:#1764FF;border-color:color-mix(in srgb,#1764FF 25%,#FFFFFF);background:color-mix(in srgb,#FFFFFF 88%,transparent);font-weight:600;}.ds-button-primary-soft:hover{background:color-mix(in srgb,#FFFFFF 88%,transparent);}.ds-button-primary-soft:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    },
+    {
+      "name": "文字操作",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<button class=\"ds-button-link\" >查看全部</button>",
+      "css": ".ds-button-link{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:8px;background:#FFFFFF;padding:6px 12px;min-height:34px;cursor:pointer;line-height:1.4;border:0;background:none;box-shadow:none;color:#1764FF;font-size:12px;padding:4px 0;min-height:32px;}.ds-button-link:hover{background:none;}.ds-button-link:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    },
+    {
+      "name": "筛选字段",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<input class=\"ds-input\" aria-label=\"筛选记忆\" placeholder=\"筛选记忆\">",
+      "css": ".ds-input{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:8px;padding:7px 10px;background:#FFFFFF;min-height:34px;max-width:100%;}.ds-input:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    },
+    {
+      "name": "当前导航",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<button class=\"ds-navigation-active\" aria-current=\"page\">记忆库</button>",
+      "css": ".ds-navigation-active{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:8px;background:#FFFFFF;padding:6px 12px;min-height:34px;cursor:pointer;line-height:1.4;display:flex;align-items:center;gap:14px;text-align:left;border:0;min-height:40px;padding:5px 10px;background:#EAF2FE;color:#1764FF;font-weight:600;}.ds-navigation-active:hover{background:#EAF2FE;}.ds-navigation-active:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    },
+    {
+      "name": "来源标签",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<span class=\"ds-chip\" >本项目</span>",
+      "css": ".ds-chip{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;display:inline-flex;padding:3px 9px;background:#EAF2FE;color:#1764FF;border-radius:6px;font-size:11px;line-height:1.4;}"
+    },
+    {
+      "name": "内容卡片",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<section class=\"ds-card\" >最近记录</section>",
+      "css": ".ds-card{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:12px;background:#FFFFFF;box-shadow:none;padding:16px;margin-bottom:16px;min-width:0;}"
+    },
+    {
+      "name": "轻面板记录",
+      "kind": "custom",
+      "refersTo": "quick-record",
+      "description": "从现存组件提取的浅色样式样本。",
+      "html": "<button class=\"ds-quick-record\" aria-expanded=\"false\">项目笔记</button>",
+      "css": ".ds-quick-record{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;display:flex;align-items:flex-start;gap:14px;width:100%;padding:14px;border:1px solid #DCE8F7;border-radius:10px;background:#FFFFFF;text-align:left;}.ds-quick-record:hover,.ds-quick-record[aria-expanded=true]{background:#F5FAFF;border-color:#1764FF;}.ds-quick-record:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "C 原生桌面 · 白浅蓝记忆工作空间",
+    "overview": "采用用户明确选择的 C 系列参考：白色内容面、浅蓝环境、深蓝文字与清晰蓝色操作。欢迎流程保留独立插画与舒展节奏，工作页以紧凑分区和可读信息行承载日常操作。\n\n运行于 DSH Web 宿主，原生桌面是视觉方向。工作台、宿主设置、轻面板和浮层共享语义主题，各自保有容器与密度。",
+    "keyCharacteristics": [
+      "白浅蓝表面与深蓝文本",
+      "欢迎精致、工作页紧凑",
+      "独立宿主表面共享主题",
+      "真实内容和状态优先"
+    ],
+    "rules": [
+      {
+        "name": "The Shared Theme Rule",
+        "body": "每个独立挂载或 portal 表面携带主题边界，不能依赖工作台恰好在场。",
+        "section": "colors"
+      },
+      {
+        "name": "The Different Density Rule",
+        "body": "共享色彩与控件语言，按欢迎、工作页和轻面板分别安排空间。",
+        "section": "layout"
+      }
+    ],
+    "dos": [
+      "Do 复用语义变量、真实字段和现有可操作组件。",
+      "Do 在独立宿主设置、轻面板及浅深主题中分别检查正文和操作区。",
+      "Do 保留焦点轮廓、字号偏好、窄屏滚动与减少动态效果支持。"
+    ],
+    "donts": [
+      "Don't 将参考截图或图片中的文字当作可操作界面。",
+      "Don't 将参考示例数字、共享样式或 coverage 映射当作全量验收。"
+    ]
+  }
+}

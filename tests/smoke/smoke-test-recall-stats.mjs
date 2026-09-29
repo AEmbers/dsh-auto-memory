@@ -161,7 +161,8 @@ for (const g of ['DamDonut', 'DamBars', 'DamSpark', 'DamHeat', 'DamStat']) {
 }
 ok(cnt(CL, "statsTab: '统计'") === 1 && cnt(CL, "statsTab: 'Stats'") === 1, 'S4g i18n 中英双语齐全')
 // ★用户要求：三条通路分开呈现、看得懂、有图表
-ok(cnt(CL, 'data.channels') === 1, 'S4g2 前端读按通道分组的快照')
+const nativeStats = CL.slice(CL.indexOf('function Iter5Stats() {'), CL.indexOf('// ITER5-GENERATED:END'))
+ok(cnt(nativeStats, 'data.channels') === 1 && !nativeStats.includes('data.stats'), 'S4g2 原生统计读按通道分组的快照，无旧扁平口径')
 {
   // ★S4g3 判据修正（2026-09-22 实测）：全局 `data.stats` 有 2 处命中，但它们在 **DebugCenter 的
   //   「Hub stats」行**（那里的 `data` 是 debug 路由应答体，与统计页无关）⇒ 全局计数是假红。

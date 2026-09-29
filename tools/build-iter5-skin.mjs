@@ -87,7 +87,15 @@ settings = replaceOnce(settings, "return h('div', { 'data-dam-settings-row': '' 
 settings = replaceOnce(settings,
   "h('div', { 'data-dam-slot': 'list', 'data-dam-row': '' }, h('label', null, label), control),\n          hint ? h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint) : null)",
   `h('div', { 'data-dam-slot': 'list', 'data-dam-row': '', className: 'i5-setting-field', 'data-wide': String(!!control && (control.type !== 'input' && control.type !== 'select' || control.props.type === 'text')) },
-            h('div', { className: 'i5-setting-copy' }, h('label', null, label), hint ? h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint) : null),
+            h('div', { className: 'i5-setting-copy' }, h('label', null, label), hint ? (function () {
+              if (typeof hint !== 'string') return h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint)
+              var cut = hint.indexOf('。'), tail = cut + 1
+              if (cut < 0) { cut = hint.indexOf('. '); tail = cut + 2 }
+              if (cut < 8 || cut >= hint.length - 2) return h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint)
+              var lead = hint.slice(0, tail)
+              if (lead.length > 64) lead = lead.slice(0, 64).replace(/[，、；,\s]+$/, '') + '…'
+              return h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, h('span', { className: 'i5-hint-lead' }, lead), h('details', { className: 'i5-hint-more' }, h('summary', null, L('更多说明', 'More')), h('span', null, hint)))
+            })() : null),
             h('div', { className: 'i5-setting-control' }, control)))`)
 const modeStart = settings.indexOf('      function onEngineModeChange(e) {')
 const modeEnd = settings.indexOf('      var sectionLabels =', modeStart)
@@ -114,6 +122,10 @@ settings = replaceOnce(settings,
   "function section(key, title, content) { return h('section', { id: 'dam-settings-' + key, 'data-dam-settings-group': '' }, h('h3', null, title), content) }",
   `var i5WelcomeControl = null
       function section(key, title, content) {
+        if (key === 'window' && content[0] && content[0].props['data-i5-field'] === t('fPromptSections')) {
+          var promptEntry = React.cloneElement(content[0], { 'data-i5-advanced-entry': 'true' })
+          content = content.slice(2).concat([promptEntry, content[1]])
+        }
         if (key === 'auto') content = content.filter(function (node) { if (node && node.props && node.props['data-i5-field'] === t('fWelcomeTour')) { i5WelcomeControl = node; return false } return true })
         if (key === 'look' && i5WelcomeControl) content = [i5WelcomeControl].concat(content)
         var hidden = i5GroupsDef[i5Group[0]].indexOf(key) < 0
@@ -133,7 +145,8 @@ settings = replaceOnce(settings,
             h(Iter5Card, { title: title, icon: 'pulse', hue: 'green' }, primary, h('details', null, h('summary', null, L('高级：发射模式、判定参数与观测', 'Advanced: emission, thresholds & observation')), advanced)))
         }
         var icons = { window: 'library', capacity: 'storage', skills: 'skills', handoff: 'handoff', auto: 'timeline', store: 'folder', look: 'settings', team: 'mindmap', skin: 'spark', about: 'note' }
-        return h('section', { id: 'dam-settings-' + key, 'data-dam-settings-group': '', hidden: hidden }, h('h3', { className: 'i5-card-title' }, h('span', { className: 'i5-badge', 'data-hue': key === 'skills' ? 'green' : key === 'handoff' ? 'cyan' : key === 'auto' ? 'orange' : 'blue' }, h(Iter5Icon, { name: icons[key] || 'settings' })), title), content)
+        var subs = { window: L('控制何时将记忆注入对话上下文，以及注入的规模。', 'When and how much memory is injected into the conversation.'), capacity: L('记忆存储容量与归档策略，控制本地存储的规模。', 'Storage capacity and archival policy for local memory.'), skills: L('记忆相关的内置技能，增强整理、检索与应用能力。', 'Built-in memory skills for organizing, retrieval and application.'), handoff: L('跨会话接续当前任务与上下文。', 'Continue tasks and context across sessions.'), auto: L('自动沉淀、提醒与免打扰行为。', 'Automation, reminders and quiet hours.'), store: L('记忆目录、外部来源与存储维护。', 'Memory directories, external sources and storage.'), look: L('主题、字号与交互偏好。', 'Theme, font size and interaction.'), team: L('团队共享与协作同步。', 'Team sharing and sync.'), skin: L('界面皮肤与插画素材。', 'Skin and illustration assets.') }
+        return h('section', { id: 'dam-settings-' + key, 'data-dam-settings-group': '', hidden: hidden }, h('h3', { className: 'i5-card-title' }, h('span', { className: 'i5-badge', 'data-hue': key === 'skills' ? 'green' : key === 'handoff' ? 'cyan' : key === 'auto' ? 'orange' : 'blue' }, h(Iter5Icon, { name: icons[key] || 'settings' })), h('span', { className: 'i5-card-title-txt' }, title, subs[key] ? h('span', { className: 'i5-card-sub' }, subs[key]) : null)), content)
       }`)
 settings = replaceOnce(settings, "      return h('div', { 'data-dam-settings': '' },", `      return h('div', { 'data-dam-settings': '', 'data-i5-dirty': dirty ? 'true' : 'false' },
         h(Iter5Tabs, { id: 'i5-settings', label: L('设置分组', 'Settings groups'), value: i5Group[0], onChange: i5Group[1], items: [['engine', L('引擎', 'Engine')], ['memory', L('记忆', 'Memory')], ['appearance', L('外观与目录', 'Appearance & paths')], ['behavior', L('行为与维护', 'Behavior & maintenance')]].map(function (r) { return [r[0], r[1], Object.keys(i5Groups.current).some(function (k) { return i5Groups.current[k] === r[0] })] }) }),`)
@@ -150,6 +163,13 @@ const shortcut = "setGuide(''); var n2 = Object.assign({}, cfg); n2.semanticEngi
 settings = replaceOnce(settings, shortcut, "onEngineModeChange({ target: { value: guide } })")
 settings = replaceOnce(settings, "h('div', { 'data-dam-savebar': '' },", "h('div', { 'data-dam-savebar': '', role: 'status' },\n          h('button', { onClick: i5Cancel, disabled: busy || !dirty }, L('取消修改', 'Discard changes')),")
 settings = replaceOnce(settings, 'onClick: save, disabled: busy', 'onClick: save, disabled: busy || !dirty')
+// Save actions are a sibling of the scrolling content, never an overlay on a field.
+const savebarStart = settings.indexOf("        h('div', { 'data-dam-savebar':")
+const savebarEnd = settings.indexOf('        // 调试中心(折叠)', savebarStart)
+if (savebarStart < 0 || savebarEnd < 0) throw Error('Settings savebar boundary not found')
+const savebar = settings.slice(savebarStart, savebarEnd).trimEnd().replace(/,$/, '')
+settings = settings.slice(0, savebarStart) + settings.slice(savebarEnd)
+settings = replaceOnce(settings, "err ? h('div', { 'data-dam-error': '' }, err) : null))", "err ? h('div', { 'data-dam-error': '' }, err) : null),\n" + savebar + ')')
 settings = replaceOnce(settings, "L('有未保存的更改', 'Unsaved changes')", "String(new Set(Object.keys(i5Groups.current).map(function (k) { return i5Groups.current[k] })).size) + L(' 个分区有未保存修改', ' sections with unsaved changes')")
 settings = replaceOnce(settings, "apiPost(API.semanticEmit, { mode: m }).then(function () { refreshSem(setSem) }).catch(function () {})", "apiPost(API.semanticEmit, { mode: m }).then(function () { if (i5Ok()) refreshSem(setSem) }).catch(function (e) { if (i5Ok()) setErr(e.message) })")
 settings = settings.replace("'tauHi 0.45 · tauLo 0.35 · deltaExp 0.03 · deltaPro 0.05'", "L('阈值由宿主校准策略管理；当前接口未提供有效数值', 'Thresholds are managed by the host policy; current values are unavailable')")

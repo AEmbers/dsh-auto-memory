@@ -11,18 +11,29 @@
 [data-iter5] .i5-nav-label{margin-top:16px;padding-top:18px;border-top:1px solid var(--i5-line);font-size:12px;letter-spacing:0;}
 [data-iter5] .i5-side-tools{flex-direction:column;border-top:1px solid var(--i5-line);padding-top:12px;gap:4px;}
 [data-iter5] .i5-side-tools button{text-align:left;display:flex;gap:14px;align-items:center;border:0;font-size:14px;min-height:38px;padding:6px 10px;}
-[data-iter5] .i5-native-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(160px,.9fr);border:1px solid var(--i5-line);border-radius:8px;background:var(--i5-surface);padding:16px 0;margin-bottom:16px;}
+[data-iter5] .i5-native-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(160px,.9fr);border:1px solid var(--i5-line);border-radius:12px;background:linear-gradient(120deg,var(--i5-surface),var(--i5-soft));padding:16px 0;margin-bottom:16px;box-shadow:0 1px 2px color-mix(in srgb,var(--i5-text) 5%,transparent),0 10px 28px color-mix(in srgb,var(--i5-blue) 6%,transparent);}
 [data-iter5] .i5-native-metrics>.i5-stat{border:0;border-right:1px solid var(--i5-line);border-radius:0;padding:0 18px;}
 [data-iter5] .i5-native-metrics .i5-stat>strong,[data-iter5] .i5-native-metrics .i5-stat>small{padding-left:40px;}
 [data-iter5] .i5-native-metrics .i5-stat-top{margin-bottom:0;}
 [data-iter5] .i5-native-metrics-action{padding:2px 18px;display:flex;flex-direction:column;justify-content:center;gap:8px;}
 [data-iter5] .i5-native-metrics-action p{color:var(--i5-secondary);font-size:13px;}
 [data-iter5] .i5-native-metrics-action button{font-size:13px;align-self:flex-end;white-space:nowrap;}
-[data-iter5] .i5-native-home-columns{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:stretch;}
-[data-iter5] .i5-native-home-columns .i5-card{border-radius:8px;}
-[data-iter5] .i5-native-recent .i5-activity-row{border-top:1px solid var(--i5-line);min-height:70px;padding:12px 4px;gap:16px;}
-[data-iter5] .i5-native-recent .i5-activity-row strong{font-size:14px;}
+[data-iter5] .i5-native-home-columns{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start;}
+[data-iter5] .i5-native-home-columns .i5-card{border-radius:12px;box-shadow:0 1px 2px color-mix(in srgb,var(--i5-text) 5%,transparent),0 10px 28px color-mix(in srgb,var(--i5-blue) 5%,transparent);}
+/* 壳层入场沿用经典 dam-rise 配方(250ms/.22,1,.36,1),只动静态壳,不动数据行,避免截图抓到中间帧 */
+@keyframes i5-rise{from{opacity:0;transform:translateY(7px) scale(.988)}to{opacity:1;transform:none}}
+[data-iter5] .i5-native-home>.i5-native-metrics,[data-iter5] .i5-native-home-columns>.i5-card,[data-iter5] .i5-native-home-columns>.i5-native-session-column>.i5-card{animation:i5-rise .25s cubic-bezier(.22,1,.36,1) both;}
+[data-iter5] .i5-native-home-columns>.i5-card:nth-child(2),[data-iter5] .i5-native-session-column>.i5-card:nth-child(2){animation-delay:.03s;}
+[data-iter5] .i5-native-recent .i5-activity-row{transition:background .15s cubic-bezier(.22,1,.36,1);}
+[data-iter5] .i5-native-recent .i5-activity-row:hover{background:var(--i5-soft);}
+[data-iter5] .i5-native-recent{display:block;max-height:min(620px,calc(100dvh - 320px));overflow:auto;}
+[data-iter5] .i5-native-recent .i5-section-heading{position:sticky;top:0;background:var(--i5-surface);z-index:1;padding-bottom:6px;}
+[data-iter5] .i5-native-recent .i5-activity-row{border-top:1px solid var(--i5-line);min-height:64px;padding:10px 4px;gap:14px;align-items:flex-start;}
+[data-iter5] .i5-native-recent .i5-activity-row>div{min-width:0;display:grid;gap:3px;}
+[data-iter5] .i5-native-recent .i5-activity-row strong{font-size:14px;font-weight:600;}
 [data-iter5] .i5-native-recent .i5-activity-row small{font-size:12px;}
+[data-iter5] .i5-native-recent .i5-activity-row>div>small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+[data-iter5] .i5-native-recent .i5-activity-meta{display:grid;justify-items:end;gap:2px;text-align:right;flex:none;font-variant-numeric:tabular-nums;}
 [data-iter5] .i5-native-recent .i5-activity-row>.i5-badge{width:36px;height:40px;border-radius:7px;}
 [data-iter5] .i5-session-details{display:grid;gap:10px;margin:0;padding:16px;background:var(--i5-bg);border:1px solid var(--i5-line);border-radius:8px;}
 [data-iter5] .i5-session-field{display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px;align-items:baseline;}

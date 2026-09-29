@@ -1,10 +1,23 @@
     function Iter5Home(props) {
-      var result = useIter5Data(function () { return Promise.allSettled([iter5MemorySnapshot(), apiGet(API.handoffState, { sessionId: currentSessionIdClient() }), apiGet(API.calendar), apiGet(API.semanticStatus)]) }, [props.nonce])
+      var result = useIter5Data(async function () {
+        var settled = await Promise.allSettled([iter5MemorySnapshot(), apiGet(API.handoffState, { sessionId: currentSessionIdClient() }), apiGet(API.calendar), apiGet(API.semanticStatus)])
+        // C10: 最近记录需要真实正文首行摘要——与轻面板相同的受控读取,仅前 8 条
+        var previews = {}
+        var mem = settled[0] && settled[0].status === 'fulfilled' ? settled[0].value : null
+        if (mem) {
+          var topRows = iter5MemoryRows(mem[0], mem[1]).sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')) }).slice(0, 8)
+          var got = await Promise.allSettled(topRows.map(function (r) { return apiGet(API.file, { path: r.path, ws: currentWs() }) }))
+          got.forEach(function (g, i) { if (g.status === 'fulfilled') previews[topRows[i].path] = String(g.value.content || '').split('\n').filter(function (line) { return line.trim() && !/^\s*#/.test(line) }).join(' ').slice(0, 120) })
+        }
+        settled.push({ status: 'fulfilled', value: previews })
+        return settled
+      }, [props.nonce])
       var values = result.data || []
       function data(i) { return values[i] && values[i].status === 'fulfilled' ? values[i].value : null }
-      var memory = data(0), state = memory && memory[1], list = memory && memory[0], handoff = data(1), calendar = data(2), sem = data(3)
+      var memory = data(0), state = memory && memory[1], list = memory && memory[0], handoff = data(1), calendar = data(2), sem = data(3), previews = data(4) || {}
       var files = memory ? iter5MemoryRows(list, state) : null
       var recent = files && files.slice().sort(function (a,b) { return String(b.date || '').localeCompare(String(a.date || '')) })
+      function kindLabel(k) { return k === 'user' ? L('用户偏好', 'User preferences') : k === 'reflections' ? L('反思记录', 'Reflection') : k === 'logs' ? L('项目日志', 'Project log') : L('项目笔记', 'Project notes') }
       var water = handoff && handoff.waterLevel
       var known = water && water.window > 0 && Number.isFinite(water.ratio) && water.modelKnown !== false
       var today = iter5Date(new Date())
@@ -21,7 +34,7 @@
           h('div', { className: 'i5-native-metrics-action' }, h('p', null, L('让过去的积累，成为下一次的起点。', 'Build on what you learned.')), h('button', { className: 'i5-primary-soft', onClick: function () { props.onNav('library') } }, L('打开记忆库', 'Open memory'), ' →'))),
         h('div', { className: 'i5-native-home-columns' },
           h(Iter5Card, { className: 'i5-native-recent' }, sectionTitle('timeline', L('最近记录', 'Recent records'), L('查看全部', 'View all'), 'library'),
-            result.loading ? h(Loading) : recent && recent.length ? recent.slice(0, 8).map(function (r) { return h('button', { className: 'i5-activity-row', key: r.path, onClick: function () { props.onNav('library', { path: r.path }) } }, h('span', { className: 'i5-badge' }, h(Iter5Icon, { name: 'note' })), h('div', null, h('strong', null, r.label), h('small', null, r.kind === 'user' ? L('用户偏好', 'User preferences') : r.kind === 'reflections' ? L('反思记录', 'Reflection') : r.kind === 'logs' ? L('项目日志', 'Project log') : L('项目笔记', 'Project notes'))), h('small', null, fmtSize(r.size))) }) : h(Iter5Empty, { title: files ? L('还没有记录', 'No records yet') : L('记忆暂不可用', 'Memory unavailable'), text: L('记忆文件会按当前工作区显示。', 'Memory files appear for the current workspace.') })),
+            result.loading ? h(Loading) : recent && recent.length ? recent.slice(0, 8).map(function (r) { return h('button', { className: 'i5-activity-row', key: r.path, onClick: function () { props.onNav('library', { path: r.path }) } }, h('span', { className: 'i5-badge' }, h(Iter5Icon, { name: 'note' })), h('div', null, h('strong', null, r.label, ' · ', kindLabel(r.kind)), h('small', null, previews[r.path] || kindLabel(r.kind))), h('small', { className: 'i5-activity-meta' }, h('span', null, r.date || ''), h('span', null, fmtSize(r.size)))) }) : h(Iter5Empty, { title: files ? L('还没有记录', 'No records yet') : L('记忆暂不可用', 'Memory unavailable'), text: L('记忆文件会按当前工作区显示。', 'Memory files appear for the current workspace.') })),
           h('div', { className: 'i5-native-session-column' },
             h(Iter5Card, null, sectionTitle('pulse', L('当前会话', 'Current session'), L('查看接续', 'Continue'), 'handoff'),
               h('dl', { className: 'i5-session-details' },

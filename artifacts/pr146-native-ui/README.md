@@ -144,3 +144,4 @@ impeccable detector仅运行一次，唯一旧文档标题3px左框已从源CSS�
 - 首页：`i5-native-metrics` 统计条替换为 `i5-native-band` 仪表带——上下文水位环（SVG pathLength+@property --i5-sweep 扫入动画，0% 不渲染进度弧避免圆点帽伪影）、近 7 日新增柱图（真实按日计数，今天高亮）、记忆构成占比条（笔记/日志/反思/偏好四色+图例），全部来自真实接口数据；会话卡删除重复的水位/容量文字行。
 - 验证：iter5 skin 22/22；全量 222 套件 198/24 与冻结基线逐件相同（kimi-smoke-r2.log）；host-check 35、operations-check 36、states-theme 19 通过；实拍 operations-home.png、dark-home.png、home-light-390.png（home-probe.cjs）。
 - impeccable detect：116 条全 advisory（既有 surface 字级/圆角不归一），无硬违规。
+- 去 Slop 追加：统计页无事件通路不再渲染 4×0 指标网格（改源 StatsTab，build 切片再生成）；首页行动格口号「让过去的积累…」换成真实信息「最近写入 · 日期」。手写区基线 hash 重登记（12b0fb22）。全量 198/24 与基线一致（kimi-smoke-r3.log）。

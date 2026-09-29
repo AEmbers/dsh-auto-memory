@@ -22,6 +22,7 @@ const {chromium}=createRequire('C:/Users/李云龙/dsh-auto-memory/docs/ui-redes
  await page.waitForTimeout(600)
  await root.waitFor();await page.waitForTimeout(900)
  await page.screenshot({path:path.join(__dirname,'dark-home.png')})
+ await page.locator('button[aria-label="设置"]').click();await page.getByRole('button',{name:'通用设置',exact:true}).click();await page.getByRole('button',{name:'浅色',exact:true}).click();await page.getByRole('button',{name:'关闭',exact:true}).click()
  console.log(JSON.stringify({errors}))
  await browser.close()
 })().catch(e=>{console.error(e.message);process.exitCode=1})

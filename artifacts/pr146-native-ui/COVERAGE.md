@@ -24,12 +24,12 @@
 | C18 | 日程 | Iter5Calendar | implemented-awaiting-full-matrix |
 | C19 | 技能 | Iter5Skills | implemented-awaiting-full-matrix |
 | C20 | 唤起回顾 | Iter5Recall | implemented-awaiting-full-matrix |
-| C21 | 工作区关系 | Iter5Workspaces | layout-in-progress-graph-clipping-requires-rebuild |
+| C21 | 工作区关系 | Iter5Workspaces | implemented-awaiting-full-matrix |
 | C22 | 存储与维护 | Iter5Storage | implemented-awaiting-full-matrix |
 | C23 | 团队协作 | TeamTab | implemented-awaiting-full-matrix |
 | C24 | 统计 | StatsTab | implemented-awaiting-full-matrix |
-| C25 | 白板看板 | KanbanView | pending-page-comparison |
-| C26 | 白板画布·可选入口 | WhiteboardGraphView | pending-page-comparison |
+| C25 | 白板看板 | KanbanView | implemented-awaiting-full-matrix |
+| C26 | 白板画布·可选入口 | WhiteboardGraphView | implemented-awaiting-full-matrix |
 | C27 | 工作台设置·引擎 | Iter5Settings / engine | implemented-awaiting-final-host-review |
 | C28 | 工作台设置·记忆 | Iter5Settings / memory | implemented-awaiting-final-host-review |
 | C29 | 工作台设置·外观与目录 | Iter5Settings / appearance | implemented-awaiting-final-host-review |

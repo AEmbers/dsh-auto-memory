@@ -205,8 +205,8 @@
     "reference": "C21-workspaces.png",
     "group": "工作台与内容",
     "source": "workspaces",
-    "implementation": "layout-in-progress-graph-clipping-requires-rebuild",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "map-check.json",
     "component": "Iter5Workspaces"
   },
   {
@@ -245,8 +245,8 @@
     "reference": "C25-kanban.png",
     "group": "接续与白板",
     "source": "kanban",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "boards-check.json",
     "component": "KanbanView"
   },
   {
@@ -255,8 +255,8 @@
     "reference": "C26-canvas.png",
     "group": "接续与白板",
     "source": "kanban",
-    "implementation": "pending-page-comparison",
-    "hostEvidence": null,
+    "implementation": "implemented-awaiting-full-matrix",
+    "hostEvidence": "boards-check.json",
     "component": "WhiteboardGraphView"
   },
   {

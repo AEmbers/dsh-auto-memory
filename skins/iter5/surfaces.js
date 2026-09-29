@@ -2,7 +2,27 @@
     function Iter5Surface(props) {
       var deep = useDeepTheme()
       var tick = useTick()
+      var boundary = useRef(null)
       useEffect(function () { return controller.subscribe(tick[1]) }, [])
+      useEffect(function () {
+        if (props.kind !== 'page' || !boundary.current) return
+        var el = boundary.current.querySelector('[data-dam-kanban-view],[data-dam-wbg-wrap]')
+        var area = el && el.closest('[data-conversation-scroll]')
+        if (!el || !area) return
+        function fit() {
+          var style = getComputedStyle(area)
+          var height = area.clientHeight - (parseFloat(style.paddingBottom) || 0) - (parseFloat(style.paddingTop) || 0)
+          var composer = document.querySelector('[data-composer-card]')
+          if (composer) { var top = composer.getBoundingClientRect().top - el.getBoundingClientRect().top; if (top > 0) height = Math.min(height, top - 8) }
+          el.style.height = Math.max(160, height) + 'px'
+          el.style.maxHeight = Math.max(160, height) + 'px'
+        }
+        fit()
+        var observer = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null
+        if (observer) { observer.observe(area); var composer = document.querySelector('[data-composer-card]'); if (composer) observer.observe(composer) }
+        window.addEventListener('resize', fit)
+        return function () { if (observer) observer.disconnect(); window.removeEventListener('resize', fit) }
+      }, [props.kind])
       useEffect(function () {
         var style = document.getElementById('dam-shared-ui-style')
         if (!style) {
@@ -19,7 +39,7 @@
           if (!count) style.remove()
         }
       }, [])
-      var node = h('div', { 'data-dam-theme': props.kind || 'overlay', 'data-deep': String(deep),
+      var node = h('div', { ref: boundary, 'data-dam-theme': props.kind || 'overlay', 'data-deep': String(deep),
         style: { '--dam-user-scale': FONT_SCALE_VALUES[fontScale] || '1' } }, props.children)
       // shell.overlay lives in a z-index:20 host stacking context, below settings.
       // Portal the boundary too, so sibling dialogs retain their theme tokens.

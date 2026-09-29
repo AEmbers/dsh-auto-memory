@@ -54,7 +54,7 @@ typography:
     fontSize: "calc(16px * var(--dam-user-scale,1))"
     fontWeight: 600
   body:
-    fontFamily: "system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif"
+    fontFamily: "\"Segoe UI Variable Text\",system-ui,\"Segoe UI\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",sans-serif"
     fontSize: "calc(14px * var(--dam-user-scale,1))"
     lineHeight: 1.6
   label:
@@ -154,7 +154,7 @@ Neutral：i5-surface 是内容面，i5-bg 是冷浅蓝环境，i5-side 是侧边
 
 **The Different Density Rule.** 共享色彩与控件语言，按欢迎、工作页和轻面板分别安排空间。
 
-工作台：侧栏 208px、标题栏 44px、底栏 34px，主区 padding 20px 24px；统计条后接双列内容。欢迎窗口上限 1120px × 780px、四周预留 48px，侧栏 224px；正文独立滚动，底部操作占独立网格行。宿主设置复用字段布局，但嵌入容器正文滚动、保存区位于独立 flex 行；轻面板也以内容滚动加固定操作区组织。
+工作台：侧栏 208px、标题栏 44px、底栏 34px，主区 padding 20px 24px；首页仪表带（上下文水位环、近 7 日新增柱图、记忆构成占比条，全部真实数据）后接双列内容。欢迎窗口上限 1120px × 780px、四周预留 48px，侧栏 224px；正文独立滚动，底部操作占独立网格行。宿主设置复用字段布局，但嵌入容器正文滚动、保存区位于独立 flex 行；轻面板也以内容滚动加固定操作区组织。
 
 工作控件 --i5-compact-control 为 34px，--i5-compact-gap 为 12px；欢迎按钮至少 44px。720px 以下欢迎改横向步骤导航，窗口宽高分别扣 16px / 24px；工作台改为 44px 标题栏、42px 菜单行、内容、34px 状态栏。基础侧栏在 viewport 900px 或 data-narrow 下抽屉化；不要只看单一断点。容器 780px 以下工作台双列合并，设置字段在容器 520px / viewport 600px 下堆叠，开关仍与标签并列；容器 600px 以下通用控件扩至 44px。窄屏与粗指针的尺寸仍需以最终选择器级联核对，不能声称每个控件都达到同一触控尺寸。
 

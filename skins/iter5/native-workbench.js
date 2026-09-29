@@ -21,16 +21,43 @@
       var water = handoff && handoff.waterLevel
       var known = water && water.window > 0 && Number.isFinite(water.ratio) && water.modelKnown !== false
       var today = iter5Date(new Date())
+      var pct = known ? Math.max(0, Math.min(100, Math.round(water.ratio * 100))) : null
+      var WD = L('周日|周一|周二|周三|周四|周五|周六', 'Sun|Mon|Tue|Wed|Thu|Fri|Sat').split('|')
+      var days = []
+      for (var di = 6; di >= 0; di--) { var dd = new Date(); dd.setDate(dd.getDate() - di); var dk = iter5Date(dd); days.push({ date: dk, label: WD[dd.getDay()], count: 0, today: dk === today }) }
+      ;(files || []).forEach(function (r) { if (!r.date) return; for (var dj = 0; dj < days.length; dj++) if (days[dj].date === r.date) { days[dj].count++; break } })
+      var maxDay = 0, weekTotal = 0
+      days.forEach(function (d) { if (d.count > maxDay) maxDay = d.count; weekTotal += d.count })
+      var COMP_HUES = { notes: 'var(--i5-blue)', logs: 'var(--i5-green)', reflections: 'var(--i5-purple)', user: 'var(--i5-orange)' }
+      var comp = ['notes', 'logs', 'reflections', 'user'].map(function (k) { return { kind: k, color: COMP_HUES[k], label: k === 'notes' ? L('笔记', 'Notes') : k === 'logs' ? L('日志', 'Logs') : k === 'reflections' ? L('反思', 'Reflections') : L('偏好', 'Preferences'), count: (files || []).filter(function (r) { return r.kind === k }).length } }).filter(function (s) { return s.count > 0 })
+      var compTotal = comp.reduce(function (s, x) { return s + x.count }, 0)
       var events = calendar && Array.isArray(calendar.entries) ? calendar.entries.filter(function (e) { return e.date === today }).sort(function (a,b) { return String(a.time || '').localeCompare(String(b.time || '')) }) : null
       var tier = sem ? sem.resolvedTier === 'c3' ? 'C3 · Python' : sem.resolvedTier === 'c2' ? 'C2 · ' + L('内置语义', 'Semantic') : 'C1 · BM25' : L('暂不可用', 'Unavailable')
       function sectionTitle(icon, title, action, target) { return h('div', { className: 'i5-section-heading' }, h('h2', null, h(Iter5Icon, { name: icon }), title), h('button', { className: 'i5-link', onClick: function () { props.onNav(target) } }, action, ' →')) }
       function info(label, value) { return h('div', { className: 'i5-session-field' }, h('dt', null, label), h('dd', null, value)) }
       return h('div', { className: 'i5-home i5-native-home' },
         result.error || values.some(function (r) { return r.status === 'rejected' }) ? h(Iter5Error, { error: result.error || L('部分数据暂不可用', 'Some data is unavailable'), retry: result.retry }) : null,
-        h('div', { className: 'i5-native-metrics', 'aria-busy': result.loading },
-          h(Iter5Stat, { icon: 'library', label: L('记忆文件', 'Memory files'), value: files && files.length, hint: L('总量 · 含日志与反思', 'Includes logs and reflections') }),
-          h(Iter5Stat, { icon: 'folder', label: L('项目日志', 'Project logs'), value: list && list.logs ? list.logs.length : null, hint: L('记忆文件中的日志', 'Logs within memory files') }),
-          h(Iter5Stat, { icon: 'recall', label: L('反思记录', 'Reflections'), value: list && list.reflections ? list.reflections.length : null, hint: L('记忆文件中的反思', 'Reflections within memory files') }),
+        h('div', { className: 'i5-native-band', 'aria-busy': result.loading },
+          h('div', { className: 'i5-band-cell i5-band-water' },
+            h('div', { className: 'i5-ring i5-water-ring' },
+              h('svg', { viewBox: '0 0 100 100' },
+                h('defs', null, h('linearGradient', { id: 'i5-water-grad', x1: '0', y1: '0', x2: '1', y2: '1' }, h('stop', { offset: '0%', stopColor: 'var(--i5-fill)' }), h('stop', { offset: '100%', stopColor: 'var(--i5-blue)' }))),
+                h('circle', { className: 'i5-ring-track', cx: '50', cy: '50', r: '44', pathLength: '100' }),
+                pct ? h('circle', { className: 'i5-ring-progress', cx: '50', cy: '50', r: '44', pathLength: '100', stroke: 'url(#i5-water-grad)', style: { '--i5-sweep': String(pct) } }) : null),
+              h('div', null, h('strong', null, pct == null ? '—' : String(pct)), h('small', null, '%'))),
+            h('div', { className: 'i5-band-water-copy' },
+              h('strong', null, L('上下文水位', 'Context used')),
+              h('small', null, known ? water.tokens.toLocaleString() + ' / ' + water.window.toLocaleString() + ' tokens' : L('接入会话后显示实时占用', 'Live usage once a session connects')))),
+          h('div', { className: 'i5-band-cell i5-band-activity' },
+            h('div', { className: 'i5-band-head' }, h('strong', null, L('近 7 日新增', 'Last 7 days')), h('span', null, weekTotal ? '+' + weekTotal : '—')),
+            h('div', { className: 'i5-activity-chart', role: 'img', 'aria-label': L('近 7 日新增记忆', 'New memories in the last 7 days') },
+              days.map(function (d) { return h('div', { key: d.date, className: 'i5-activity-col', 'data-today': d.today ? 'true' : undefined, title: d.date + ' · ' + d.count + ' ' + L('条', 'items') },
+                h('i', d.count ? { style: { height: Math.max(10, Math.round(d.count / maxDay * 100)) + '%' } } : { 'data-zero': 'true' }),
+                h('small', null, d.label)) }))),
+          h('div', { className: 'i5-band-cell i5-band-comp' },
+            h('div', { className: 'i5-band-head' }, h('strong', null, L('记忆构成', 'Composition')), h('span', null, files ? String(files.length) + ' ' + L('条', 'total') : '—')),
+            h('div', { className: 'i5-comp-bar', role: 'img', 'aria-label': L('记忆构成占比', 'Memory composition') }, compTotal ? comp.map(function (s) { return h('i', { key: s.kind, style: { flexGrow: s.count, background: s.color }, title: s.label + ' ' + s.count }) }) : h('i', { 'data-zero': 'true' })),
+            comp.length ? h('div', { className: 'i5-comp-legend' }, comp.map(function (s) { return h('span', { key: s.kind }, h('i', { style: { background: s.color } }), s.label + ' ' + s.count) })) : h('small', { className: 'i5-muted' }, L('写入记忆后显示构成', 'Composition appears once memories exist'))),
           h('div', { className: 'i5-native-metrics-action' }, h('p', null, L('让过去的积累，成为下一次的起点。', 'Build on what you learned.')), h('button', { className: 'i5-primary-soft', onClick: function () { props.onNav('library') } }, L('打开记忆库', 'Open memory'), ' →'))),
         h('div', { className: 'i5-native-home-columns' },
           h(Iter5Card, { className: 'i5-native-recent' }, sectionTitle('timeline', L('最近记录', 'Recent records'), L('查看全部', 'View all'), 'library'),
@@ -40,8 +67,6 @@
               h('dl', { className: 'i5-session-details' },
                 info(L('工作区', 'Workspace'), state && state.ws ? pathName(state.ws) : L('尚未选择', 'Not selected')),
                 info(L('当前检索', 'Retrieval'), tier),
-                info(L('上下文水位', 'Context used'), known ? Math.round(water.ratio * 100) + '%' : L('尚无可靠计量', 'Not measured')),
-                info(L('上下文容量', 'Context capacity'), known ? water.tokens.toLocaleString() + ' / ' + water.window.toLocaleString() + ' tokens' : '—'),
                 info(L('自动沉淀', 'Automatic memory'), state && state.autoStats && typeof state.autoStats.count === 'number' ? state.autoStats.count : '—'))),
             h(Iter5Card, { className: 'i5-daily-card' }, sectionTitle('calendar', L('今日日程', "Today's schedule"), L('管理日程', 'Manage'), 'calendar'),
               h('p', { className: 'i5-muted' }, today),

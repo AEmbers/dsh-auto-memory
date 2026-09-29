@@ -2,7 +2,7 @@
 [data-dam-theme] aside.i5-native-notice{box-sizing:border-box;position:fixed;right:20px;bottom:20px;z-index:2147483200;width:min(430px,calc(100vw - 32px))!important;background:var(--i5-surface);color:var(--i5-text);box-shadow:0 12px 40px color-mix(in srgb,var(--i5-text) 18%,transparent);overflow:auto;}
 [data-dam-theme] .i5-native-notice>header{display:flex;gap:12px;align-items:center;}
 [data-dam-theme] .i5-native-notice>header>svg{color:var(--i5-blue);flex:none;}
-[data-dam-theme] .i5-native-notice h2{font-size:20px;margin:0;}
+[data-dam-theme] .i5-native-notice h2{font-family:var(--i5-font-display);font-size:20px;letter-spacing:-.015em;margin:0;}
 [data-dam-theme] .i5-native-notice[data-urgent=true]>header{color:var(--i5-error);}
 [data-dam-theme] .i5-notice-copy{font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:18px 0;}
 [data-dam-theme] .i5-native-notice>footer{display:flex;gap:12px;justify-content:flex-end;align-items:center;border-top:1px solid var(--i5-line);padding-top:14px;}
@@ -10,7 +10,7 @@
 [data-dam-theme] .i5-native-notice button[data-primary=true]{background:var(--i5-primary);border-color:var(--i5-primary);color:var(--i5-on-accent);}
 [data-iter5] .i5-native-update>header{display:flex;gap:16px;align-items:center;padding:8px 0 20px;border-bottom:1px solid var(--i5-line);}
 [data-iter5] .i5-native-update>header>svg{color:var(--i5-blue);width:36px;height:36px;}
-[data-iter5] .i5-native-update h3{font-size:22px;margin:0;}
+[data-iter5] .i5-native-update h3{font-family:var(--i5-font-display);font-size:22px;letter-spacing:-.02em;margin:0;}
 [data-iter5] .i5-native-update header p{margin:4px 0 0;color:var(--i5-secondary);}
 [data-iter5] .i5-native-update details{background:var(--i5-bg);padding:16px 20px;border-radius:8px;margin:12px 0;}
 [data-iter5] .i5-native-update summary{cursor:pointer;font-size:16px;font-weight:600;}
@@ -22,7 +22,7 @@
 [data-dam-theme] [data-native-continuation=confirm]{width:min(680px,calc(100vw - 32px))!important;}
 [data-dam-theme] .i5-continuation-heading{display:flex;gap:12px;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--i5-line);}
 [data-dam-theme] .i5-continuation-heading>svg{color:var(--i5-blue);flex:none;}
-[data-dam-theme] .i5-continuation-heading h2{font-size:22px;margin:0;flex:1;}
+[data-dam-theme] .i5-continuation-heading h2{font-family:var(--i5-font-display);font-size:22px;letter-spacing:-.02em;margin:0;flex:1;}
 [data-dam-theme] .i5-continuation-heading button{background:var(--i5-surface);color:var(--i5-secondary);border:1px solid var(--i5-line);border-radius:6px;min-width:34px;min-height:34px;cursor:pointer;}
 [data-dam-theme] .i5-continuation-warning{font-size:16px;font-weight:600;padding:16px;background:color-mix(in srgb,var(--i5-orange) 10%,var(--i5-surface));border-radius:8px;margin:20px 0;}
 [data-dam-theme] .i5-continuation-facts{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;margin:20px 0;}
@@ -41,13 +41,13 @@
 [data-iter5] .i5-dialog-backdrop{backdrop-filter:none;padding:24px;background:color-mix(in srgb,var(--i5-text) 24%,transparent);}
 [data-iter5] .i5-dialog{width:min(640px,100%);max-height:calc(100dvh - 48px);padding:0 24px 24px;border:0;border-radius:10px;}
 [data-iter5] .i5-dialog>.i5-section-heading{position:sticky;top:0;z-index:1;background:var(--i5-surface);padding:18px 24px;margin:0 -24px 20px;border-bottom:1px solid var(--i5-line);}
-[data-iter5] .i5-dialog>.i5-section-heading h2{font-size:20px;margin:0;}
+[data-iter5] .i5-dialog>.i5-section-heading h2{font-family:var(--i5-font-display);font-size:20px;letter-spacing:-.015em;margin:0;}
 [data-iter5] .i5-dialog-footer{justify-content:space-between;}
 [data-iter5] .i5-calendar-form>.i5-form-field{display:grid;grid-template-columns:90px minmax(0,1fr);align-items:center;gap:16px;margin:20px 0;}
 [data-iter5] .i5-calendar-form input,[data-iter5] .i5-calendar-form select{min-height:40px;}
 [data-iter5] .i5-note-page{max-width:1040px;margin:0 auto;}
 [data-iter5] .i5-main:has(.i5-note-page){background:var(--i5-surface);}
-[data-iter5] .i5-note-page>h2{font-size:24px;margin:16px 0 6px;}
+[data-iter5] .i5-note-page>h2{font-family:var(--i5-font-display);font-size:24px;letter-spacing:-.02em;margin:16px 0 6px;}
 [data-iter5] .i5-note-destination{display:flex;gap:14px;background:var(--i5-bg);border-radius:8px;padding:18px;margin:24px 0;}
 [data-iter5] .i5-note-destination>svg{color:var(--i5-blue);flex:none;}
 [data-iter5] .i5-note-destination strong,[data-iter5] .i5-note-destination small{display:block;overflow-wrap:anywhere;}
@@ -57,7 +57,7 @@
 [data-iter5] .i5-note-footer>.i5-primary{margin-left:auto;order:2;}
 [data-iter5] .i5-note-footer>small{color:var(--i5-secondary);}
 [data-iter5] .i5-migration{grid-column:1/-1;min-width:0;}
-[data-iter5] .i5-migration h2{font-size:22px;margin:0 0 6px;}
+[data-iter5] .i5-migration h2{font-family:var(--i5-font-display);font-size:22px;letter-spacing:-.02em;margin:0 0 6px;}
 [data-iter5] .i5-migration h3{font-size:18px;margin:0 0 12px;}
 [data-iter5] .i5-migration>section{border:1px solid var(--i5-line);border-radius:8px;background:var(--i5-surface);padding:24px;margin-top:20px;min-width:0;}
 [data-iter5] .i5-migration p,[data-iter5] .i5-migration span,[data-iter5] .i5-migration small{overflow-wrap:anywhere;}
@@ -156,7 +156,7 @@
 [data-dam-theme] [data-dam-body]>div:has(>[data-dam-kv][data-dam-block=prose]) [data-dam-hint]{opacity:1;color:var(--i5-secondary);font-size:12px;line-height:1.7;}
 [data-dam-theme] [data-dam-page]{background:var(--i5-bg);color:var(--i5-text);font:inherit;}
 [data-dam-theme] [data-dam-page-head]{background:var(--i5-surface);padding:12px 16px;min-height:52px;border-bottom:1px solid var(--i5-line);gap:10px;}
-[data-dam-theme] [data-dam-page-head]>strong{font-size:18px;}
+[data-dam-theme] [data-dam-page-head]>strong{font-family:var(--i5-font-display);font-size:18px;font-weight:650;letter-spacing:-.01em;}
 [data-dam-theme] [data-dam-page-nav]{background:var(--i5-bg);padding:12px 8px;border-color:var(--i5-line);}
 [data-dam-theme] [data-dam-page-nav]>button{padding:10px 12px;min-height:40px;border-radius:6px;color:var(--i5-secondary);font:inherit;}
 [data-dam-theme] [data-dam-page-nav]>button[data-active=true]{background:var(--i5-soft);color:var(--i5-blue);font-weight:600;}

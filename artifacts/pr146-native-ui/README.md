@@ -137,3 +137,10 @@ impeccable detector仅运行一次，唯一旧文档标题3px左框已从源CSS�
 美化轮经用户明确授权自由发挥：欢迎页插图加径向光晕与投影、入场动效；圆点选中变长 pill；面板渐变头部、记录卡片悬浮提升、图标渐变底；设置组卡片化带柔和投影、输入焦点蓝色光晕、开关过渡；首页统计带渐变。动效配方直接借自主仓库 main 经典体系：dam-rise(translateY(7px) scale(.988)) 250ms、easeOut cubic-bezier(.22,1,.36,1)、卡片阴影 0 1px 2px + 0 10px 28px 的 token 化版本。为防截图抓到中间帧，入场动画只加在静态壳（统计带/列卡），数据行不加。
 
 验证：host-check 35 项、operations-check 36 项、states-theme-check 19 项、panel-logs-check 2 项全过；iter5 smoke 22/22；全量 222 套件 198 PASS/24 FAIL 与冻结基线逐件相同，无新增失败。手写区三处经审阅改动（向导计数 span、面板几何助手、分组标题精简 + MemoryTabBody 日志改挂 Iter5History + 展开 body data-iter5），smoke-test-iter5-skin.mjs 的源码 sha256 基线已按流程重登记。新增 panel-logs-check.cjs 补拍 C36 日志列表+详情态证据（panel-expanded-logs.png）。
+
+## Kimi 惊艳轮（2026-09-29 傍晚）：全局精修 + 首页仪表带
+
+- 全局：Segoe UI Variable Text/Display 字体栈、展示字重字距、卡片柔和分层阴影（--i5-shadow token 化）、主题化滚动条/选区/焦点环、输入聚焦环、按钮 hover/active 过渡、开关与进度条内阴影。
+- 首页：`i5-native-metrics` 统计条替换为 `i5-native-band` 仪表带——上下文水位环（SVG pathLength+@property --i5-sweep 扫入动画，0% 不渲染进度弧避免圆点帽伪影）、近 7 日新增柱图（真实按日计数，今天高亮）、记忆构成占比条（笔记/日志/反思/偏好四色+图例），全部来自真实接口数据；会话卡删除重复的水位/容量文字行。
+- 验证：iter5 skin 22/22；全量 222 套件 198/24 与冻结基线逐件相同（kimi-smoke-r2.log）；host-check 35、operations-check 36、states-theme 19 通过；实拍 operations-home.png、dark-home.png、home-light-390.png（home-probe.cjs）。
+- impeccable detect：116 条全 advisory（既有 surface 字级/圆角不归一），无硬违规。

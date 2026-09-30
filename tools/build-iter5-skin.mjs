@@ -229,13 +229,11 @@ storage = storage.slice(0, migrationStart) + `    var migRows = h(Iter5Migration
       pickOut: function () { migPickInto(setMigOut, setMigOutPicking) }, onExport: function () { migExport() },
       pack: migPack, setPack: function (value) { setMigPack(value); setMigPlan(null); setMigResult(null) }, packPicking: migPackPicking,
       pickPack: function () { migPickInto(function (value) { setMigPack(value); setMigPlan(null); setMigResult(null) }, setMigPackPicking) },
-      onPreview: function () { migPreview(migConflict) }, plan: migPlan, onCancelPreview: function () { setMigPlan(null) },
-      conflict: migConflict, setConflict: function (value) { setMigConflict(value); migPreview(value) }, onApply: migApply,
+      onPreview: function () { migPreview(migConflict) }, plan: migPlan, onCancelPreview: migInvalidate,
+      conflict: migConflict, setConflict: migChangeConflict, onApply: migApply,
       busy: migBusy, error: migErr, message: migNote, result: migResult
     })
 ` + storage.slice(migrationEnd)
-storage = replaceOnce(storage, 'function migPreview() {', 'function migPreview(conflict) {')
-storage = replaceOnce(storage, "apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined })", "apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined, onConflict: conflict || migConflict })")
 storage = replaceOnce(storage, "return h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows)", `return h('div', { className: 'i5-storage-view i5-panel i5-instrument' }, h(Iter5Screws),
         deleteRequest[0] ? h(Iter5DeleteConfirmation, { payload: deleteRequest[0].payload, onClose: function () { deleteRequest[1](null) }, onConfirm: function () { var pending = deleteRequest[0]; deleteRequest[1](null); act('delete', pending.payload, pending.onDone, true) } }) : null,
         h('div', { className: 'i5-stats i5-stats-four' },

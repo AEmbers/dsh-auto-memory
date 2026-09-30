@@ -42,7 +42,12 @@ ck('focus 复查', /addEventListener\('focus'/.test(cli))
 ck('未新增 setInterval 用于工作台',
   // ★必须先剥注释：注释里那句「无 setInterval」会命中字面量 ⇒ 假红（第 15 次判据错）
   (() => {
-    const noCmt = cli.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1')
+    let noCmt = cli.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1')
+    // #160: an adjacent draft guard now mentions '|workbench'; exclude only the
+    // already-existing, exact identity watcher (not workbench setup polling).
+    const identityTimer = /useEffect\(function \(\) \{ var timer = setInterval\(function \(\) \{ identityState\[1\]\(iter5Identity\(\)\) \}, 500\); return function \(\) \{ clearInterval\(timer\) \} \}, \[\]\)/g
+    if ([...noCmt.matchAll(identityTimer)].length !== 1) return false
+    noCmt = noCmt.replace(identityTimer, '')
     const hits = [...noCmt.matchAll(/setInterval\s*\(/g)].map((m) => {
       const ln = noCmt.slice(0, m.index).split('\n').length
       return noCmt.split('\n').slice(Math.max(0, ln - 8), ln + 2).join(' ')

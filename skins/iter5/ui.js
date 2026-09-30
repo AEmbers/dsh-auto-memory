@@ -105,7 +105,7 @@
       var rowsData = useIter5Data(iter5MemorySnapshot, [props.nonce])
       var intent = props.intent || {}
       var filter = useState(intent.category || 'all'), scope = useState(intent.scope || 'all'), query = useState(''), selected = useState(intent.path || '')
-      var append = useState(false)
+      var append = useState(function () { return !!iter5NoteDrafts[iter5Identity() + '|workbench'] })
       var reader = useRef(null)
       var rows = rowsData.data ? iter5MemoryRows(rowsData.data[0], rowsData.data[1]).filter(function (r) {
         return (filter[0] === 'all' || r.kind === filter[0]) && (scope[0] === 'all' || r.scope === scope[0]) && (r.label + ' ' + r.path).toLowerCase().indexOf(query[0].toLowerCase()) >= 0
@@ -144,7 +144,7 @@
       if (append[0]) return h('section', { className: 'i5-note-page' },
         h('h2', null, L('追加项目笔记', 'Append project note')),
         h('p', { className: 'i5-muted' }, L('记录决定、补充信息与下一步行动。', 'Record decisions, supporting details and next actions.')),
-        h(Iter5Note, { source: rowsData.data[1].notesPath, onSaved: rowsData.retry, onClose: function () { append[1](false) } }))
+        h(Iter5Note, { persistDraft: 'workbench', source: rowsData.data[1].notesPath, onSaved: rowsData.retry, onClose: function () { append[1](false) } }))
       return h('div', { className: 'i5-panel i5-instrument' }, h(Iter5Screws),
         h('div', { className: 'i5-ph' }, h('h2', null, L('记忆文件', 'Memory files')), h('span', { className: 'i5-ph-right i5-num' }, rows.length)),
         h('div', { className: 'i5-toolbar' },
@@ -182,6 +182,8 @@
       var page = useState(function () { return iter5PageForTab(controller.panelTab()) })
       var refresh = useState(0), menu = useState(false), identityState = useState(iter5Identity), intent = useState(null), focus = useState(false)
       var lastTab = useRef(controller.panelTab())
+      var navigation = useRef(null), ownNavigation = useRef(false)
+      navigation.current = { page: page[0], identity: iter5Identity() }
       var root = useRef(null), menuButton = useRef(null)
       var content = useRef(null)
       var deep = useIter5Theme(), skinStyle = useIter5Style(), identity = iter5Identity()
@@ -220,6 +222,14 @@
         window.addEventListener('resize', fit)
         return function () { if (ro) ro.disconnect(); if (mo) mo.disconnect(); window.removeEventListener('resize', fit) }
       }, [])
+      useEffect(function () { return controller.guardPanelTab(function (next) {
+        var current = navigation.current
+        if (ownNavigation.current || current.identity !== iter5Identity()) return true
+        if (iter5PageForTab(next) === current.page) return true
+        if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定离开？', 'Leave with unsaved changes?'))) return false
+        if (current.page === 'settings') delete iter5SettingsDrafts[current.identity + '|workbench']
+        return true
+      }) }, [])
       useEffect(function () { return controller.subscribe(function () {
         var next = controller.panelTab()
         if (next !== lastTab.current) { lastTab.current = next; page[1](iter5PageForTab(next)) }
@@ -227,12 +237,17 @@
       useEffect(function () { var timer = setInterval(function () { identityState[1](iter5Identity()) }, 500); return function () { clearInterval(timer) } }, [])
       useEffect(function () { if (content.current) content.current.scrollTop = 0 }, [page[0]])
       function nav(id, options) {
-        if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定离开？', 'Discard unsaved changes and leave?'))) return
+        if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定离开？', 'Leave with unsaved changes?'))) return
+        var row = ITER5_PAGES.filter(function (p) { return p[0] === id })[0]
+        var accepted = true
+        ownNavigation.current = true
+        try {
+          if (row && id !== 'settings') accepted = controller.setPanelTab(row[4])
+          if (id === 'team' || id === 'stats') accepted = controller.setPanelTab(id)
+        } finally { ownNavigation.current = false }
+        if (accepted === false) return
         if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']
         intent[1](options || null); page[1](id); menu[1](false)
-        var row = ITER5_PAGES.filter(function (p) { return p[0] === id })[0]
-        if (row && id !== 'settings') controller.setPanelTab(row[4])
-        if (id === 'team' || id === 'stats') controller.setPanelTab(id)
       }
       var meta = ITER5_PAGES.filter(function (p) { return p[0] === page[0] })[0]
       var title = meta ? L(meta[1], meta[2]) : page[0] === 'team' ? L('团队协作', 'Teamwork') : L('统计', 'Statistics')

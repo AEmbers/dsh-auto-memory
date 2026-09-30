@@ -30,7 +30,7 @@ const eq = (a, b, msg) => ok(a === b, msg + (a === b ? '' : ` (got ${JSON.string
 console.log('== 1. 双承载面共享同一份状态（不是抄两份实现） ==')
 ok(/var pos = controller\.panelPos\(\)/.test(SRC), 'MemoryPanel 读取 controller.panelPos()')
 ok(/var panelTab = 'overview'/.test(SRC), '页签状态是模块级共享变量（浮层与会话页同源）')
-ok(/function setPanelTab\(v\) \{ if \(panelTab !== v\) \{ panelTab = v; emit\(\) \} \}/.test(SRC), 'setPanelTab 改状态即 emit ⇒ 两处同时重渲染')
+ok(/function setPanelTab\(v\) \{[\s\S]*?panelTabGuards\.some[\s\S]*?panelTab = v; emit\(\); return true/.test(SRC), 'setPanelTab 先校验草稿导航，再改共享状态并 emit（#160）')
 ok(/panelTab: function \(\) \{ return panelTab \}/.test(SRC), 'controller.panelTab() 暴露给会话页')
 ok(/var tab = controller\.panelTab\(\)\s*\n\s*var setTab = controller\.setPanelTab/.test(SRC), 'MemoryPanel 用共享页签（不再各自 useState）')
 ok(/function MemoryPageView\(props\)/.test(SRC), '存在会话页组件 MemoryPageView')

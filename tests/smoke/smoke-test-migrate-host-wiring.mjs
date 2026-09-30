@@ -57,8 +57,8 @@ console.log('\n[H2] 宿主不得有裸 `os.` 引用（未导入即 ReferenceErro
 console.log('\n[H3] 前端三处调用必须携带工作区（否则宿主只能回退/失败）')
 {
   ok(/API\.migrateExport,\s*\{\s*ws:/.test(cl), 'H3a 导出传 ws')
-  ok(/API\.migrateInspect,\s*\{\s*packPath: migPack,\s*targetWs:/.test(cl), 'H3b 预览传 targetWs')
-  ok(/API\.migrateImport,\s*\{\s*packPath: migPack,\s*targetWs:/.test(cl), 'H3c 导入传 targetWs')
+  ok(/var binding = \{ packPath: migPack, targetWs: migWs \|\| undefined/.test(cl) && /API\.migrateInspect, binding/.test(cl), 'H3b 预览绑定当前工作区 targetWs（#160）')
+  ok(/API\.migrateImport, binding/.test(cl) && /binding\.targetWs !== \(currentWs\(\) \|\| undefined\)/.test(cl), 'H3c 导入复用已核对工作区的预览绑定（#160）')
   ok(cnt(cl, 'function currentWs()') === 1, 'H3d 工作区来源是既有的 currentWs()（同文件可达）')
   // 三处都不得再出现「裸调用」形态
   ok(cnt(cl, 'apiPost(API.migrateExport, { outPath:') === 0, 'H3e 导出旧形态（无 ws）已不存在')

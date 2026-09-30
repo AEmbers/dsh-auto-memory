@@ -3,6 +3,7 @@
   "checks": [
     "isolated profile",
     "body text follows host at 14px",
+    "light surface matches host",
     "recall mode visible without advanced",
     "tuning initially folded",
     "advanced tunable accessible",
@@ -13,7 +14,7 @@
     "外观与目录 readable",
     "接续与维护 readable",
     "mobile root fits",
-    "dark host remains neutral",
+    "dark form matches host panel across all surfaces",
     "no browser errors"
   ],
   "errors": []

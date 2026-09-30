@@ -158,8 +158,11 @@
 [data-iter5][data-i5-embedded] :is(small,.i5-muted,.i5-style-picker,.i5-mode-picker,.i5-hint-more>summary){font-size:calc(var(--dsh-content-font-size,14px) * 6 / 7)!important;}
 
 /* Host settings are a neutral native form, independent of workbench materials. */
-[data-dam-theme=settings] [data-iter5][data-i5-embedded]{--i5-bg:#fff;--i5-face:#fff;--i5-surface:#fff;--i5-side:#fff;--i5-recess:#fff;--i5-soft:#f3f6fc;--i5-text:#25262a;--i5-secondary:#585b63;--i5-muted:#666a73;--i5-line:#e4e5e9;--i5-hair:#eeeef1;--i5-bezel:#d6d8de;--i5-shadow:none;background:var(--i5-face);color:var(--i5-text);}
-[data-dam-theme=settings][data-deep=true] [data-i5-embedded]{--i5-bg:#202124;--i5-face:#202124;--i5-surface:#202124;--i5-side:#202124;--i5-recess:#202124;--i5-soft:#2c303a;--i5-text:#ededf0;--i5-secondary:#c5c6cc;--i5-muted:#aeb0b9;--i5-line:#3d3f46;--i5-hair:#34363c;--i5-bezel:#555761;}
+/* Workbench aliases point DSH tokens back to i5 tokens. Restore inheritance at
+   both settings roots before consuming host tokens, avoiding circular aliases. */
+[data-dam-theme=settings],[data-dam-theme=settings] [data-iter5][data-i5-embedded]{--dsw-alias-bg-layer-1:inherit;--dsw-alias-bg-layer-2:inherit;--dsw-alias-label-primary:inherit;--dsw-alias-label-secondary:inherit;--dsw-alias-border-l1:inherit;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded]{--i5-host-face-fallback:#fff;--i5-host-text-fallback:#25262a;--i5-host-secondary-fallback:#585b63;--i5-host-line-fallback:#e4e5e9;--i5-bg:var(--dsw-alias-bg-layer-2,var(--i5-host-face-fallback));--i5-face:var(--i5-bg);--i5-surface:var(--i5-bg);--i5-side:var(--i5-bg);--i5-recess:var(--i5-bg);--i5-soft:var(--dsw-alias-interactive-bg-hover,#80808014);--i5-text:var(--dsw-alias-label-primary,var(--i5-host-text-fallback));--i5-secondary:var(--dsw-alias-label-secondary,var(--i5-host-secondary-fallback));--i5-muted:var(--i5-secondary);--i5-line:var(--dsw-alias-border-l2,var(--i5-host-line-fallback));--i5-hair:var(--i5-line);--i5-bezel:var(--dsw-alias-border-l1,var(--i5-host-line-fallback));--i5-blue:var(--dsw-alias-state-business-primary,#4166e8);--i5-shadow:none;background:var(--i5-face);color:var(--i5-text);}
+[data-dam-theme=settings][data-deep=true] [data-i5-embedded]{--i5-host-face-fallback:#292a2c;--i5-host-text-fallback:#ededf0;--i5-host-secondary-fallback:#c5c6cc;--i5-host-line-fallback:#3d3f46;}
 [data-dam-theme=settings] [data-iter5][data-i5-embedded]>.i5-settings-frame-head{padding:4px 0 16px;border:0;background:var(--i5-face);gap:8px;}
 [data-dam-theme=settings] [data-iter5][data-i5-embedded]>.i5-main{background:var(--i5-face);padding:0;}
 [data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings-content]{padding:0 8px 20px 0;gap:24px;background:var(--i5-face);}
@@ -195,3 +198,6 @@
 [data-iter5] .i5-mode-card .i5-setting-field{display:block;}
 [data-iter5] .i5-mode-card .i5-setting-copy{display:block;margin-bottom:12px;}
 [data-iter5] .i5-mode-card .i5-setting-copy>label{display:none;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings-row] input[type=checkbox]{background:var(--dsw-alias-bg-module-platform,var(--i5-soft));border-color:var(--i5-line);box-shadow:none;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings-row] input[type=checkbox]:checked{background:var(--i5-blue);border-color:var(--i5-blue);}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings-row] input[type=checkbox]::after{background:var(--dsw-static-neutral-bluish-00,#fff);box-shadow:none;}

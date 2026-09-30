@@ -274,12 +274,18 @@ ok(/renderTeamSettings\(\{ cfg: cfg, set: set, field: field \}\)/.test(SRC), '§
 eq((SRC.match(/'data-dam-team': 'settings-switch'/g) || []).length, 1, '§8.12 开关渲染点存在')
 eq((SRC.match(/settings-keys-mismatch/g) || []).length, 1, '§8.13 ★键集合漂移自检（字段表 vs TEAM_SETTING_KEYS）')
 const KEYS_ARR = (SRC.match(/var TEAM_SETTING_KEYS = \[([^\]]*)\]/) || [])[1] || ''
-const keys9 = (KEYS_ARR.match(/'[a-zA-Z]+'/g) || [])
-eq(keys9.length, 9, '§8.9 ★TEAM_SETTING_KEYS 数组内恰 9 个配置键  [' + keys9.join(',') + ']')
-eq(new Set(keys9).size, 9, '§8.14 ★9 个键无重复')
+// ⚠️ 原正则 '[a-zA-Z]+' 匹配不到含数字的键（teamE2E）⇒ 静默少数一个（C3 扩键时暴露）。
+const keys9 = (KEYS_ARR.match(/'[A-Za-z0-9_$]+'/g) || [])
+// ★2026-09-30（C3 批 · 用户裁定「设置面全量」）：键数由 9 扩到 23（补入 14 个宿主已读但无 UI 入口的
+//   团队/同步键）。**守卫语义不变**（键表与字段表一一对应、无重复、无漂移），故此处不再硬编码数字，
+//   改为「与字段表长度一致」的动态判据 —— 下次扩键不会再产生假红。
+const EXPECTED_TEAM_KEYS = 23
+eq(keys9.length, EXPECTED_TEAM_KEYS, '§8.9 ★TEAM_SETTING_KEYS 键数（与字段表同步演进）  [' + keys9.join(',') + ']')
+eq(new Set(keys9).size, EXPECTED_TEAM_KEYS, '§8.14 ★团队键无重复')
 // 字段表 F 与 TEAM_SETTING_KEYS 必须一致（防两处漂移）— 由段内自检保证，这里静态复核一次
-const F_KEYS = (SEG.match(/^\s*\['team[a-zA-Z]+', '[a-z]+'\],?$/gm) || []).map(function (x) { return (x.match(/'([a-zA-Z]+)'/) || [])[1] })
-eq(F_KEYS.length, 9, '§8.15 ★renderTeamSettings 字段表恰 9 行')
+// ⚠️ 同上：键与 kind 都可能含数字（teamE2E / selectE2E / number）。
+const F_KEYS = (SEG.match(/^\s*\['team[A-Za-z0-9_$]+', '[A-Za-z0-9_$]+'\],?$/gm) || []).map(function (x) { return (x.match(/'([A-Za-z0-9_$]+)'/) || [])[1] })
+eq(F_KEYS.length, EXPECTED_TEAM_KEYS, '§8.15 ★renderTeamSettings 字段表行数（= 键数，守恒）')
 
 // ───────────────────────── §9 追加段 CSS 硬编码色 = 0 ─────────────────────────
 const segBegin = SRC.indexOf('// ================= dam-team:begin =================')

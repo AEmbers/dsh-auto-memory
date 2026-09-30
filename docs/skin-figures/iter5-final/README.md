@@ -39,3 +39,12 @@
 17 项隔离宿主检查通过、0 pageerror：通过真实字号按钮调整到 12px / 17px，覆盖三皮肤 × 两种明暗；展开后动态更改宿主字体变量，验证即时继承；390px 窄屏表单检查通过。测试结束将隔离宿主字号恢复 14px。字体变量注入验证是受控测试，不声称宿主已有字体选择 UI。
 
 [12px](host-font-12.png) · [17px](host-font-17.png) · [窄屏](host-font-mobile.png) · [检查记录](host-font-checks.json)
+
+
+## 宿主设置白底协调版（最新）
+
+用户要求此入口与 DSH 设置协调，因此宿主“自动记忆”设置现在独立于工作台材质：浅色白底，深色随 DSH；去掉活水渐变、厚阴影和层层卡片，使用分隔线、轻量单选行和统一控件。工作台外观选择移至“外观与目录”，页头仅保留标题及展开按钮。字体/字号仍跟随宿主。
+
+19 项隔离宿主检查通过，0 pageerror；包括原字体矩阵、窄屏、白底无渐变、宿主深色覆盖工作台浅色偏好。生成器幂等、语法及 iter5 行为回归通过。Impeccable 扫描仅 2 条圆角 advisory，无非 advisory。
+
+[白底新版](host-neutral-light.png) · [宿主深色](host-neutral-dark.png) · [窄屏](host-neutral-mobile.png) · [检查记录](host-neutral-checks.json)

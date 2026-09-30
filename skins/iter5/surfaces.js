@@ -1,6 +1,7 @@
     // Each registered surface owns a theme boundary, including sibling overlays.
     function Iter5Surface(props) {
-      var deep = useIter5Theme(), skinStyle = useIter5Style()
+      var skinDeep = useIter5Theme(), hostDeep = useDeepTheme(), skinStyle = useIter5Style()
+      var deep = props.kind === 'settings' ? hostDeep : skinDeep
       var tick = useTick()
       var boundary = useRef(null)
       useEffect(function () { return controller.subscribe(tick[1]) }, [])
@@ -108,7 +109,7 @@
             if (e.shiftKey && document.activeElement === nodes[0]) { e.preventDefault(); nodes[nodes.length - 1].focus() }
             else if (!e.shiftKey && document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus() }
           } },
-          h('header', { className: 'i5-settings-frame-head' }, h('strong', null, L('记忆设置', 'Memory settings')), h(Iter5StylePicker), h(Iter5ModePicker),
+          h('header', { className: 'i5-settings-frame-head' }, h('strong', null, L('记忆设置', 'Memory settings')),
             h('button', { 'data-i5-settings-return': '', onClick: function () { expanded[1](!expanded[0]) } }, expanded[0] ? L('返回宿主设置', 'Back to host settings') : L('展开设置', 'Expand settings'))),
           h('div', { className: 'i5-main' }, h(Iter5Settings, { key: identity[0], draftScope: 'host', close: props && props.close }))))
       return h('div', { ref: slot, 'data-i5-settings-slot': '' },

@@ -156,3 +156,30 @@
 [data-iter5][data-i5-embedded] :is(h1,h2,h3,.i5-settings-frame-head>strong){font-size:calc(var(--dsh-content-font-size,14px) * 8 / 7)!important;}
 [data-iter5][data-i5-embedded] :is([data-dam-hint],.i5-card-sub){font-size:calc(var(--dsh-content-font-size,14px) * 13 / 14)!important;}
 [data-iter5][data-i5-embedded] :is(small,.i5-muted,.i5-style-picker,.i5-mode-picker,.i5-hint-more>summary){font-size:calc(var(--dsh-content-font-size,14px) * 6 / 7)!important;}
+
+/* Host settings are a neutral native form, independent of workbench materials. */
+[data-dam-theme=settings] [data-iter5][data-i5-embedded]{--i5-bg:#fff;--i5-face:#fff;--i5-surface:#fff;--i5-side:#fff;--i5-recess:#fff;--i5-soft:#f3f6fc;--i5-text:#25262a;--i5-secondary:#585b63;--i5-muted:#666a73;--i5-line:#e4e5e9;--i5-hair:#eeeef1;--i5-bezel:#d6d8de;--i5-shadow:none;background:var(--i5-face);color:var(--i5-text);}
+[data-dam-theme=settings][data-deep=true] [data-i5-embedded]{--i5-bg:#202124;--i5-face:#202124;--i5-surface:#202124;--i5-side:#202124;--i5-recess:#202124;--i5-soft:#2c303a;--i5-text:#ededf0;--i5-secondary:#c5c6cc;--i5-muted:#aeb0b9;--i5-line:#3d3f46;--i5-hair:#34363c;--i5-bezel:#555761;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded]>.i5-settings-frame-head{padding:4px 0 16px;border:0;background:var(--i5-face);gap:8px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded]>.i5-main{background:var(--i5-face);padding:0;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings-content]{padding:0 8px 20px 0;gap:24px;background:var(--i5-face);}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings]>.i5-tabs{padding:0;gap:22px;margin:0 0 20px;background:var(--i5-face);}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] :is(.i5-card,[data-dam-settings-group]){padding:0;border:0;border-radius:0;background:none;box-shadow:none;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] .i5-engine-grid{grid-template-columns:minmax(0,1fr);gap:24px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] :is(.i5-card,[data-dam-settings-group])+.i5-card{border-top:1px solid var(--i5-line);padding-top:24px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] .i5-card-title{padding:0;margin:0 0 12px;border:0;background:none;letter-spacing:0;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] .i5-card-title>.i5-badge{background:none;border:0;box-shadow:none;color:var(--i5-secondary);width:20px;height:20px;border-radius:0;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] .i5-engine-radios{gap:2px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] .i5-engine-choice{min-height:38px;padding:8px 10px;border:0;border-radius:6px;background:none;box-shadow:none;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] .i5-engine-choice:has(:checked){background:var(--i5-soft);box-shadow:none;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] button:not([role=tab]){background:var(--i5-face);box-shadow:none;border-radius:6px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] button:not(:disabled):hover{background:var(--i5-soft);}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] :is(input:not([type=checkbox]):not([type=radio]),select,textarea){background:var(--i5-face);border-color:var(--i5-bezel);box-shadow:none;border-radius:6px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] .i5-setup-card>div{background:var(--i5-face)!important;border-color:var(--i5-line)!important;box-shadow:none!important;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings-row]{padding:14px 0;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-savebar]{background:var(--i5-face);padding:12px 0 0;border-top:1px solid var(--i5-line);gap:8px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-savebar] button[data-dirty=true]{background:var(--i5-blue);color:var(--i5-face);}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded][data-expanded=true]{padding:20px max(20px,env(safe-area-inset-right)) 16px max(20px,env(safe-area-inset-left));}
+
+[data-dam-theme=settings] .i5-workbench-appearance{display:flex;align-items:center;flex-wrap:wrap;gap:10px;flex:none;padding:0 0 16px;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded]>.i5-settings-frame-head>button{margin-left:auto;}

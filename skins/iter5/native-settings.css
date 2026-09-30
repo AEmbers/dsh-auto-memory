@@ -147,3 +147,12 @@
 @media(max-width:720px){
  [data-iter5] [data-dam-settings-row] input[type=checkbox]{border-color:transparent;}
 }
+/* Host settings follow DSH typography directly, including when portalled to body. */
+[data-dam-theme=settings], [data-iter5][data-i5-embedded]{font-family:var(--dsw-font-family,system-ui);font-size:var(--dsh-content-font-size,14px);}
+[data-iter5][data-i5-embedded]{--dam-user-scale:1;--dam-scale:1;--i5-font-display:var(--dsw-font-family,system-ui);}
+/* Classic form fragments contain inline pixel sizes. Normalize only this host entry. */
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] *{font-size:inherit!important;}
+[data-iter5][data-i5-embedded] :not(code,pre,kbd,samp){font-family:inherit!important;}
+[data-iter5][data-i5-embedded] :is(h1,h2,h3,.i5-settings-frame-head>strong){font-size:calc(var(--dsh-content-font-size,14px) * 8 / 7)!important;}
+[data-iter5][data-i5-embedded] :is([data-dam-hint],.i5-card-sub){font-size:calc(var(--dsh-content-font-size,14px) * 13 / 14)!important;}
+[data-iter5][data-i5-embedded] :is(small,.i5-muted,.i5-style-picker,.i5-mode-picker,.i5-hint-more>summary){font-size:calc(var(--dsh-content-font-size,14px) * 6 / 7)!important;}

@@ -50,3 +50,5 @@ node tests/smoke/smoke-test-iter5-skin.mjs
 实现：style-choice.js 管理偏好及主题覆盖，alternate-home.js 用同一首页数据渲染编辑/活水布局，style-variants.css 控制跨页与独立浮层外观。新增源文件需随生成器 fixture 一起维护。验证见 artifacts/three-skins-20260930/ACCEPTANCE.md。
 
 最终参考、配色与验证见 [实拍验收](../../docs/skin-figures/iter5-final/README.md)。
+
+宿主设置入口的字体与字号直接跟随 DSH 全局变量；独立插件字号不在此入口叠加，展开设置与换肤不改变这一规则。工作台的排版倍率不受影响。

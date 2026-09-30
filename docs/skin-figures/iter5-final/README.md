@@ -30,3 +30,12 @@
 - [仪器浅色](instrument-light-1440.png) / [深色](instrument-dark-1440.png)
 - [编辑浅色](editorial-light-1440.png) / [深色](editorial-dark-1440.png)
 - [活水浅色](water-light-1440.png) / [深色](water-dark-1440.png)
+
+
+## 宿主设置字体跟随
+
+自动记忆的宿主设置入口直接采用 DSH 的 `--dsh-content-font-size` 和 `--dsw-font-family`，不叠加插件独立字号倍率。标题、提示与正文保留相对层级；内嵌和展开到 body 的设置均适用。三个皮肤与浅深模式共享该规则。DSH 当前有全局字号控件；字体跟随宿主发布的主题字体变量，不额外提供宿主没有的字体选择器。
+
+17 项隔离宿主检查通过、0 pageerror：通过真实字号按钮调整到 12px / 17px，覆盖三皮肤 × 两种明暗；展开后动态更改宿主字体变量，验证即时继承；390px 窄屏表单检查通过。测试结束将隔离宿主字号恢复 14px。字体变量注入验证是受控测试，不声称宿主已有字体选择 UI。
+
+[12px](host-font-12.png) · [17px](host-font-17.png) · [窄屏](host-font-mobile.png) · [检查记录](host-font-checks.json)

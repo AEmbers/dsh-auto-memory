@@ -16,7 +16,6 @@ import os from 'node:os'
 import { fileURLToPath } from 'node:url'
 import * as RL from '../../lib/rules-layer.js'
 import * as NS from '../../lib/note-status.js'
-import { listRuleItemsPre } from '../../lib/rules-edit.js'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, '../..')
@@ -97,28 +96,7 @@ ok(/applyRuleEditPre\(engine/.test(routeBlock), '前端路由走同一写盘口'
 ok(!/writeFull\(/.test(routeBlock), '路由内不再自带第二套写入')
 
 console.log('[G7] 写盘口真行为（真 fs 临时目录）')
-function extractFn(header) {
-  const i = SRC_IX.indexOf(header)
-  if (i < 0) throw new Error('未找到：' + header)
-  // ★从**形参列表结束**后的第一个 { 起算 —— 形参默认值里也有 {}（payload = {}, opts = {}），
-  //   直接找第一个 { 会从默认值开始配平 ⇒ 函数体被提前截断（本守卫首版即撞上此坑）
-  let s = SRC_IX.indexOf('{', SRC_IX.indexOf(')', i)), d = 0
-  for (let j = s; j < SRC_IX.length; j++) {
-    if (SRC_IX[j] === '{') d++
-    else if (SRC_IX[j] === '}') { d--; if (d === 0) return SRC_IX.slice(i, j + 1) }
-  }
-  throw new Error('花括号不平衡：' + header)
-}
-const src = extractFn('async function applyRuleEditPre(engine, op, payload = {}, opts = {})')
-// ★#147（2026-09-30）：applyRuleEditPre 删除分支新增 stripOrphanAnchorsPre 引用（模块级绑定）——
-//   抽取重建的作用域里没有它 ⇒ 必须按注入表纪律一并注入，否则 ReferenceError 被外层 catch 吞掉，
-//   表现为「独占卡删除静默不生效」（与 autocont-host 夹具 contTitleStampPre 同款坑）。
-const apply = new Function('listRuleItemsPre', 'appendRuleItemPre', 'updateRuleItemPre', 'removeRuleItemPre', 'stripOrphanAnchorsPre',
-  'return ' + src)(listRuleItemsPre,
-  (await import('../../lib/rules-edit.js')).appendRuleItemPre,
-  (await import('../../lib/rules-edit.js')).updateRuleItemPre,
-  (await import('../../lib/rules-edit.js')).removeRuleItemPre,
-  (await import('../../lib/index.js')).stripOrphanAnchorsPre)
+const { applyRuleEditPre: apply } = await import('../../lib/index.js')
 ok(typeof apply === 'function', 'applyRuleEditPre 可被取出运行')
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'p9-rules-'))
@@ -147,8 +125,11 @@ eq(newIdx, 0, 'add 落点在文件头部（用户手写区）')
 const afterRm = await apply(fakeEngine, 'remove', { index: newIdx, expect: '第三条：新规则。' }, { requireExpect: true })
 eq(afterRm.items.length, 2, 'remove 真删且条数回落')
 ok(!fs.readFileSync(file, 'utf8').includes('第三条'), '被删条目确实从磁盘消失（真删，非软标）')
-const noExpectRoute = await apply(fakeEngine, 'remove', { index: 1 }, { requireExpect: false })
-ok(noExpectRoute.ok, 'GUI 侧 requireExpect=false 时沿用 R7 语义（不强制）')
+const noExpectRoute = await apply(fakeEngine, 'remove', { index: 1 }, { requireExpect: true, requireRevision: true })
+ok(!noExpectRoute.ok, '#160 GUI 缺内容/全文版本必须拒绝')
+const guiView = await apply(fakeEngine, 'list')
+const guiEdit = await apply(fakeEngine, 'remove', { index: 1, expect: guiView.items[1].text, revision: guiView.revision }, { requireExpect: true, requireRevision: true })
+ok(guiEdit.ok, '#160 GUI 当前内容及全文版本匹配时放行')
 console.log('[P9] #147 独占锚点卡条目删除（orphan-anchor 整篇拒写，2026-09-30）')
 {
   const { parseAnchors } = await import('../../lib/memory-anchor.js')

@@ -43,6 +43,9 @@ const classic = source
 // ★2026-09-30（D2 · 设置双向实时同步）本快照第七次演进：saveConfigPatch 成功后 emit 广播（唯一写出口
 //   一处收口）；两个 I5 入口（宿主设置面板 / 工作台设置页）各增一个「广播即重取」effect，含三条安全线
 //   （有草稿不覆盖用户输入 / busy 不重取 / 身份不符放弃）。功能性验收见 smoke-test-settings-sync.mjs。
+// ★2026-09-30（D3 · 提示词层镜像 12→23 逐字一致）本快照第八次演进：DEFAULT_PROMPT_LAYERS_CLIENT
+//   由 12 层扩为与服务端同键序的 23 层、逐字一致（此前 snapshotHead/snapshotWelcomeBody 为截断版）。
+//   守卫升级：g4-whiteboard 新增 G4-6d（键集相等 + 逐键求值比对），并把原 G4-6b 的键序假设改为花括号配对抽取。
 // ★2026-09-30（A 批 · 皮肤可插拔重构，用户裁定「基线永不变」）本快照再次演进，归因五条：
 //   (1) damSkinActive 由二值改三值（classic / v4 / iter5 = 默认）；
 //   (2) 新增 damSkinCssFlavor + damSkinCssText：样式表按当前皮肤分派，两份 CSS 绝不同时注入；
@@ -50,7 +53,7 @@ const classic = source
 //   (4) 挂载门与挂载期注入门由 === v4 放宽为 !== classic（否则默认档被挡在门外，皮肤整个不见）；
 //   (5) 经典侧入口按钮口径改为「经典 <-> 新皮肤族」。
 //   守卫语义不变：生成块之外的任何**非意外**改动仍会被本锁抓住。
-assert.equal(createHash('sha256').update(classic).digest('hex'), 'b262b65034f9e64c244534ff1878dc19e0e7a8b5930e26e273f5513631eec444', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), '72112370416244e118be3b99632dfed380c961f404cfe4ca5573e4ea5c50fb49', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

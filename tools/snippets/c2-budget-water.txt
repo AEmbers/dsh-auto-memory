@@ -1,0 +1,18 @@
+          // ★2026-09-30（C2 · 用户裁定：设置面必须全量，不得缺项）——注入预算/白板账本/水位四组键，
+          //   此前只有宿主读、无 UI 入口（实测 client.js 零引用）：
+          //   ① tier0BudgetShare = Tier-0 目录占注入预算的比例（与 tier0MaxTokens 取小生效）；
+          //   ② slimPlanChars / slimLedgerChars = 精简版注入里白板/账本的字符上限；
+          //   ③ snapshotTieredInject = 分级注入总开关（关掉=每轮全量快照，token 成本显著上升）；
+          //   ④ waterLevelThresholdMode / officialCompactionRatio / officialHeadroomTokens / waterLevelAutoMargin
+          //      = 上下文水位与压缩的四个人为旋钮（auto 档校准用）。
+          //   全部写 DEFAULT_CONFIG 内既有键（宿主白名单通过）。
+          field(t('fTier0Share'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 1, step: 0.05, value: cfg.tier0BudgetShare === undefined ? 0.25 : cfg.tier0BudgetShare, onChange: function (e) { set('tier0BudgetShare', Math.max(0, Number(e.target.value) || 0.25)) } }), t('fTier0ShareHint')),
+          field(t('fSlimPlan'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 4000, value: cfg.slimPlanChars === undefined ? 400 : cfg.slimPlanChars, onChange: function (e) { set('slimPlanChars', Math.max(0, Number(e.target.value) || 400)) } }), t('fSlimPlanHint')),
+          field(t('fSlimLedger'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 4000, value: cfg.slimLedgerChars === undefined ? 300 : cfg.slimLedgerChars, onChange: function (e) { set('slimLedgerChars', Math.max(0, Number(e.target.value) || 300)) } }), t('fSlimLedgerHint')),
+          field(t('fTieredInject'), h('input', { type: 'checkbox', 'data-dam-key': 'snapshotTieredInject', checked: cfg.snapshotTieredInject !== false, onChange: function (e) { set('snapshotTieredInject', e.target.checked) } }), t('fTieredInjectHint')),
+          field(t('fWaterMode'), h('select', { 'data-dam-select': '', value: String(cfg.waterLevelThresholdMode || 'auto'), onChange: function (e) { set('waterLevelThresholdMode', e.target.value) } },
+            h('option', { value: 'auto' }, L('auto 自动校准（推荐）', 'auto (calibrated)')),
+            h('option', { value: 'fixed' }, L('fixed 固定阈值（旧行为）', 'fixed threshold (legacy)'))), t('fWaterModeHint')),
+          field(t('fCompactionRatio'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0.1, max: 1, step: 0.05, value: cfg.officialCompactionRatio === undefined ? 0.8 : cfg.officialCompactionRatio, onChange: function (e) { set('officialCompactionRatio', Math.max(0.1, Number(e.target.value) || 0.8)) } }), t('fCompactionRatioHint')),
+          field(t('fOfficialHeadroom'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 1000000, step: 1024, value: cfg.officialHeadroomTokens === undefined ? 65536 : cfg.officialHeadroomTokens, onChange: function (e) { set('officialHeadroomTokens', Math.max(0, Number(e.target.value) || 65536)) } }), t('fOfficialHeadroomHint')),
+          field(t('fAutoMargin'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0.1, max: 1, step: 0.05, value: cfg.waterLevelAutoMargin === undefined ? 0.9 : cfg.waterLevelAutoMargin, onChange: function (e) { set('waterLevelAutoMargin', Math.max(0.1, Number(e.target.value) || 0.9)) } }), t('fAutoMarginHint')),

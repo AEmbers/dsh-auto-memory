@@ -1413,6 +1413,24 @@
           field(t('fExtBudget'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 200, value: cfg.externalInjectionChars === undefined ? 1400 : cfg.externalInjectionChars, onChange: function (e) { set('externalInjectionChars', Number(e.target.value) || 1400) } }), t('fExtBudgetHint')),
           field(t('fSnapGap'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 50, value: cfg.snapshotMinGapRounds === undefined ? 5 : cfg.snapshotMinGapRounds, onChange: function (e) { set('snapshotMinGapRounds', Number(e.target.value) || 5) } }), t('fSnapGapHint')),
           field(t('fReinjectOnCompact'), h('input', { type: 'checkbox', checked: cfg.snapshotReinjectOnCompact !== false, onChange: function (e) { set('snapshotReinjectOnCompact', e.target.checked) } }), t('fReinjectOnCompactHint')),
+          // ★2026-09-30（C2 · 用户裁定：设置面必须全量，不得缺项）——注入预算/白板账本/水位四组键，
+          //   此前只有宿主读、无 UI 入口（实测 client.js 零引用）：
+          //   ① tier0BudgetShare = Tier-0 目录占注入预算的比例（与 tier0MaxTokens 取小生效）；
+          //   ② slimPlanChars / slimLedgerChars = 精简版注入里白板/账本的字符上限；
+          //   ③ snapshotTieredInject = 分级注入总开关（关掉=每轮全量快照，token 成本显著上升）；
+          //   ④ waterLevelThresholdMode / officialCompactionRatio / officialHeadroomTokens / waterLevelAutoMargin
+          //      = 上下文水位与压缩的四个人为旋钮（auto 档校准用）。
+          //   全部写 DEFAULT_CONFIG 内既有键（宿主白名单通过）。
+          field(t('fTier0Share'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 1, step: 0.05, value: cfg.tier0BudgetShare === undefined ? 0.25 : cfg.tier0BudgetShare, onChange: function (e) { set('tier0BudgetShare', Math.max(0, Number(e.target.value) || 0.25)) } }), t('fTier0ShareHint')),
+          field(t('fSlimPlan'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 4000, value: cfg.slimPlanChars === undefined ? 400 : cfg.slimPlanChars, onChange: function (e) { set('slimPlanChars', Math.max(0, Number(e.target.value) || 400)) } }), t('fSlimPlanHint')),
+          field(t('fSlimLedger'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 4000, value: cfg.slimLedgerChars === undefined ? 300 : cfg.slimLedgerChars, onChange: function (e) { set('slimLedgerChars', Math.max(0, Number(e.target.value) || 300)) } }), t('fSlimLedgerHint')),
+          field(t('fTieredInject'), h('input', { type: 'checkbox', 'data-dam-key': 'snapshotTieredInject', checked: cfg.snapshotTieredInject !== false, onChange: function (e) { set('snapshotTieredInject', e.target.checked) } }), t('fTieredInjectHint')),
+          field(t('fWaterMode'), h('select', { 'data-dam-select': '', value: String(cfg.waterLevelThresholdMode || 'auto'), onChange: function (e) { set('waterLevelThresholdMode', e.target.value) } },
+            h('option', { value: 'auto' }, L('auto 自动校准（推荐）', 'auto (calibrated)')),
+            h('option', { value: 'fixed' }, L('fixed 固定阈值（旧行为）', 'fixed threshold (legacy)'))), t('fWaterModeHint')),
+          field(t('fCompactionRatio'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0.1, max: 1, step: 0.05, value: cfg.officialCompactionRatio === undefined ? 0.8 : cfg.officialCompactionRatio, onChange: function (e) { set('officialCompactionRatio', Math.max(0.1, Number(e.target.value) || 0.8)) } }), t('fCompactionRatioHint')),
+          field(t('fOfficialHeadroom'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 1000000, step: 1024, value: cfg.officialHeadroomTokens === undefined ? 65536 : cfg.officialHeadroomTokens, onChange: function (e) { set('officialHeadroomTokens', Math.max(0, Number(e.target.value) || 65536)) } }), t('fOfficialHeadroomHint')),
+          field(t('fAutoMargin'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0.1, max: 1, step: 0.05, value: cfg.waterLevelAutoMargin === undefined ? 0.9 : cfg.waterLevelAutoMargin, onChange: function (e) { set('waterLevelAutoMargin', Math.max(0.1, Number(e.target.value) || 0.9)) } }), t('fAutoMarginHint')),
           field(t('fPromptCustom'), h('button', { 'data-dam-slot': 'actions', 'data-dam-btn': '', onClick: function () { setPromptEditOpen(!promptEditOpen) } }, (promptEditOpen ? (L('收起', 'Collapse')) : (L('编辑 prompt 层', 'Edit prompt layers')))), t('fPromptCustomHint')),
           promptEditOpen ? [
             h('div', { key: '__layers', style: { padding: '6px 0 2px', width: '100%' } },
@@ -1495,6 +1513,16 @@
           field(t('fAutoPopup'), h('input', { type: 'checkbox', checked: cfg.autoPopupEnabled !== false, onChange: function (e) { set('autoPopupEnabled', e.target.checked) } }), t('fAutoPopupHint')),
           field(t('fUnattended'), h('input', { type: 'checkbox', checked: !!cfg.unattendedMode, onChange: function (e) { set('unattendedMode', e.target.checked) } }), t('fUnattendedHint')),
           field(t('fUnattendedAuto'), h('input', { type: 'checkbox', checked: !!cfg.unattendedAuto, onChange: function (e) { set('unattendedAuto', e.target.checked) } }), t('fUnattendedAutoHint')),
+          // ★2026-09-30（C2 续）接续/归档/工作台六键（宿主均已读、此前无 UI 入口）：
+          //   autoContinueConfirmSeconds / autoContinueCooldownMinutes（接续确认与冷却）、
+          //   autoArchiveCheckMin（归档巡检周期）、workbenchLoopShort/Long（工作台轮询节奏）、
+          //   workbenchRetryMs（工作台重试间隔）。
+          field(t('fAutoContinueConfirm'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 5, max: 600, value: cfg.autoContinueConfirmSeconds === undefined ? 35 : cfg.autoContinueConfirmSeconds, onChange: function (e) { set('autoContinueConfirmSeconds', Math.max(5, Number(e.target.value) || 35)) } }), t('fAutoContinueConfirmHint')),
+          field(t('fAutoContinueCooldown'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1, max: 1440, value: cfg.autoContinueCooldownMinutes === undefined ? 30 : cfg.autoContinueCooldownMinutes, onChange: function (e) { set('autoContinueCooldownMinutes', Math.max(1, Number(e.target.value) || 30)) } }), t('fAutoContinueCooldownHint')),
+          field(t('fArchiveCheckMin'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1, max: 1440, value: cfg.autoArchiveCheckMin === undefined ? 60 : cfg.autoArchiveCheckMin, onChange: function (e) { set('autoArchiveCheckMin', Math.max(1, Number(e.target.value) || 60)) } }), t('fArchiveCheckMinHint')),
+          field(t('fWorkbenchLoopShort'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1, max: 240, value: cfg.workbenchLoopShort === undefined ? 10 : cfg.workbenchLoopShort, onChange: function (e) { set('workbenchLoopShort', Math.max(1, Number(e.target.value) || 10)) } }), t('fWorkbenchLoopShortHint')),
+          field(t('fWorkbenchLoopLong'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1, max: 720, value: cfg.workbenchLoopLong === undefined ? 24 : cfg.workbenchLoopLong, onChange: function (e) { set('workbenchLoopLong', Math.max(1, Number(e.target.value) || 24)) } }), t('fWorkbenchLoopLongHint')),
+          field(t('fWorkbenchRetryMs'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1000, max: 600000, step: 1000, value: cfg.workbenchRetryMs === undefined ? 30000 : cfg.workbenchRetryMs, onChange: function (e) { set('workbenchRetryMs', Math.max(1000, Number(e.target.value) || 30000)) } }), t('fWorkbenchRetryMsHint')),
           // ★E5（2026-09-25 用户口径）：轮换周期 = **天**，默认 2。用系统墙钟切期（不用自建计时器）；
           //   到期后旧工作台整份弃掉、下一期新建 —— 母会话条目数因此有上界。
           //   为什么默认 2 天：旧工作台会话要「先静默才可能被归档」，而静默的前提是不再有子代理挂上去，

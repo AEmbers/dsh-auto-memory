@@ -166,7 +166,7 @@ ok(cnt(CL, "statsTab: '统计'") === 1 && cnt(CL, "statsTab: 'Stats'") === 1, 'S
 //   现全文件不再有旧扁平直读；StatsTab 与新皮肤 Iter5Stats 均经解包后的 st.* 读（同一 bug 的两个现场）。
 ok(cnt(CL, 'data.channels') === 0, 'S4g2 旧扁平直读 data.channels 已彻底移除（演进自「出现1次」）')
 {
-  const i5s = CL.slice(CL.indexOf('function Iter5Stats() {'), CL.indexOf('// ITER5-GENERATED:END'))
+  const i5s = CL.slice(CL.indexOf('function Iter5Stats() {'), CL.indexOf('function Iter5Stats() {') + 4000)
   ok(!i5s.includes('data.channels') && i5s.includes('st.channels'), 'S4g2b 新皮肤 Iter5Stats 同步解包 stats（新组件未复制旧有的恒 0 读法）')
 } 
 {

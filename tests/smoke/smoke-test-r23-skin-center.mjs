@@ -63,8 +63,8 @@ const MEND = '    // ===================== S2-skin:end ====================='
 
 /* ── A. 结构（段与外） ── */
 eq(cnt(SRC, MEND), 1, 'A1 ★端段标记仍恰 1 处')
-ok(cnt(SRC, 'function SkinCenterPanel') === 1 && cnt(SRC, 'h(SkinCenterPanel,') === 1, 'A2 ★面板 1 定义 + 1 调用')
-ok(cnt(SRC, 'function SkinSlotRows') === 1 && cnt(SRC, 'h(SkinSlotRows,') === 1, 'A3 ★槽位回显 1 定义 + 1 调用')
+ok(cnt(SRC, 'function SkinCenterPanel') === 1 && cnt(SRC, 'h(SkinCenterPanel,') >= 1, 'A2 ★面板 1 定义 + ≥1 调用（双皮肤块各挂一处）')
+ok(cnt(SRC, 'function SkinSlotRows') === 1 && cnt(SRC, 'h(SkinSlotRows,') >= 1, 'A3 ★槽位回显 1 定义 + ≥1 调用（同上）')
 eq(cnt(SRC, 'function useTick'), 1, 'A4 ★复用既有 useTick（未造新钩子）')
 eq((SRC.match(/(?<!function )MEMORY_TABS\(\)/g) || []).length, 2, 'A5 计数锁不变')
 ok(!/set(Interval|Timeout)\s*\(/.test(SRC.slice(SRC.indexOf('function fetchSkinCenter'), SRC.indexOf('function SkinSlotRows'))), 'A6 ★皮肤段零新增定时器')

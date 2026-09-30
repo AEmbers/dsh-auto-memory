@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
@@ -13,7 +12,12 @@ const end = '    // ITER5-GENERATED:END'
 // ★2026-09-30 双皮肤块：legacy（3.2.5 旧款）源从 git 历史取，包 IIFE 后嵌入。
 const legacyBegin = '    // ===== ITER5-LEGACY-GENERATED:BEGIN ====='
 const legacyEnd = '    // ===== ITER5-LEGACY-GENERATED:END ====='
-const legacySrc = execFileSync('git', ['show', 'ecd3a44:lib/client.js'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\r\n').join('\n')
+// ★2026-09-30 双皮肤块：legacy（3.2.5 旧款）源从 **冻结文件** 读，包 IIFE 后嵌入。
+//   为什么用冻结文件而不是 `git show`：本生成器会被测试在临时目录里重跑（幂等性验收），
+//   那里没有 git 仓库 ⇒ 依赖 git 会让「生成器幂等」这条守卫在 fixture 里失败。
+//   冻结源 = ecd3a44（v3.2.5）的生成块原文，路径 skins/legacy/iter5-325.js.frozen。
+//   要更新旧款行为：改该文件（它是「旧款皮肤」的单一真源）。
+const legacySrc = readFileSync(path.join(root, 'skins/legacy/iter5-325.js.frozen'), 'utf8').split('\r\n').join('\n')
 const lbIdx = legacySrc.indexOf('    // ITER5-GENERATED:BEGIN')
 const leIdx = legacySrc.indexOf('    // ITER5-GENERATED:END')
 const legacyBody = legacySrc.slice(lbIdx, leIdx + '    // ITER5-GENERATED:END'.length)

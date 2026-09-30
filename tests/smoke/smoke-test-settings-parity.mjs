@@ -80,4 +80,22 @@ assert.ok(!ci(fake, 'activationInboxEnabled'), 'negative path: detector must not
 assert.ok(implemented.includes('activationInboxEnabled'), 'activationInboxEnabled must be among implemented keys')
 console.log('PASS negative path: detector catches a removed gate control')
 
+
+// ---- 6) ★写入白名单一致性（D1 · 2026-09-30）----
+//   根因：POST /config 只接受 Object.keys(DEFAULT_CONFIG) 里的键，其余**静默丢弃**。
+//   而 renderTeamSettings 曾渲染 5 个不在白名单里的键（teamServerUrl/teamId/teamMemberName/
+//   teamConflictPolicy/teamAuditEnabled）⇒ 用户改了界面翻面、配置永远写不进去，且无任何报错。
+//   判据：UI 渲染的团队键 ⊆ DEFAULT_CONFIG 键集（缺一即红）。
+const teamKeysInUi = [...sliceBetween(client, 'var TEAM_SETTING_KEYS = [', ']').matchAll(/'([A-Za-z0-9_$]+)'/g)].map((m) => m[1])
+assert.ok(teamKeysInUi.length > 20, 'team key extraction looks wrong: ' + teamKeysInUi.length)
+const missingFromWhitelist = teamKeysInUi.filter((k) => !allKeys.includes(k))
+assert.deepEqual(missingFromWhitelist, [], 'team keys rendered in UI but NOT in DEFAULT_CONFIG (would be silently dropped): ' + missingFromWhitelist.join(', '))
+console.log('PASS write whitelist: all ' + teamKeysInUi.length + ' UI team keys are writable (in DEFAULT_CONFIG)')
+
+// 负路径：证明判据能抓到白名单缺键
+const fakeKeys = allKeys.filter((k) => k !== 'teamConflictPolicy')
+assert.ok(fakeKeys.indexOf('teamConflictPolicy') < 0, 'negative path: must notice a removed whitelist entry')
+assert.ok(teamKeysInUi.includes('teamConflictPolicy'), 'teamConflictPolicy must be rendered in the team UI')
+console.log('PASS negative path: whitelist check catches a missing key')
+
 console.log('PASS settings parity: 3 surfaces, ' + implemented.length + ' keys each, gates + readout verified')

@@ -43,7 +43,7 @@ ok(SRC.includes('_teamInflight') && SRC.includes('if (_teamInflight) return _tea
 /* ── C. ★vm 真执行 teamFromState（门控铁律 4 条） */
 function mkTeam() {
   const i = SRC.indexOf('    function teamFromState(st) {')
-  const j = SRC.indexOf('\r\n    }\r\n', i) + 7;
+  const j = SRC.indexOf('\n    }', i) + 6;
   const sb = { console, String, Number, Object, JSON, Math, Array, Boolean }
   sb.globalThis = sb;
   vm.runInContext(SRC.slice(i, j) + ';globalThis.__T = teamFromState;', vm.createContext(sb), { filename: 'client.js#team' });

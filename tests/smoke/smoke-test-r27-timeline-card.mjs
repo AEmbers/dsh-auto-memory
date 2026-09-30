@@ -54,7 +54,7 @@ const cnt = (s, x) => s.split(x).length - 1
 
 /* ── 抽取 DamTimelineCard（真执行） ── */
 const i0 = SRC.indexOf('    function DamTimelineCard(props) {')
-const i1 = SRC.indexOf('\r\n    }\r\n', i0) + 7
+const i1 = SRC.indexOf('\n    }', i0) + 6
 ok(i0 > 0 && i1 > i0 + 500, 'A0 DamTimelineCard 可整段抽取（'+ (i1 - i0) + ' B）')
 const SEG = SRC.slice(i0, i1)
 const h = function (type, props) { const rest = Array.prototype.slice.call(arguments, 2), kids = []

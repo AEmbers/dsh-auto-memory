@@ -50,7 +50,7 @@ eq(cnt(SRC, 'foldDays: foldOpen.days'), 1, 'C1 ★前端取数**真带** foldDay
 eq(cnt(SRC, 'foldOpen.expand = function'), 1, 'C2a（守卫，非功能证据）展开函数定义恰 1 处')
 const _iF = SRC.indexOf("      var stFold = useState({ days: 7 })")
 const _iG = SRC.indexOf('foldOpen.expand = function')
-const _iGend = SRC.indexOf('\r\n', _iG)
+const _iGend = SRC.indexOf('\n', _iG)
 ok(_iF > 0 && _iG > _iF && _iGend > _iG, 'C2b ★折叠态两行可真抽取')
 const _foldSeg = SRC.slice(_iF, _iGend)
 let _lastSet = null
@@ -74,9 +74,9 @@ const h = function (type, props) { const rest = Array.prototype.slice.call(argum
   const push = (k) => { if (k === null || k === undefined || k === false) return; if (Array.isArray(k)) k.forEach(push); else kids.push(k) }
   rest.forEach(push); return { __el: true, type, props: props || {}, kids } }
 const i0 = SRC.indexOf('    var DAM_FOLD_DAYS_DEFAULT = 7')
-const i1 = SRC.indexOf('\n    }\r\n', SRC.indexOf('function DamFoldBar'))
+const i1 = SRC.indexOf('\n    }', SRC.indexOf('function DamFoldBar'))
 ok(i0 > 0 && i1 > i0, 'D0 折叠段可抽取');
-const SEG = SRC.slice(i0, i1 + 7)
+const SEG = SRC.slice(i0, i1 + 6)
 const sb = { console, h, String, Object, Array, JSON, Number }
 sb.globalThis = sb
 vm.runInContext(SEG + ';globalThis.__F = DamFoldBar;', vm.createContext(sb), { filename: 'client.js#fold' })

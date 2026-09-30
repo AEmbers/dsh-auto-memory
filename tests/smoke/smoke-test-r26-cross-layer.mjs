@@ -158,6 +158,7 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   ⑥ 前端三态以后端 state 为准 + mode-aware 文案（修「未安装、当前模式不受影响」在
 //      Python 档下的错误措辞）。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
+
 // ★2026-09-30 基线演进 R61→R62（接续工作区漂移修复批，增量归因；用户报障「A区点击接续，新会话在B区」）：
 //   三条漂移通道全修：
 //   ① buildPrevSessionPack：want 显式给出但无持久化文件时，**不再静默改用 _lastAgent**（最近活跃
@@ -180,8 +181,13 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //      形状 {enabled, stats: snapshot()} 不动）——三通路恒 0 + 空态文案的口径错位修正；
 //   守卫演进：recall-stats S4g2/S4g3 旧判据（「data.channels 恰好 1 次」「StatsTab 内 data.stats=0」）
 //   焊死的是 bug 本身，已带归因改写；p9 注入表 +5 绑定、新增 #147 行为段；l0-extract +5 例。
+// ★2026-09-30 基线演进 R63→R65（PR #150 皮肤 + PR #155 运行时修复，两批合并后重编）：
+//   ① #150：skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（路由按 ?deep=1 选暗色素材）；
+//   ② #155：#152 增量开关每轮取值 / #153 默认模型回退共用解析器 / #154 接续创建失败显式报错；
+//   ③ 上述 3.2.5 全部修复保留。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'A80EF8FCDCBF0FFC', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R64 基线；R63→R64 放行 = #153 默认模型回退 + #154 接续工作区保护，理由见上）')
+//   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '4BE9989C5B23B971', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R65 基线（PR #150 皮肤 + PR #155 运行时修复 两批合并）；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色素材）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器 + #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
 // R64 (LF-normalized hash): #153 shared profile/block model parser and paired fallback route; #154 source-workspace create guard.
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')

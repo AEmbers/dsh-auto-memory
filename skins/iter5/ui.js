@@ -11,38 +11,6 @@
       ['settings', '设置', 'Settings', 'slate', 'settings'],
     ]
     function iter5Identity() { return String(currentSessionIdClient() || '') + '|' + String(currentWs() || '') }
-    // ── 主题三态（2026-09-29 恢复）──────────────────────────────────────────────
-    //   合并社区作者版本时，本仓原有的「跟随系统 / 亮色 / 暗色」开关被覆盖丢失，只剩被动的
-    //   `useDeepTheme()`（宿主给什么是什么）⇒ 用户看不到也改不了当前档位。此处恢复，并把它
-    //   接到**同一个** data-deep 上：
-    //     'auto'（默认）= 跟随宿主（宿主 preference=system 时即跟随系统）
-    //     'light' / 'dark' = 强制；只覆盖传给 data-deep 的布尔值，
-    //   配色仍 100% 由 skin.css 的 [data-deep=true] 驱动 —— 不新增任何配色分支。
-    //   存 localStorage['dam-skin-theme']；读写 fail-soft（无 storage ⇒ 'auto'）。
-    //   注意：宿主自己渲染的覆盖层（轻面板 / 首次向导）不在本开关范围内，它们跟随宿主主题。
-    var ITER5_THEME_KEY = 'dam-skin-theme'
-    function iter5ThemeGet() {
-      try {
-        var v = String(localStorage.getItem(ITER5_THEME_KEY) || '')
-        return v === 'light' || v === 'dark' ? v : 'auto'
-      } catch (e) { return 'auto' }
-    }
-    function iter5ThemeSet(v) {
-      try {
-        if (v === 'light' || v === 'dark') localStorage.setItem(ITER5_THEME_KEY, v)
-        else localStorage.removeItem(ITER5_THEME_KEY)
-      } catch (e) {}
-    }
-    function iter5ThemeCycle(v) { return v === 'auto' ? 'light' : v === 'light' ? 'dark' : 'auto' }
-    function iter5ThemeLabel(v) { return v === 'light' ? L('亮色', 'Light') : v === 'dark' ? L('暗色', 'Dark') : L('跟随系统', 'Auto') }
-    function iter5ThemeIcon(v) { return v === 'light' ? 'sun' : v === 'dark' ? 'moon' : 'contrast' }
-    /** 皮肤生效深浅 = 本地档位覆盖宿主档位。皮肤内所有取深/浅的地方都走它，保证一处切换处处一致。 */
-    function useIter5Theme() {
-      var pref = useState(iter5ThemeGet)
-      var hostDeep = useDeepTheme()
-      var deep = pref[0] === 'auto' ? hostDeep : pref[0] === 'dark'
-      return [pref[0], deep, function (next) { iter5ThemeSet(next); pref[1](next) }]
-    }
     function iter5PageForTab(tab) {
       if (['notes', 'logs', 'reflections', 'search'].indexOf(tab) >= 0) return 'library'
       if (tab === 'connect') return 'handoff'
@@ -69,9 +37,7 @@
         mindmap: 'M4 4h5v5H4zM15 15h5v5h-5zM4 15h5v5H4zM6 9v6M9 6h8v9',
         storage: 'M4 5h16v5H4zM4 14h16v5H4zM7 7h2M7 16h2',
         settings: 'M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6',
-        sun: 'M12 4V2M12 22v-2M4 12H2M22 12h-2M6 6 4.5 4.5M19.5 19.5 18 18M18 6l1.5-1.5M4.5 19.5 6 18M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
-        moon: 'M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z',
-        contrast: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 3v18a9 9 0 0 0 0-18z',
+        lock: 'M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4M12 14v3',
       }
       return h('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, h('path', { d: paths[props.name] || paths.library }))
     }
@@ -88,8 +54,16 @@
           } }, it[1], it[2] ? h('span', { className: 'i5-dirty-dot', 'aria-label': L('未保存', 'Unsaved') }) : null)
       }))
     }
+    function Iter5Screws() { return h(React.Fragment, null, ['tl','tr','bl','br'].map(function (corner) { return h('span', { key: corner, className: 'i5-screw i5-screw-' + corner, 'aria-hidden': true }) })) }
     function Iter5Card(props) { return h('section', { className: 'i5-card ' + (props.className || '') }, props.title ? h('h2', { className: 'i5-card-title' }, props.icon ? h('span', { className: 'i5-badge', 'data-hue': props.hue || 'blue' }, h(Iter5Icon, { name: props.icon })) : null, props.title) : null, props.children) }
-    function Iter5Error(props) { return h('div', { className: 'i5-error', role: 'alert' }, props.error, props.retry ? h('button', { type: 'button', onClick: props.retry }, L('重试', 'Retry')) : null) }
+    function Iter5Error(props) {
+      // Only an explicit denial identifies this state; an unavailable service is not a permission failure.
+      var denied = /\b(?:EACCES|EPERM|forbidden)\b|HTTP 403\b|权限不足|拒绝访问/i.test(String(props.error || ''))
+      return h('div', { className: 'i5-error', 'data-denied': denied ? 'true' : undefined, role: 'alert' },
+        denied ? h(Iter5Icon, { name: 'lock' }) : null,
+        h('div', { className: 'i5-error-copy' }, h('strong', null, denied ? L('访问被拒绝', 'Access denied') : props.title || L('操作未完成', 'Action incomplete')), h('p', null, props.error), denied ? h('p', null, L('请核对当前目录和宿主的访问权限；权限恢复后可重试。', 'Check the current directory and host access permissions, then retry once access is restored.')) : null),
+        props.retry ? h('button', { type: 'button', onClick: props.retry }, L('重试', 'Retry')) : null)
+    }
     // Never accept a response issued for a different session/workspace or an unmounted view.
     function useIter5Data(loader, deps) {
       var pair = useState({ data: null, error: '', loading: true })
@@ -166,22 +140,26 @@
         })
       }
       if (rowsData.error) return h(Iter5Error, { error: rowsData.error, retry: rowsData.retry })
-      if (rowsData.loading) return h(Loading)
-      return h('div', null,
+      if (rowsData.loading) return h(Iter5MemoryLoading)
+      if (append[0]) return h('section', { className: 'i5-note-page' },
+        h('h2', null, L('追加项目笔记', 'Append project note')),
+        h('p', { className: 'i5-muted' }, L('记录决定、补充信息与下一步行动。', 'Record decisions, supporting details and next actions.')),
+        h(Iter5Note, { source: rowsData.data[1].notesPath, onSaved: rowsData.retry, onClose: function () { append[1](false) } }))
+      return h('div', { className: 'i5-panel i5-instrument' }, h(Iter5Screws),
+        h('div', { className: 'i5-ph' }, h('h2', null, L('记忆文件', 'Memory files')), h('span', { className: 'i5-ph-right i5-num' }, rows.length)),
         h('div', { className: 'i5-toolbar' },
           h('input', { type: 'search', placeholder: L('按标题或路径筛选', 'Filter titles or paths'), 'aria-label': L('筛选记忆文件', 'Filter memory files'), value: query[0], onChange: function (e) { query[1](e.target.value) } }),
           h('select', { 'aria-label': L('记忆范围', 'Memory scope'), value: scope[0], onChange: function (e) { scope[1](e.target.value) } }, [['all', L('全部范围', 'All scopes')], ['user', L('用户级', 'User')], ['project', L('本项目', 'This project')]].map(function (x) { return h('option', { key: x[0], value: x[0] }, x[1]) })),
           h('select', { 'aria-label': L('记忆分类', 'Memory category'), value: filter[0], onChange: function (e) { filter[1](e.target.value) } }, [['all', L('全部分类', 'All categories')], ['user', L('用户偏好', 'Preferences')], ['notes', L('项目笔记', 'Notes')], ['logs', L('日志', 'Logs')], ['reflections', L('反思', 'Reflections')]].map(function (x) { return h('option', { key: x[0], value: x[0] }, x[1]) })),
           h('button', { onClick: function () { if (append[0] && !window.confirm(L('关闭笔记编辑区？未保存的内容将丢失。', 'Close the note editor and discard unsaved text?'))) return; append[1](!append[0]) }, 'aria-expanded': append[0] }, L('追加笔记', 'Append note'))),
-        append[0] ? h(Iter5Card, { title: L('追加项目笔记', 'Append project note') }, h(Iter5Note, { onSaved: rowsData.retry })) : null,
-        h('div', { className: 'i5-list-detail' },
+        h('div', { className: 'i5-list-detail', 'data-empty': String(rows.length === 0) },
           h('div', { className: 'i5-card i5-file-list', 'aria-label': L('记忆文件', 'Memory files') }, rows.length ? rows.map(function (r) {
-              return h('button', { key: r.path, className: 'i5-file', 'aria-current': r.path === path ? 'true' : undefined, onClick: function () { selectFile(r.path) } }, h('span', { className: 'i5-badge i5-badge-lg', 'data-hue': r.kind === 'user' ? 'pink' : r.kind === 'reflections' ? 'purple' : 'blue' }, h(Iter5Icon, { name: r.kind === 'user' ? 'heart' : 'note' })), h('span', { className: 'i5-file-copy' }, h('strong', null, r.label), h('small', null, r.kind === 'user' ? L('长期偏好与规则', 'Lasting preferences and rules') : r.kind === 'notes' ? L('项目笔记', 'Project notes') : r.kind === 'logs' ? L('每日日志', 'Daily log') : L('反思记录', 'Reflection')), h('span', { className: 'i5-tag' }, r.scope === 'user' ? L('用户级', 'User') : L('本项目', 'Workspace'))), h('small', null, fmtSize(r.size)))
+              return h('button', { key: r.path, className: 'i5-file', 'aria-current': r.path === path ? 'true' : undefined, onClick: function () { selectFile(r.path) } }, h('span', { className: 'i5-type-led', 'aria-hidden': true, 'data-hue': r.kind === 'user' ? 'pink' : r.kind === 'reflections' ? 'purple' : 'blue' }, h(Iter5Icon, { name: r.kind === 'user' ? 'heart' : 'note' })), h('span', { className: 'i5-file-copy' }, h('strong', null, r.label), h('small', null, r.kind === 'user' ? L('长期偏好与规则', 'Lasting preferences and rules') : r.kind === 'notes' ? L('项目笔记', 'Project notes') : r.kind === 'logs' ? L('每日日志', 'Daily log') : L('反思记录', 'Reflection')), h('span', { className: 'i5-tag' }, r.scope === 'user' ? L('用户级', 'User') : L('本项目', 'Workspace'))), h('small', null, fmtSize(r.size)))
           }) : h('p', { className: 'i5-empty' }, L('没有符合条件的记忆文件', 'No matching memory files'))),
           h('section', { ref: reader, className: 'i5-card i5-source-card', 'aria-label': L('记忆详情', 'Memory detail') },
             h('div', { className: 'i5-source-heading' }, h('span', { className: 'i5-badge', 'data-hue': 'blue' }, h(Iter5Icon, { name: 'note' })), h('h2', { tabIndex: -1 }, chosen ? chosen.label : L('记忆详情', 'Memory detail'))),
-            chosen ? h('div', { className: 'i5-source-meta' }, h('span', { className: 'i5-tag' }, chosen.scope === 'user' ? L('用户偏好', 'User preferences') : L('项目记忆', 'Project memory')), h('span', null, fmtSize(chosen.size))) : null,
-            file.error ? h(Iter5Error, { error: file.error, retry: file.retry }) : file.loading && path ? h(Loading) : chosen && file.data ? h(Iter5Document, { text: file.data.content || L('文件暂无内容。', 'This file is empty.') }) : h(Iter5Empty, { title: rows.length ? L('选择一段记忆', 'Select a memory') : L('没有符合条件的记忆文件', 'No matching memory files'), text: L('调整筛选条件，或追加新的项目笔记。', 'Adjust the filters or append a project note.') }),
+            chosen ? h('div', { className: 'i5-source-meta' }, h('span', { className: 'i5-tag' }, chosen.scope === 'user' ? L('用户偏好', 'User preferences') : L('项目记忆', 'Project memory')), h('span', null, fmtSize(chosen.size)), chosen.date ? h('time', null, chosen.date) : null) : null,
+            file.error ? h(Iter5Error, { title: L('读取失败', 'Unable to read'), error: file.error, retry: file.retry }) : file.loading && path ? h(Loading) : chosen && file.data ? h(Iter5Document, { text: file.data.content || L('文件暂无内容。', 'This file is empty.') }) : h(Iter5Empty, { title: query[0] || filter[0] !== 'all' || scope[0] !== 'all' ? L('没有符合条件的记忆文件', 'No matching memory files') : L('暂无记忆记录', 'No memory records yet'), text: L('调整筛选条件，或追加新的项目笔记。', 'Adjust the filters or append a project note.') }, h('button', { className: 'i5-primary', onClick: function () { append[1](true) } }, L('追加笔记', 'Append note'))),
             chosen ? h('div', { className: 'i5-source-origin' }, h('strong', null, L('文件来源', 'Source file')), h('small', null, file.data && file.data.path || path)) : null)))
     }
     function Iter5Memory(props) {
@@ -197,10 +175,8 @@
       var tab = useState(controller.panelTab() === 'connect' ? 'external' : 'task')
       var items = [['task', L('当前任务', 'Current task')], ['board', L('白板', 'Whiteboard')], ['external', L('外部来源', 'External sources')]]
       return h('div', null, h(Iter5Tabs, { id: 'i5-continue', label: L('接续分区', 'Continuation sections'), items: items, value: tab[0], onChange: tab[1] }),
-        h('div', { role: 'tabpanel', id: 'i5-continue-panel', 'aria-labelledby': 'i5-continue-tab-' + tab[0], className: 'i5-hosted' },
-          tab[0] === 'external' ? h(Iter5External, { nonce: props.nonce }) : tab[0] === 'task' ? h(Iter5Handoff, { nonce: props.nonce }) : h('div', { className: 'i5-card' },
-            tab[0] === 'board' ? h('p', { className: 'i5-muted' }, L('白板原文只读；编辑和接续执行由宿主负责。', 'Whiteboard source is read-only; the host manages editing and continuation.')) : null,
-            h(PlanTab, { key: tab[0], nonce: props.nonce }))))
+        h('div', { role: 'tabpanel', id: 'i5-continue-panel', 'aria-labelledby': 'i5-continue-tab-' + tab[0], className: 'i5-continue-content' },
+          tab[0] === 'external' ? h(Iter5External, { nonce: props.nonce }) : h(Iter5Handoff, { key: tab[0], nonce: props.nonce, boardOnly: tab[0] === 'board' })))
     }
     function Iter5Page(props) {
       var page = useState(function () { return iter5PageForTab(controller.panelTab()) })
@@ -208,8 +184,7 @@
       var lastTab = useRef(controller.panelTab())
       var root = useRef(null), menuButton = useRef(null)
       var content = useRef(null)
-      var theme = useIter5Theme()
-      var deep = theme[1], identity = iter5Identity()
+      var deep = useIter5Theme(), skinStyle = useIter5Style(), identity = iter5Identity()
       useEffect(function () {
         var el = root.current
         if (!el) return
@@ -262,14 +237,32 @@
       var meta = ITER5_PAGES.filter(function (p) { return p[0] === page[0] })[0]
       var title = meta ? L(meta[1], meta[2]) : page[0] === 'team' ? L('团队协作', 'Teamwork') : L('统计', 'Statistics')
       var nonce = String(props.nonce || 0) + ':' + refresh[0]
-      var components = { home: Iter5Home, library: Iter5Memory, handoff: Iter5Continue, calendar: Iter5Calendar, skills: Iter5Skills, recall: Iter5Recall, mindmap: Iter5Workspaces, storage: Iter5Storage, settings: Iter5Settings, team: TeamTab, stats: StatsTab }
+      var components = { home: Iter5Home, library: Iter5Memory, handoff: Iter5Continue, calendar: Iter5Calendar, skills: Iter5Skills, recall: Iter5Recall, mindmap: Iter5Workspaces, storage: Iter5Storage, settings: Iter5Settings, team: Iter5Team, stats: Iter5Stats }
       var Component = components[page[0]] || Iter5Home
       function closeMenu() { menu[1](false); if (menuButton.current) menuButton.current.focus() }
       useEffect(function () {
         if (!menu[0] || !root.current) return
         var close = root.current.querySelector('[data-i5-close-nav]'); if (close) close.focus()
       }, [menu[0]])
-      return h('div', { ref: root, 'data-iter5': '', 'data-deep': deep ? 'true' : 'false', 'data-focus': String(focus[0]), role: focus[0] ? 'dialog' : undefined, 'aria-modal': focus[0] ? true : undefined, 'aria-label': focus[0] ? L('记忆工作台', 'Memory workbench') : undefined, onKeyDown: function (e) {
+      // 顶部仪器导轨读数窗:会话 / 检索档 / 自动沉淀计数 / 日期,全部为真实宿主数据
+      var railData = useIter5Data(function () { return Promise.allSettled([apiGet(API.state, { ws: currentWs() }), apiGet(API.semanticStatus)]) }, [props.nonce])
+      var railValues = railData.data || []
+      var railState = railValues[0] && railValues[0].status === 'fulfilled' ? railValues[0].value : null
+      var railSem = railValues[1] && railValues[1].status === 'fulfilled' ? railValues[1].value : null
+      var railTier = railSem ? railSem.resolvedTier === 'c3' ? 'C3 · Python' : railSem.resolvedTier === 'c2' ? 'C2 · ' + L('内置语义', 'Semantic') : 'C1 · BM25' : '—'
+      var railNow = new Date()
+      var railWD = L('周日|周一|周二|周三|周四|周五|周六', 'Sun|Mon|Tue|Wed|Thu|Fri|Sat').split('|')
+      function railBtn(id, zh, en, icon) {
+        return h('button', { key: id, className: 'i5-rail-btn', 'data-i5-nav': id, 'aria-current': page[0] === id ? 'page' : undefined, onClick: function () { nav(id) } }, h('span', null, L(zh, en)))
+      }
+      function pageActions() { return h('div', { className: 'i5-page-actions' }, h('button', { 'aria-label': focus[0] ? L('退出专注查看', 'Exit focused view') : L('专注查看', 'Focused view'), 'aria-pressed': focus[0], onClick: function () { focus[1](!focus[0]) } }, h('svg', { width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.5,'aria-hidden':true },h('path',{d:focus[0]?'M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5':'M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5'}))), h('button', { 'aria-label': L('刷新当前页', 'Refresh current page'), onClick: function () { if (root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('刷新会放弃未保存修改，继续？', 'Discard changes and refresh?'))) return; if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']; refresh[1](refresh[0] + 1) } }, h(Iter5Icon,{name:'timeline'}))) }
+      function railReadout(k, v) { return h('div', { className: 'i5-rs', key: k }, h('span', { className: 'i5-rs-k' }, k), h('span', { className: 'i5-rs-v i5-num' }, v)) }
+      function exitClassic() {
+        if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定切回经典？', 'Discard unsaved changes and return to classic?'))) return
+        if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']
+        damSkinSet('classic'); props.onExit()
+      }
+      return h('div', { ref: root, 'data-iter5': '', 'data-native-workbench': '', 'data-i5-style': skinStyle, 'data-page': page[0], 'data-deep': deep ? 'true' : 'false', 'data-focus': String(focus[0]), role: focus[0] ? 'dialog' : undefined, 'aria-modal': focus[0] ? true : undefined, 'aria-label': focus[0] ? L('记忆工作台', 'Memory workbench') : undefined, onKeyDown: function (e) {
         if (!focus[0]) return
         if (e.key === 'Escape' && !menu[0] && !root.current.querySelector('.i5-dialog')) { e.stopPropagation(); focus[1](false) }
         if (e.key === 'Tab') {
@@ -279,6 +272,27 @@
           else if (!e.shiftKey && document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus() }
         }
       }, style: { '--dam-user-scale': FONT_SCALE_VALUES[fontScale] || '1', '--i5-blue': accentTheme !== 'deepseek' && ACCENT_VALUES[accentTheme] ? 'color-mix(in srgb, ' + ACCENT_VALUES[accentTheme] + ' 70%, var(--i5-text))' : undefined, '--i5-fill': accentTheme !== 'deepseek' ? ACCENT_VALUES[accentTheme] : undefined } },
+        h('header', { className: 'i5-rail' },
+          h('div', { className: 'i5-rail-brand' },
+            h('svg', { viewBox: '0 0 32 32', 'aria-hidden': true },
+              h('circle', { cx: 16, cy: 16, r: 13, strokeWidth: 2.2, style: { fill: 'var(--i5-recess)', stroke: 'var(--i5-tick-micro)' } }),
+              h('circle', { cx: 16, cy: 16, r: 9.4, fill: 'none', strokeWidth: 1, style: { stroke: 'var(--i5-line)' } }),
+              h('path', { d: 'M 8.2 23.8 A 11 11 0 0 1 16 5', fill: 'none', strokeWidth: 1.6, strokeLinecap: 'round', style: { stroke: 'var(--i5-text)' } }),
+              h('path', { d: 'M 23.5 24.2 A 11 11 0 0 0 25.9 18.6', fill: 'none', strokeWidth: 2.6, strokeLinecap: 'butt', style: { stroke: 'var(--i5-orange)' } }),
+              h('line', { x1: 16, y1: 16, x2: 9.4, y2: 22.6, strokeWidth: 2, strokeLinecap: 'round', style: { stroke: 'var(--i5-blue)' } }),
+              h('circle', { cx: 16, cy: 16, r: 2, style: { fill: 'var(--i5-text)' } })),
+            h('div', null, h('b', null, L('自动记忆', 'Auto Memory')), h('span', null, 'DSH-AUTO-MEMORY'))),
+          h('nav', { className: 'i5-rail-nav', 'aria-label': L('记忆导航', 'Memory navigation') },
+            h('div', { className: 'i5-rail-group' }, ITER5_PAGES.slice(0, 4).map(function (p) { return railBtn(p[0], p[1], p[2], p[0]) })),
+            h('div', { className: 'i5-rail-group' }, ITER5_PAGES.slice(4, 8).map(function (p) { return railBtn(p[0], p[1], p[2], p[0]) })),
+            h('div', { className: 'i5-rail-group' }, [railBtn('settings', '设置', 'Settings', 'settings'), railBtn('team', '团队', 'Team', 'mindmap'), railBtn('stats', '统计', 'Stats', 'pulse')])),
+          h('div', { className: 'i5-rail-status' },
+            railReadout(L('当前会话', 'Session'), currentWs() ? pathName(currentWs()) : L('尚未选择', 'Not selected')),
+            railReadout(L('检索', 'Retrieval'), railTier),
+            railReadout(L('自动沉淀', 'Auto memory'), railState && railState.autoStats && typeof railState.autoStats.count === 'number' ? String(railState.autoStats.count) : '—'),
+            railReadout(L('日期', 'Date'), iter5Date(railNow) + ' ' + railWD[railNow.getDay()])),
+          h(Iter5StylePicker), h(Iter5ModePicker), pageActions(),
+          h('button', { className: 'i5-rail-exit', 'data-dam-skin-v4-exit': '', onClick: exitClassic }, L('返回经典', 'Classic'))),
         h('button', { className: 'i5-mobile-menu', ref: menuButton, 'aria-expanded': menu[0], 'aria-label': L('打开导航', 'Open navigation'), onClick: function () { menu[1](!menu[0]) } }, '☰ ', L('记忆中枢', 'Memory')),
         menu[0] ? h('div', { className: 'i5-nav-backdrop', onClick: closeMenu }) : null,
         h('aside', { className: 'i5-sidebar', 'data-open': menu[0] ? 'true' : 'false', onKeyDown: function (e) {
@@ -291,18 +305,13 @@
           }
         } },
           h('button', { className: 'i5-close-nav', 'data-i5-close-nav': '', onClick: closeMenu }, L('关闭导航', 'Close navigation')),
-          h('div', { className: 'i5-brand' }, h('span', { className: 'i5-brand-mark', 'aria-hidden': true }, h(Iter5Icon, { name: 'spark' })), h('div', null, h('strong', null, 'dsh-auto-memory'), h('small', null, L('让重要的事持久被记住', 'Keep what matters')))),
-          h('nav', { 'aria-label': L('记忆导航', 'Memory navigation') }, ITER5_PAGES.map(function (p, i) { return h(React.Fragment, { key: p[0] }, i === 0 || i === 4 ? h('small', { className: 'i5-nav-label' }, i === 0 ? L('工作', 'Work') : L('扩展', 'More')) : null,
+          h('nav', { 'aria-label': L('记忆导航', 'Memory navigation') }, ITER5_PAGES.map(function (p, i) { return h(React.Fragment, { key: p[0] }, i === 4 ? h('small', { className: 'i5-nav-label' }, i === 0 ? L('工作', 'Work') : L('扩展', 'More')) : null,
             h('button', { 'data-i5-nav': p[0], 'aria-current': page[0] === p[0] ? 'page' : undefined, onClick: function () { nav(p[0]) } }, h('span', { className: 'i5-badge', 'data-hue': p[3] }, h(Iter5Icon, { name: p[0] })), L(p[1], p[2]))) })),
-          h('div', { className: 'i5-sidebar-foot' }, h('div', { className: 'i5-sidebar-art' }, h(Iter5Art, {})), h('div', { className: 'i5-side-caption' }, h('strong', null, L('记忆，在这里延续', 'Memory carries forward')), h('small', null, L('积累 · 回顾 · 接续', 'Keep · recall · continue'))), h('div', { className: 'i5-side-tools' }, h('button', { onClick: function () { nav('team') }, 'aria-current': page[0] === 'team' ? 'page' : undefined }, L('团队', 'Team')), h('button', { onClick: function () { nav('stats') }, 'aria-current': page[0] === 'stats' ? 'page' : undefined }, L('统计', 'Stats'))),
-            h('button', { 'data-dam-skin-v4-exit': '', onClick: function () {
-              if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定切回经典？', 'Discard unsaved changes and return to classic?'))) return
-              if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']
-              damSkinSet('classic'); props.onExit()
-            } }, L('返回经典皮肤', 'Back to classic')))),
+          h('div', { className: 'i5-sidebar-foot' }, h('div', { className: 'i5-side-tools' }, h('button', { onClick: function () { nav('team') }, 'aria-current': page[0] === 'team' ? 'page' : undefined }, h(Iter5Icon, { name: 'mindmap' }), L('团队', 'Team')), h('button', { onClick: function () { nav('stats') }, 'aria-current': page[0] === 'stats' ? 'page' : undefined }, h(Iter5Icon, { name: 'pulse' }), L('统计', 'Stats'))),
+            h('button', { 'data-dam-skin-v4-exit': '', onClick: exitClassic }, L('返回经典皮肤', 'Back to classic')))),
         h('main', { ref: content, className: 'i5-main', key: identity, 'aria-label': title },
           h('header', { className: 'i5-page-head' }, h('div', null, h('h1', null, title), h('p', null, locale === 'zh' ? ({ home: '查看最近记录、今日日程与当前会话，继续手头的工作。', library: '集中查看用户偏好、项目笔记、每日日志与反思记录。', handoff: '让当前的目标、进度与经验，在下一段会话中继续。', calendar: '把待办与重要时刻放在一起，让每一天更从容。', recall: '回顾每一次记忆唤起，查看判定依据并留下反馈。', skills: '让反复验证的经验，沉淀为可复用的工作方法。', mindmap: '从工作区与记忆之间，发现持续连接的脉络。', storage: '查看记忆语料、维护索引，以及迁移你的积累。', settings: '决定记忆如何记录、唤回与接续，让它更适合你。' }[page[0]] || '记忆与任务，按当前工作区呈现') : 'Memory and tasks for the current workspace')),
-            h('div', { className: 'i5-page-actions' }, h('button', { 'data-i5-theme': theme[0], 'aria-label': L('外观主题：', 'Appearance theme: ') + iter5ThemeLabel(theme[0]) + L('（点击切换 跟随 → 亮 → 暗）', ' (click to cycle auto → light → dark)'), title: L('主题：', 'Theme: ') + iter5ThemeLabel(theme[0]) + L('（点击切换）', ' (click to cycle)'), onClick: function () { theme[2](iter5ThemeCycle(theme[0])) } }, h(Iter5Icon, { name: iter5ThemeIcon(theme[0]) }), ' ', iter5ThemeLabel(theme[0])), h('button', { 'aria-label': focus[0] ? L('退出专注查看', 'Exit focused view') : L('专注查看', 'Focused view'), 'aria-pressed': focus[0], onClick: function () { focus[1](!focus[0]) } }, focus[0] ? L('返回会话', 'Back to conversation') : L('专注查看', 'Focused view')), h('button', { 'aria-label': L('刷新当前页', 'Refresh current page'), onClick: function () { if (root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('刷新会放弃未保存修改，继续？', 'Discard changes and refresh?'))) return; if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']; refresh[1](refresh[0] + 1) } }, L('刷新', 'Refresh')))),
-          h('div', { className: ['team', 'stats'].indexOf(page[0]) >= 0 ? 'i5-card i5-hosted' : '' }, h(Component, { key: page[0] + ':' + nonce + ':' + JSON.stringify(intent[0]), nonce: nonce, onNav: nav, intent: intent[0] })),
+            null),
+          h('div', { className: '' }, h(Component, { key: page[0] + ':' + nonce + ':' + JSON.stringify(intent[0]), nonce: nonce, onNav: nav, intent: intent[0] })),
           page[0] === 'storage' ? h('details', { className: 'i5-card' }, h('summary', null, L('调试中心', 'Diagnostics')), h(DebugCenter), h('button', { onClick: function () { nav('settings', { group: 'behavior' }) } }, L('检查更新与高级设置', 'Updates and advanced settings'))) : null))
     }

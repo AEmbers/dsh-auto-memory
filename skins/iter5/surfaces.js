@@ -1,8 +1,29 @@
     // Each registered surface owns a theme boundary, including sibling overlays.
     function Iter5Surface(props) {
-      var deep = useIter5Theme()[1]
+      var skinDeep = useIter5Theme(), hostDeep = useDeepTheme(), skinStyle = useIter5Style()
+      var deep = props.kind === 'settings' ? hostDeep : skinDeep
       var tick = useTick()
+      var boundary = useRef(null)
       useEffect(function () { return controller.subscribe(tick[1]) }, [])
+      useEffect(function () {
+        if (props.kind !== 'page' || !boundary.current) return
+        var el = boundary.current.querySelector('[data-dam-kanban-view],[data-dam-wbg-wrap]')
+        var area = el && el.closest('[data-conversation-scroll]')
+        if (!el || !area) return
+        function fit() {
+          var style = getComputedStyle(area)
+          var height = area.clientHeight - (parseFloat(style.paddingBottom) || 0) - (parseFloat(style.paddingTop) || 0)
+          var composer = document.querySelector('[data-composer-card]')
+          if (composer) { var top = composer.getBoundingClientRect().top - el.getBoundingClientRect().top; if (top > 0) height = Math.min(height, top - 8) }
+          el.style.height = Math.max(160, height) + 'px'
+          el.style.maxHeight = Math.max(160, height) + 'px'
+        }
+        fit()
+        var observer = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null
+        if (observer) { observer.observe(area); var composer = document.querySelector('[data-composer-card]'); if (composer) observer.observe(composer) }
+        window.addEventListener('resize', fit)
+        return function () { if (observer) observer.disconnect(); window.removeEventListener('resize', fit) }
+      }, [props.kind])
       useEffect(function () {
         var style = document.getElementById('dam-shared-ui-style')
         if (!style) {
@@ -19,7 +40,7 @@
           if (!count) style.remove()
         }
       }, [])
-      var node = h('div', { 'data-dam-theme': props.kind || 'overlay', 'data-deep': String(deep),
+      var node = h('div', { ref: boundary, 'data-dam-theme': props.kind || 'overlay', 'data-i5-style': skinStyle, 'data-deep': String(deep),
         style: { '--dam-user-scale': FONT_SCALE_VALUES[fontScale] || '1' } }, props.children)
       // shell.overlay lives in a z-index:20 host stacking context, below settings.
       // Portal the boundary too, so sibling dialogs retain their theme tokens.
@@ -27,6 +48,7 @@
         ? createPortal(node, document.body) : node
     }
     function Iter5HostSettings(props) {
+      var skinStyle = useIter5Style()
       var identity = useState(iter5Identity)
       var root = useRef(null)
       var slot = useRef(null)
@@ -46,7 +68,7 @@
         // Move a stable portal container, not the React form. Drafts and focus survive.
         ;(expanded[0] ? document.body : slot.current).appendChild(target)
         var el = root.current
-        if (expanded[0] && el) {
+        if (expanded[0] && el && !dialogState && !document.querySelector('.i5-overlay-root')) {
           var previous = document.activeElement
           var close = el.querySelector('[data-i5-settings-return]')
           if (close) close.focus()
@@ -55,6 +77,8 @@
       }, [expanded[0]])
       useEffect(function () {
         function guard(e) {
+          // A sibling portal dialog owns focus and Escape until it closes.
+          if (document.querySelector('.i5-overlay-root')) return
           var el = root.current, dialog = slot.current && slot.current.closest('[role=dialog]')
           if (e.type === 'keydown' && e.key === 'Escape' && expanded[0] && !dialogState) {
             e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); expanded[1](false); return
@@ -75,7 +99,7 @@
         return function () { clearInterval(timer) }
       }, [])
       var form = h(Iter5Surface, { kind: 'settings' },
-        h('div', { ref: root, 'data-iter5': '', 'data-i5-embedded': '', 'data-expanded': String(expanded[0]),
+        h('div', { ref: root, 'data-iter5': '', 'data-i5-embedded': '', 'data-i5-style': skinStyle, 'data-expanded': String(expanded[0]),
           role: expanded[0] ? 'dialog' : undefined, 'aria-modal': expanded[0] ? true : undefined,
           'aria-label': L('记忆设置', 'Memory settings'),
           onKeyDown: function (e) {

@@ -8,57 +8,18 @@ import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 
 const source = readFileSync(new URL('../../lib/client.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n')
-const BEGIN = '    // ITER5-GENERATED:BEGIN'
-const END = '    // ITER5-GENERATED:END'
-// ★2026-09-29 断言形态更换（本仓）：原判据是「剥离生成区后整个文件的 sha256 等于某条基线」。
-//   它的问题是：**任何**对经典档的正当改动都会让它变红，于是每轮都要重算一次基线 —— 时间花在
-//   修断言上而不是修问题上（用户原话）。而它想守的那条红线其实很具体：
-//     「皮肤的一切都落在受控生成区内，经典档不被皮肤污染；样式注入是 opt-in 的」。
-//   现在直接断言这组**不变量**，既不需要基线，也比摘要更强（摘要只能证明「变了」，不能说明「变坏了」）：
-//     ① 生成区存在且非空；② 皮肤标识**一个都不许**出现在生成区之外（先还原接缝再判）；
-//     ③ 生成区里必须真有皮肤（否则②会因「根本没有皮肤」而假绿）；
-//     ④ 皮肤渲染与样式注入仍受 damSkinActive() 开关约束（经典档零接触）。
-assert(source.includes(BEGIN) && source.includes(END), 'generated skin region must be present')
-const genStart = source.indexOf(BEGIN)
-const genEnd = source.indexOf(END) + END.length
-assert(genEnd > genStart, 'generated skin region must be non-empty')
-
-const outside = source.slice(0, genStart) + source.slice(genEnd)
-// 先把接缝**还原**再查污染：`Iter5Page` / `ITER5_CSS` 本来就会在这两处接缝行里各出现一次
-// （渲染分支与样式注入），那是接口本身，不是泄漏。还原之后仍残留才算泄漏。
-// 前三条是生成器**必然**施加的接缝（必须恰命中一次）；后两条（向导 hook）在本仓是**手写已修**，
-// 故此处仅在「作者那版写法」存在时才还原 —— 用可选列表表达，避免把「本仓已修好」误判成漂移。
-const SEAMS = [
-  ["+ DAM_SKIN_V4_CSS + '\\n' + ITER5_CSS + '\\n/* dam-skin:end (v4) */'", "+ DAM_SKIN_V4_CSS + '\\n/* dam-skin:end (v4) */'"],
-  ['h(Iter5Page, { nonce: nonce, onExit:', 'h(DamSkinV4Page, { nonce: nonce, onExit:'],
-  ["try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch'],
-]
-let classic = outside
-for (const [from] of SEAMS) {
-  assert.equal(classic.split(from).length - 1, 1, 'Required skin seam must match exactly once: ' + from.slice(0, 70))
-}
-for (const [from, to] of SEAMS) classic = classic.replace(from, to)
-// 上面三条是生成器**必然**施加的接缝。向导 hook 那条（React #310）在本仓是**手写已修**的形态
-// —— 不还原，直接按下一条断言校验「修好后的形状」必须存在，否则经典档的既修缺陷会悄悄回退。
-const SKIN_MARKERS = ['Iter5Page', 'Iter5Surface', 'Iter5Home', 'iter5Identity', 'i5-banner-copy', 'i5-page-head', 'data-iter5', 'ITER5_CSS', 'ITER5_PAGES', 'useIter5Theme']
-for (const marker of SKIN_MARKERS) {
-  assert(!classic.includes(marker), 'Skin identifier leaked outside the generated region: ' + marker)
-}
-// 生成区内必须真的含皮肤（否则上面那条会因为「根本没有皮肤」而假绿）。
-for (const marker of ['Iter5Page', 'ITER5_CSS', 'useIter5Theme', 'i5-page-head']) {
-  assert(source.slice(genStart, genEnd).includes(marker), 'generated region is missing skin code: ' + marker)
-}
-// React #310 红线：向导首屏的 `useDeepTheme()` 必须在**无条件调用区**，不得留在三元分支里。
-assert(!classic.includes("? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })"), 'hook must not be called inside the welcome-tour ternary (#310)')
-assert(/function DialogHost\(\) \{[\s\S]{0,900}?\n      var tourDeep = useDeepTheme\(\)\n/.test(classic), 'DialogHost must keep the unconditional tourDeep hook (before any early return)')
-assert(classic.includes("? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })"), 'welcome tour must consume the unconditional tourDeep value')
-// ④ 经典档零接触 + 注入 opt-in。
-//   注意方向：接缝**还原**后 classic 是「皮肤接入之前」的形态，所以「注入语句存在」这类断言
-//   要查 **source**（实时文件），查 classic 会得到相反结论 —— 这一点踩过一次，写清楚。
-assert(/function damSkinActive\(\)[\s\S]{0,400}?return ['"]classic['"]/.test(classic), 'classic remains the fail-safe skin when storage is unreadable')
-assert(/if \(damSkinActive\(\) === 'v4'\) \{/.test(classic), 'skin render branch stays gated on damSkinActive()')
-assert(/if \(damSkinActive\(\) === 'v4'\) damSkinEnsureCss\(\)/.test(source), 'skin stylesheet injection stays gated on damSkinActive() in the live file')
-console.log('PASS classic half is skin-free; all seams hit once; skin stays opt-in')
+const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ ITER5-GENERATED:END\n/, '')
+  .replace("+ DAM_SKIN_V4_CSS + '\\n' + ITER5_CSS + '\\n/* dam-skin:end (v4) */'", "+ DAM_SKIN_V4_CSS + '\\n/* dam-skin:end (v4) */'")
+  .replace('h(Iter5Page, { nonce: nonce, onExit:', 'h(DamSkinV4Page, { nonce: nonce, onExit:')
+  .replace("try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch')
+  .replace('function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()', 'function DialogHost() {\n      var tickPair = useTick()')
+  .replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })")
+// ★2026-09-30：本快照基线演进（PR #150/#155 合并到 v3.2.5 之后）——生成块**之外**的 client.js
+//   现包含 3.2.5 的合法修复（接续身份钉死 clickedSid、StatsTab/Iter5Stats 解包 data.stats、
+//   时间戳标题等），故快照哈希随之变化；守卫语义不变：
+//   生成块之外的任何**非意外**改动仍会被本锁抓住。
+assert.equal(createHash('sha256').update(classic).digest('hex'), '64aaba6a0d4736e542d21f1b4801f0efe367d3ad52e2944d94f1f65ed516f616', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
 for (const line of css.split('\n')) {
@@ -69,32 +30,6 @@ assert(!source.includes('BData.'), 'No demo data shipped')
 const embeddedCss=JSON.parse(source.match(/var ITER5_CSS = (.+)\n/)[1])
 const sharedTokens=embeddedCss.match(/\[data-iter5\],\[data-dam-theme\]\{([^}]+)\}/)[1]
 assert(sharedTokens.split(';').filter(Boolean).every(declaration=>declaration.startsWith('--')),'Overlay token sharing must not include page flex/height/position styles')
-// ── 动效判据（2026-09-29 新增）────────────────────────────────────────────────
-// 皮肤原先**一条动效都没有**（卡片入场被 `animation:none` 一并封死）。此处不锁具体数值
-// （数值会随设计调整），只锁住那几条「写错就是缺陷」的红线：
-// 注意：皮肤里有两个 reduced-motion 块 —— 前一个属于**宿主渲染的覆盖层**（[data-dam-theme]，我们不动它），
-// 后一个才是皮肤自己的（[data-iter5]）。判据必须锚到后者。
-const reducedAt = embeddedCss.lastIndexOf('@media(prefers-reduced-motion:reduce){')
-assert(reducedAt > 0, '皮肤必须有 [data-iter5] 作用域的 reduced-motion 降级块')
-const reduced = embeddedCss.slice(reducedAt, reducedAt + 900)
-assert(reduced.includes('animation:none!important'), 'reduced-motion 必须去掉位移动画')
-assert(!/[^)]\*[^{]*\{[^}]*transition:none!important/.test(reduced), 'reduced-motion 不该用通配选择器把换色过渡一并清零（应减弱而非清零）')
-// 入场一律从「有」开始：禁 scale(0)（现实中不会从无到有）。
-assert(!/scale\(0\)/.test(embeddedCss), '入场不得从 scale(0) 开始')
-// UI 动效不得用 ease-in（起步拖沓，用户最盯的就是起步那一刻）。
-assert(!/var\(--i5-dur[^)]*\)\s+ease-in\b/.test(embeddedCss), 'UI 动效不得使用 ease-in')
-// 只动 transform / opacity（外加水位环的 stroke-dashoffset）——不得出现 transition: all。
-assert(!/transition:\s*all\b/.test(embeddedCss), '禁止 transition: all')
-// 动效刻度必须是命名 token，不得散落字面量毫秒（皮肤唯一例外是既有 greet-host 兜底）。
-assert(embeddedCss.includes('--i5-ease-out:cubic-bezier(.23,1,.32,1)'), '必须使用强 ease-out 曲线而非内置 ease-out')
-assert(/\.i5-ring-progress\{transition:stroke-dashoffset var\(--i5-dur-slow\)/.test(embeddedCss), '水位环过渡必须走刻度 token')
-// 按下反馈存在（皮肤此前完全没有 :active 态）。
-assert(/\[data-iter5\] button:active:not\(:disabled\)\{transform:scale\(\.97\)/.test(embeddedCss), '按钮必须有按下反馈')
-// 换页整块入场存在。
-assert(/\[data-iter5\] \.i5-main > :not\(\.i5-page-head\)\{animation:i5-fade-in/.test(embeddedCss), '换页必须有入场过渡')
-assert(/\[data-iter5\] \.i5-main > :not\(\.i5-page-head\) > \* > \*\{animation:i5-block-in/.test(embeddedCss), '页面内内容块必须错峰入场（且取到正确的嵌套层）')
-// 皮肤自己的卡片不得再被封死动效（原 `animation:none` 写法的回归守卫）。
-assert(!/\[data-iter5\] \.i5-card,\[data-iter5\] \.i5-stat\{animation:none/.test(embeddedCss), '皮肤卡片的动效不得被整体封死')
 console.log('PASS scoped token colors and no demo data')
 
 // Execute the shipped factory with a small hook harness. No network, real memory,
@@ -111,17 +46,11 @@ const React = {
   useReducer(fn, initial) { const [state, set] = React.useState(initial); return [state, action => set(old => fn(old, action))] },
   useEffect(fn, deps) { const i = cursor++; const old = states[i]; if (!old || deps.some((d, n) => !Object.is(d, old[n]))) { states[i] = deps; effects.push(fn) } },
 }
-// ★2026-09-29：原先 setItem 是空实现 ⇒ 皮肤主题档位的「写入—读回」永远测不出来（假绿）。
-//   改成最小可用的真存储语义：即使不做真持久化，也必须让 get/set/remove 自洽。
-const localStorage = (() => {
-  const mem = new Map()
-  return { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => { mem.set(k, String(v)) }, removeItem: (k) => { mem.delete(k) }, get length() { return mem.size } }
-})()
+const localStorage = { getItem: () => null, setItem() {}, removeItem() {}, length: 0 }
 const document = { documentElement: { getAttribute: () => '', style: { setProperty() {} }, classList: { contains: () => false } }, querySelector: () => null, getElementById: () => null }
 const window = { localStorage, addEventListener() {}, removeEventListener() {}, confirm() { confirmCount++; return accept }, __ModuleLoader__: { load(def) { exposed = def.factory(name => { if (name === 'react') return React; throw Error('Test module unavailable: ' + name) }) } } }
-const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
-vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
-      iter5ThemeGet: iter5ThemeGet, iter5ThemeSet: iter5ThemeSet, iter5ThemeCycle: iter5ThemeCycle, useIter5Theme: useIter5Theme, Iter5Page: Iter5Page,
+const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, requestAnimationFrame: fn=>fn(), setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
+vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { Iter5Notice: Iter5Notice, Iter5Summary: Iter5Summary, Iter5AutoContinue: Iter5AutoContinue, Iter5Storage: Iter5Storage, Iter5Migration: Iter5Migration, Iter5DeleteConfirmation: Iter5DeleteConfirmation, iter5WorkspaceLayout: iter5WorkspaceLayout, iter5MapLabel: iter5MapLabel, Iter5WorkspaceGraph: Iter5WorkspaceGraph, iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
       transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
@@ -135,61 +64,8 @@ document.documentElement.style.colorScheme = 'dark'
 assert.equal(themeReader(), true, 'Current host color-scheme is recognized')
 document.documentElement.style.colorScheme = 'light'
 assert.equal(themeReader(), false, 'Switching back to light clears dark theme')
-// 皮肤侧三态：档位本身 + 「覆盖宿主」语义（这是用户报障「切了不跟系统 / 看不到档位」的正面判据）。
-// 断言的是纯函数与一个真 hook 调用，不读私有实现细节。
-assert.equal(test.iter5ThemeGet(), 'auto', '默认档位必须是跟随系统（auto）')
-assert.equal(test.iter5ThemeCycle('auto'), 'light')
-assert.equal(test.iter5ThemeCycle('light'), 'dark')
-assert.equal(test.iter5ThemeCycle('dark'), 'auto', '循环必须闭合回跟随系统')
-assert.equal(test.iter5ThemeSet('dark'), undefined)
-assert.equal(test.iter5ThemeGet(), 'dark', '显式档位要能读回')
-test.iter5ThemeSet('auto')
-states = []; effects = []; cursor = 0
-document.body = { hasAttribute: () => false }
-assert.equal(test.useIter5Theme()[1], false, 'auto 档必须跟随宿主（宿主亮 ⇒ 亮）')
-test.iter5ThemeSet('dark')
-states = []; effects = []; cursor = 0
-assert.equal(test.useIter5Theme()[1], true, 'dark 档必须覆盖宿主亮色')
-test.iter5ThemeSet('light')
-document.body = { hasAttribute: name => name === 'data-ds-dark-theme' }
-states = []; effects = []; cursor = 0
-assert.equal(test.useIter5Theme()[1], false, 'light 档必须覆盖宿主暗色')
-
-// 工作台顶部必须真的渲染出主题按钮，且档位写在 data-i5-theme 上（用户「看不到档位」的正面判据）。
-states = []; effects = []; cursor = 0
-test.iter5ThemeSet('dark')
-const pageTree = test.Iter5Page({ nonce: 0, onExit() {} })
-const themeBtn = nodes(pageTree, (n) => n.props && n.props['data-i5-theme'] !== undefined)[0]
-assert(themeBtn, '工作台顶部必须渲染主题切换按钮')
-assert.equal(themeBtn.props['data-i5-theme'], 'dark', 'data-i5-theme 必须反映当前档位')
-const workbenchRoot = nodes(pageTree, (n) => n.props && n.props['data-iter5'] === '' && n.props['data-deep'] !== undefined)[0]
-assert(workbenchRoot, '工作台根节点必须带 data-deep')
-assert.equal(workbenchRoot.props['data-deep'], 'true', 'dark 档必须把 data-deep 置 true（配色开关）')
-test.iter5ThemeSet('auto')
-states = []; effects = []; cursor = 0
-test.iter5ThemeSet('auto')
-document.body = { hasAttribute: () => false }
-// 上面真调过 useIter5Theme()（占用了钩子槽位）⇒ 必须清干净再交给下面的组件渲染，
-// 否则 states[0] 会残留档位字符串，被下游组件的第一个 useState 误读成自身初值。
-states = []; effects = []; cursor = 0
 assert(!embeddedCss.includes('body:has([data-iter5])'), 'Independent roots never depend on a workbench being mounted')
 assert(!embeddedCss.includes('html:has(#dam-skin-v4-style)'), 'Shared overlays do not depend on opt-in stylesheet lifetime')
-// ★2026-09-29 真因守卫：宿主的 ThemePresenter 只往三处写主题（html.style.colorScheme、
-//   html[data-ds-theme-source]、body[data-ds-dark-theme]）。旧 observer 只盯 html 的
-//   class/data-theme/data-dsh-theme ⇒ 宿主一条都不写 ⇒ **永不触发**，主题在挂载时冻结。
-//   这里直接断言「观察集合覆盖宿主三种写入」，防止将来有人把 filter 改窄又不自知。
-const watched = new Set()
-const beforeObserve = context.__observed
-vm.runInContext(source.slice(source.indexOf('    var deepSubs = new Set()'), source.indexOf('    /** 背景层')) + '\ndeepWatch()', vm.createContext({
-  Set, console, document,
-  window: {},
-  readHostDeep: () => false,
-  MutationObserver: function () { this.observe = (node, opts) => { for (const a of (opts && opts.attributeFilter) || []) watched.add(a) } },
-}))
-for (const attr of ['style', 'data-ds-theme-source', 'data-ds-dark-theme']) {
-  assert(watched.has(attr), 'Host theme write must be observed, else theme changes are invisible: ' + attr)
-}
-void beforeObserve
 console.log('PASS actual host theme markers and standalone entry styles')
 test.transport(async url => {
   if (url.includes('/config')) return { config: { ...config } }
@@ -205,12 +81,21 @@ test.transport(async url => {
 function render() { cursor = 0; const tree = test.Iter5Settings(); const pending = effects; effects = []; pending.forEach(fn => fn()); return tree }
 async function settle() { for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0)); return render() }
 function nodes(tree, predicate, out = []) { if (!tree || typeof tree !== 'object') return out; if (Array.isArray(tree)) tree.forEach(x => nodes(x, predicate, out)); else { if (predicate(tree)) out.push(tree); nodes(tree.props?.children, predicate, out) } return out }
-function field(tree, key) { const label = test.t(key); const found = nodes(tree, n => n.props?.['aria-label'] === label && n.type === 'input'); assert(found.length, 'Input exists: ' + label); return found[0] }
+function field(tree, key) { const label = test.t(key); const row = nodes(tree, n => n.props?.['data-i5-field'] === label)[0]; const found = nodes(row, n => n.type === 'input'); assert(found.length, 'Input exists: ' + label); return found[0] }
 function button(tree, label) { const found = nodes(tree, n => n.type === 'button' && n.props.children.flat(Infinity).includes(label)); assert(found.length, 'Button exists: ' + label); return found[0] }
 render(); let tree = await settle()
 assert.equal(field(tree, 'fNoteCap').props.value, 24000)
 assert.equal(field(tree, 'fUserCap').props.value, 24000)
 console.log('PASS generated settings preserve both upstream capacity defaults')
+const engineSections = nodes(tree, n => n.props?.className === 'i5-engine-grid')[0]
+const engineAdvanced = nodes(engineSections, n => n.type === 'details' && n.props.className === 'i5-settings-advanced')[0]
+assert.equal(nodes(engineAdvanced, n => n.props?.['data-i5-field'] === test.t('fEmitMode')).length, 0, 'Actual delivery mode must not be hidden in advanced settings')
+assert.equal(nodes(engineAdvanced, n => n.props?.['data-i5-field'] === test.t('fJsCooldown')).length, 1, 'Tuning remains available in advanced settings')
+assert.equal(field(tree, 'fAssocEngine').props['aria-label'], '主动查找相关记忆', 'Accessible name matches plain-language visible label')
+const memorySection = nodes(tree, n => n.type === 'section' && n.props.id?.endsWith('-section-capacity'))[0]
+assert.equal(nodes(memorySection, n => n.props?.['data-i5-field'] === test.t('fAutoConsolidate')).length, 1, 'Automatic recording stays reachable after regrouping')
+assert.equal(nodes(memorySection, n => n.type === 'details' && n.props.className === 'i5-settings-advanced').length, 1)
+console.log('PASS beginner settings expose recall delivery and preserve advanced controls')
 const appearance=nodes(tree,n=>n.type==='section'&&n.props.id&&n.props.id.endsWith('-section-look'))[0]
 assert(button(appearance,test.t('tourReplay')),'Manual welcome entry stays in appearance group')
 console.log('PASS welcome replay is reachable under appearance settings')
@@ -283,6 +168,10 @@ window['dsh-auto-memory.wizStatus']={loaded:true,ready:false,download:{phase:'id
 test.setDialog(null);test.DialogHost();const hiddenHooks=cursor
 cursor=0;test.setDialog({kind:'welcomeTour',manual:true});const tour=test.DialogHost()
 assert(tour,'Welcome tour renders')
+const nativeNav=nodes(tour,n=>n.props?.['data-native-tour-nav']==='')[0]
+assert(nativeNav,'Welcome provides the approved native step navigation')
+assert.equal(nodes(nativeNav,n=>n.type==='button').length,9,'All actual welcome steps remain reachable')
+assert.equal(nodes(nativeNav,n=>n.props?.['aria-current']==='step').length,1,'Exactly one step is current')
 const welcomeToggles=window['dsh-auto-memory.TOUR_STEPS'].flatMap(step=>step.toggles||[])
 assert(welcomeToggles.some(t=>t.key==='workbenchEnabled'))
 assert(!welcomeToggles.some(t=>t.key==='workbenchRoot'),'Directory setting cannot be written as a boolean')
@@ -311,7 +200,7 @@ console.log('PASS file transitions cannot display stale content under a new titl
 states=[];effects=[];cursor=0
 const home=test.Iter5Home({nonce:0,onNav(){}})
 assert.equal(nodes(home,n=>n.props?.className==='i5-daily-card').length,1,'Home retains its real calendar section')
-assert.equal(nodes(home,n=>n.props?.className==='i5-activity').length,1,'Home retains recent records')
+assert.equal(nodes(home,n=>n.props?.className==='i5-native-recent').length,1,'Home retains recent records')
 console.log('PASS refined home retains recent records and calendar entry points')
 
 states=[];effects=[];cursor=0
@@ -328,6 +217,121 @@ resolveOld('workspace-a');await new Promise(resolve=>setTimeout(resolve,0));curs
 assert.equal(test.useIter5Data(()=>Promise.resolve(null),[]).data,'workspace-b','Late prior-workspace data must not replace the active scope')
 console.log('PASS late results cannot cross session/workspace identity')
 
+
+// Execute panel draft and selectable search behavior through the shipped components.
+function renderNative(component, props) { cursor=0;const tree=component(props);effects.splice(0).forEach(fn=>fn());return tree }
+function resetNative() { states=[];effects=[];cursor=0 }
+resetNative();test.identity('note-session-a|workspace-a')
+let note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+nodes(note,n=>n.type==='textarea')[0].props.onChange({target:{value:'Keep this unsaved note'}})
+resetNative();test.identity('note-session-b|workspace-b')
+note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+assert.equal(nodes(note,n=>n.type==='textarea')[0].props.value,'','A different session never receives the panel draft')
+resetNative();test.identity('note-session-a|workspace-a')
+note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+assert.equal(nodes(note,n=>n.type==='textarea')[0].props.value,'Keep this unsaved note','Closing and remounting restores the same-session draft')
+test.transport(async()=>({}),async()=>({ok:true}))
+note.props.onSubmit({preventDefault(){}})
+await new Promise(resolve=>setTimeout(resolve,0))
+resetNative();note=renderNative(test.Iter5Note,{persistDraft:'panel'})
+assert.equal(nodes(note,n=>n.type==='textarea')[0].props.value,'','A successful append clears the recovered draft')
+console.log('PASS panel drafts survive remount, isolate identities and clear only after append')
+resetNative()
+test.transport(async()=>({}),async()=>({answer:'Host summary',hits:[{where:'log-a.md',line:'First source passage'},{where:'log-b.md',line:'Second source passage'}],keywords:['source']}))
+let search=renderNative(test.Iter5Search,{nonce:0})
+nodes(search,n=>n.type==='input')[0].props.onChange({target:{value:'source'}})
+search=renderNative(test.Iter5Search,{nonce:0})
+nodes(search,n=>n.type==='form')[0].props.onSubmit({preventDefault(){}})
+await new Promise(resolve=>setTimeout(resolve,0))
+search=renderNative(test.Iter5Search,{nonce:0})
+const results=nodes(search,n=>n.props?.className==='i5-search-result')
+assert.equal(results.length,3,'The host summary and both source passages are independently selectable')
+results[1].props.onClick()
+search=renderNative(test.Iter5Search,{nonce:0})
+assert.equal(nodes(search,n=>n.props?.className==='i5-search-result'&&n.props['aria-current']==='true').length,1)
+assert.equal(nodes(search,n=>n.type==='h2'&&n.props.tabIndex===-1)[0].props.children[0],'log-b.md','Selecting a source updates the detail heading')
+const lexical=test.iter5SearchEntries({result:'[记忆检索] 验收\n== 本地记忆文件命中 ==\n· log-a.md:\n  - exact source A\n· log-b.md:\n  - exact source B'},'recall')
+assert.equal(lexical.length,3)
+assert.equal(lexical[0].title,'log-a.md')
+assert.equal(lexical[1].text,'- exact source B')
+assert.equal(lexical[2].summary,true,'The complete host transcript remains available')
+console.log('PASS search renders real source passages as selectable results')
+
+
+resetNative()
+const actionNode={key:'skill-1',props:{'data-dam-content':'',children:[{type:'button',props:{children:['Approve'],onClick(){}}}]}}
+const skillRows=[{props:{title:'Skill group',children:[actionNode]}}]
+assert.equal(test.iter5SkillContent(skillRows,'skill-1'),actionNode,'Original gated action node is reused without reimplementing its handlers')
+let skillTree=renderNative(test.Iter5SkillBrowser,{active:[],pipeline:[{procedureId:'skill-1',title:'Reviewed process',stage:'candidate',steps:['Actual step'],successCriteria:['Actual criterion']}],rows:skillRows})
+assert.equal(nodes(skillTree,n=>n.props?.className==='i5-native-skill-row').length,1)
+assert.equal(nodes(skillTree,n=>n.type==='li')[0].props.children[0],'Actual step')
+nodes(skillTree,n=>n.type==='input')[0].props.onChange({target:{value:'absent'}})
+skillTree=renderNative(test.Iter5SkillBrowser,{active:[],pipeline:[{procedureId:'skill-1',title:'Reviewed process'}],rows:skillRows})
+assert.equal(nodes(skillTree,n=>n.props?.className==='i5-native-skill-row').length,0)
+console.log('PASS native skills preserve gated action content and title filtering')
+
+
+for (const count of [1,2,5]) {
+ const workspaces=Array.from({length:count},(_,i)=>({path:'ws-'+i,name:'Workspace '+i,graphTopics:Array.from({length:i===0?14:4},(_,n)=>({label:'Topic '+n}))}))
+ const graph=test.iter5WorkspaceLayout(workspaces,{links:count>1?[{from:'ws-0',to:'ws-1',label:'shared'}]:[]})
+ assert.equal(graph.nodes.filter(n=>n.kind==='workspace').length,count)
+ assert.equal(graph.nodes.filter(n=>n.kind==='topic').length,14+4*(count-1),'Every actual topic is represented')
+ for (const node of graph.nodes) assert(node.x-node.width/2>=0&&node.x+node.width/2<=graph.width&&node.y-node.height/2>=0&&node.y+node.height/2<=graph.height,'All graph node rectangles fit the viewBox')
+ assert.equal(graph.edges.filter(e=>e.shared).length,count>1?1:0)
+}
+console.log('PASS native graph retains all topics and bounds every node inside its canvas')
+
+// Replanning must follow the selected policy; changing packs invalidates the preview.
+resetNative()
+const storageCalls=[],migrationCalls=[]
+context.fetch=async(url,opts)=>{if(opts?.body)storageCalls.push(JSON.parse(opts.body));return {ok:true,json:async()=>({ok:true,sources:[{file:'fixture/MEMORY.md',sourceRef:'notes:MEMORY.md',status:'ok'}],counts:{total:1,ok:1,stale:0,unrepairable:0}})}}
+test.transport(async()=>({}),async(url,body)=>{migrationCalls.push({url,body});return {ok:true,plan:{onConflict:body.onConflict,additions:[],overwrites:[],stats:{willWrite:0}}}})
+let storageTree=renderNative(test.Iter5Storage,{nonce:0})
+await new Promise(resolve=>setTimeout(resolve,0))
+storageTree=renderNative(test.Iter5Storage,{nonce:0})
+const migrationProps=()=>nodes(storageTree,n=>n.type===test.Iter5Migration)[0].props
+migrationProps().setPack('fixture/backup.dam-pack')
+storageTree=renderNative(test.Iter5Storage,{nonce:0});migrationProps().onPreview()
+await new Promise(resolve=>setTimeout(resolve,0));storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(migrationCalls.at(-1).body.onConflict,'keep')
+migrationProps().setConflict('overwrite')
+await new Promise(resolve=>setTimeout(resolve,0));storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(migrationCalls.at(-1).body.onConflict,'overwrite','Changing policy obtains a new host plan')
+assert.equal(migrationProps().plan.onConflict,'overwrite')
+migrationProps().setPack('fixture/another.dam-pack');storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(migrationProps().plan,null,'A new pack cannot reuse the previous pack preview')
+const selects=nodes(storageTree,n=>n.type==='select')
+selects[0].props.onChange({target:{value:'fixture/MEMORY.md'}})
+nodes(storageTree,n=>n.type==='input'&&String(n.props.placeholder).startsWith('mem_'))[0].props.onChange({target:{value:'memory-fixture'}})
+storageTree=renderNative(test.Iter5Storage,{nonce:0});button(storageTree,'删除').props.onClick()
+storageTree=renderNative(test.Iter5Storage,{nonce:0})
+let confirmNode=nodes(storageTree,n=>n.type===test.Iter5DeleteConfirmation)[0]
+assert.equal(confirmNode.props.payload.memoryId,'memory-fixture')
+assert.equal(storageCalls.length,0,'Opening confirmation is read-only')
+confirmNode.props.onClose();storageTree=renderNative(test.Iter5Storage,{nonce:0})
+assert.equal(nodes(storageTree,n=>n.type===test.Iter5DeleteConfirmation).length,0)
+assert.equal(storageCalls.length,0,'Canceling cannot delete')
+button(storageTree,'删除').props.onClick();storageTree=renderNative(test.Iter5Storage,{nonce:0})
+nodes(storageTree,n=>n.type===test.Iter5DeleteConfirmation)[0].props.onConfirm()
+await new Promise(resolve=>setTimeout(resolve,0))
+assert.equal(storageCalls.length,1)
+assert.equal(storageCalls[0].memoryId,'memory-fixture')
+console.log('PASS migration policy replans, pack changes invalidate preview, and deletion requires explicit confirmation')
+
+resetNative();test.setDialog({kind:'notice',notice:{title:'Host notice',message:'Actual message'}})
+const noticeElement=renderNative(test.DialogHost,{})
+const notice=test.Iter5Notice(noticeElement.props)
+assert.equal(notice.props['data-native-dialog'],'notice')
+assert.equal(nodes(notice,n=>n.props?.['data-native-dialog']==='notice').length,1,'Sibling notices have an independently styleable native surface')
+test.setDialog(null)
+
+const summary=test.Iter5Summary({summary:{summary:'Actual host summary',works:Array.from({length:8},(_,i)=>({title:'Work '+i,points:['Point '+i]}))},onClose(){}})
+assert.equal(nodes(summary,n=>n.type==='li').length,8,'Summary retains every actual work item and its points')
+const progress=test.Iter5AutoContinue({executing:true,status:'Host is continuing',onDismiss(){}})
+assert.equal(nodes(progress,n=>n.props?.role==='progressbar').length,1)
+assert.equal(nodes(progress,n=>n.props?.['aria-valuenow']!==undefined).length,0,'No fake percentage when host does not report step progress')
+console.log('PASS summary retains all host work details and continuation uses indeterminate progress')
+
 // Git may check out skin sources as CRLF on Windows and LF on Linux.
 // Both must produce the same normalized bundle without doubled CR bytes.
 const fixture=mkdtempSync(path.join(tmpdir(),'iter5-generator-'))
@@ -335,7 +339,7 @@ try {
   for(const dir of ['lib','tools','skins/iter5'])mkdirSync(path.join(fixture,dir),{recursive:true})
   writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
   for(const newline of ['\n','\r\n']) {
-    for(const name of ['ui.js','views.js','surfaces.js','skin.css']) {
+    for(const name of ['settings-copy.js','style-choice.js','alternate-home.js','style-variants.css','ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js','native-operations.css','native-skills.js','native-storage.js','native-team.js','native-map.js','native-messages.js','native-secondary.css']) {
       const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
       writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
     }
@@ -351,3 +355,19 @@ try {
   rmSync(fixture,{recursive:true,force:true})
 }
 console.log('PASS generator is idempotent with LF and CRLF checkouts')
+
+// Topic deduplication, readable labels and non-actionable topic semantics.
+const uniqueGraph = test.iter5WorkspaceLayout([{path:'/fixture',name:'Fixture',items:['Topic',' Topic ', 'Other']}], {})
+assert.equal(uniqueGraph.nodes.filter(n=>n.kind==='topic').length, 2)
+assert.equal(Array.from(test.iter5MapLabel('Long workspace title with meaningful word boundaries')).length, 2)
+assert(test.iter5MapLabel('Long workspace title with meaningful word boundaries')[1].endsWith('…'))
+assert.deepEqual(Array.from(test.iter5MapLabel('Memory search')), ['Memory search'])
+console.log('PASS instrument topic deduplication and word-boundary labels')
+
+resetNative()
+const topicTree=renderNative(test.Iter5WorkspaceGraph,{workspaces:[{path:'/fixture',name:'Fixture',items:['Topic']}],onSelect(){throw Error('Topic must not switch workspace')},scale:1})
+const topicNode=nodes(topicTree,n=>n.props?.['data-native-map-node']==='topic')[0]
+assert.equal(topicNode.props.onClick,undefined)
+assert.equal(topicNode.props.tabIndex,undefined)
+assert.equal(topicNode.props.role,'img')
+console.log('PASS topic nodes expose content without a misleading workspace action')

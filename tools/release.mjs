@@ -81,7 +81,15 @@ for (const entry of ['cordis.patch.yml', 'README.md', 'README.zh-CN.md', 'LICENS
   // ★2026-09-21 补 CHANGELOG.md：两份 README **各有 3 处**链接到 `CHANGELOG.md`（导航条 / 文末链接区，
   //   共 6 处），但此文件此前**从不在复制清单里**，REL 仓也从未有过它 ⇒ GitHub 上点「Changelog」
   //   一直是 **404**（`git log --all -- CHANGELOG.md` 为空可证）。发版脚本漏拷，属真断链。
-  'CHANGELOG.md', 'skins']) {
+  'CHANGELOG.md', 'skins',
+  // ★2026-09-29（3.2.4 插件图标批）：宿主新增插件元数据机制（`@deepseek-ai/dsh-app-boot` 的
+  //   readPluginMeta / iconOf / dictionariesOf）—— 插件用 package.json 的 `icon` 字段 +
+  //   `locale/<lang>.json` 在设置页插件行显示图标与中/英标题描述。
+  //   ⚠️ 该机制由**宿主读盘**（icon 读成 data URL 塞进 <img>），文件必须真在安装包里：
+  //   此前复制清单没有这两项 ⇒ 图标只存在于开发树、发布包里缺 icon.svg ⇒
+  //   宿主 iconOf 校验失败（existsSync/statSync）⇒ 整条元数据读不到、界面上**永远无图标**
+  //   （与 CHANGELOG.md / tools/lib / build-iter5-skin.mjs 同类漏网：功能做了但发布物里没有）。
+  'icon.svg', 'locale']) {
   const s = path.join(DEV, entry), d = path.join(REL, entry)
   if (existsSync(s)) cpSync(s, d, { recursive: true })
 }
@@ -380,7 +388,15 @@ const relPkg = {
   version,
   type: 'module',
   main: 'lib/index.js',
-  exports: { '.': './lib/index.js', './client': './lib/client.js', './package.json': './package.json' },
+  // ★2026-09-29（3.2.4）：插件图标 + 本地化元数据。宿主 `readPluginMeta` 读**发布包**里的
+  //   package.json（icon 字段）与 icon.svg/locale 文件；缺任一项 ⇒ 设置页插件行无图标/标题。
+  icon: './icon.svg',
+  exports: {
+    '.': './lib/index.js',
+    './client': './lib/client.js',
+    './package.json': './package.json',
+    './locale/*.json': './locale/*.json',
+  },
   // #20:python/ 运行时(worker+语义引擎+策略)必须随包;bench(539MB 模型夹具)与 __pycache__ 永久排除
   // #106:发布物剔除非运行时负载 —— docs/internal(内部审计/规划/分诊)与 .bak/.bak-* 一律不进包
   // ★2026-09-23(3.1.6) 补两处**实测到的真实泄漏**（dry-run 构建里点名核对得到）：
@@ -391,7 +407,7 @@ const relPkg = {
   //   ② 原 `!docs/**/*.bak` 与 `!docs/**/*.bak-*` 两条**依赖 npm 的 glob 语义**，而 `docs/**`
   //      中途另起一段的写法在部分 npm 版本上不生效 ⇒ 统一用 `!**/*.bak*` 一条兜住所有层级
   //      （`.bak` 与 `.bak-*` 都被覆盖），再补一条 `!lib/*.m8b*bak` 覆盖上述无点形态。
-  files: ['lib', 'python', 'docs', 'skins', 'cordis.patch.yml', '!python/bench', '!python/__pycache__', '!docs/internal',
+  files: ['lib', 'python', 'docs', 'skins', 'icon.svg', 'locale', 'cordis.patch.yml', '!python/bench', '!python/__pycache__', '!docs/internal',
     // ★2026-09-28 跟进社区作者 PR #146：补七条**设计稿/演示稿**排除（防止本地未跟踪材料随包发布）。
     //   与 package.json 的 files 同源，两处必须一致 —— 发布包由本文件的 files 决定，package.json 是给 npm 的声明。
     '!docs/ui-demo-*', '!docs/ui-demo', '!docs/ui-redesign-*', '!docs/ui-rebuild-handoff-*',

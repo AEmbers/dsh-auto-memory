@@ -456,6 +456,60 @@ if (!client.includes('F6 · 共享样式按皮肤分派')) {
     ].join('\n')
   })
 }
+
+// ★2026-09-30（H1 · 用户实测三项残留）：F 批的「非 iter5 一律不注入」把**模块级浮层**变成无样式 ——
+//   · DSH 设置页里的插件设置区（settings.section）：classic/legacy 档下无任何皮肤样式 ⇒ 布局崩坏；
+//   · 左下角记忆窗格（kind=panel）与新手引导/更新日志（kind=dialogs）：掉回宿主默认底（蓝底），
+//     丢失「新款（经典）」的液态玻璃。
+//   根因：这三面共用同一套 i5-* 标记，样式表却只有一个 `#dam-shared-ui-style`，且**恒为变体表**。
+//   F 批为避免污染把它整个停注，等于把「有样式但不该有」换成「该有却没有」。
+//   修法：按**当前皮肤**投放对应表 —— 变体档→ITER5_CSS；新款（经典）/传统档→LEGACY_ITER5_CSS（冻结 3.2.5 原表）。
+//   设置页用户已裁定「可调整为新版一致」，故 classic 档同样拿到 3.2.5 表，而不是空表。
+if (!client.includes('H1 · 外层三面按皮肤分派')) {
+  const f6Head = /^(\s*)\/\/ ★2026-09-30（F 批 · 共享样式按皮肤分派）[^\n]*\n\1\/\/[^\n]*\n\1var damFlavor = 'classic'\n\1try \{ damFlavor = damSkinCssFlavor\(\) \} catch \(eF6\) \{\}\n\1if \(damFlavor !== 'iter5'\) return function \(\) \{\}\n/gm
+  const f6Hits = (client.match(f6Head) || []).length
+  if (f6Hits !== 2) throw new Error('H1: expected 2 F6 heads, got ' + f6Hits)
+  let h1Seq = 0
+  client = client.replace(f6Head, function (_m, indent) {
+    h1Seq += 1
+    if (h1Seq === 1) {
+      // 冻结块（Legacy5Page 自用）：其**局部** ITER5_CSS 就是 3.2.5 原表 ⇒ 恒注入即可。
+      return [
+        indent + '// ★2026-09-30（H1 · 冻结块）：本块局部的 ITER5_CSS 即 3.2.5 原表 ⇒ 恒注入，不再按档位停注。',
+        indent + '//   停注会让同屏叠加的浮层失去这份老标记的样式（用户实测：设置区崩坏/窗格蓝底）。',
+      ].join('\n') + '\n'
+    }
+    // 外层块（shell.overlay ×3 + settings.section 共用本 Surface）：按当前皮肤投放。
+    return [
+      indent + '// ★2026-09-30（H1 · 外层三面按皮肤分派）：按**当前皮肤**投放样式表 ——',
+      indent + '//   变体档→ITER5_CSS；新款（经典）/传统档→LEGACY_ITER5_CSS（冻结 3.2.5 原表，含液态玻璃）。',
+      indent + '//   根因：F 批「非 iter5 一律不注入」使引导/更新日志/左下窗格/设置区**无任何皮肤样式** ⇒',
+      indent + '//   设置区崩坏、窗格掉回宿主蓝底。停注 ≠ 去污染。',
+      indent + 'var damSharedCss = ITER5_CSS',
+      indent + "try { damSharedCss = damSkinCssFlavor() === 'iter5' ? ITER5_CSS : LEGACY_ITER5_CSS } catch (eH1) {}",
+    ].join('\n') + '\n'
+  })
+  // 外层块的 textContent 改用 damSharedCss（第 2 处；第 1 处属冻结块，保持原样）
+  const txtRe = /^(\s*)style\.textContent = ITER5_CSS$/gm
+  const txtHits = (client.match(txtRe) || []).length
+  if (txtHits !== 2) throw new Error('H1: expected 2 textContent lines, got ' + txtHits)
+  let txtSeq = 0
+  client = client.replace(txtRe, function (line) {
+    txtSeq += 1
+    return txtSeq === 2 ? line.replace('ITER5_CSS', 'damSharedCss') : line
+  })
+  // 已存在的共享表须随换肤刷新内容（原实现只在缺失时创建 ⇒ 换肤后内容不更新）
+  const usersRe = /^(\s*)style\.dataset\.users = String\(Number\(style\.dataset\.users \|\| 0\) \+ 1\)$/gm
+  const usersHits = (client.match(usersRe) || []).length
+  if (usersHits !== 2) throw new Error('H1: expected 2 users lines, got ' + usersHits)
+  let usersSeq = 0
+  client = client.replace(usersRe, function (line) {
+    usersSeq += 1
+    if (usersSeq !== 2) return line
+    const ind = /^(\s*)/.exec(line)[1]
+    return ind + 'if (style.textContent !== damSharedCss) style.textContent = damSharedCss' + '\n' + line
+  })
+}
 const output = client.replace(/\n/g, newline)
 if (process.argv.includes('--check')) {
   if (readFileSync(file, 'utf8') !== output) throw new Error('Embedded iter5 skin is stale; run node tools/build-iter5-skin.mjs')

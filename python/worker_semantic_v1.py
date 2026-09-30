@@ -953,7 +953,14 @@ class SemanticWorker(base.Worker):
                 else:
                     row['activationId'] = act['activationId']
                     row['level'] = act['level']
-                    if self.activation_policy['mode'] == 'active':
+                    # 2026-09-30 G 批 · 发射闸单钥匙化：本通道（M7-6 双阈值）此前只看 activationPolicy.mode，
+                    # 而该键在**用户面零写入点**（设置页 / 向导 / semantic-emit 端点均只写 activationEmitMode）
+                    # ⇒ 用户在 UI 开「记忆唤起」后本通道恒沉默（判定照跑、shadow 行照记、帧不发）。
+                    # 判定改为「以投递开关为准」：activationEmitMode == active 即放行；
+                    # 同时保留 activationPolicy.mode == active 的**显式**路径（校准脚本 / 老配置仍有效）。
+                    # ⚠️ 非引擎联动：JS 与 Python 两套引擎的选择逻辑完全不动（语义引擎铁律）。
+                    if (self.activation_policy['mode'] == 'active'
+                            or self.activation_emit_mode == 'active'):
                         frames.append(self._frame(req, 'activation_request',
                                                   {'activation': act},
                                                   fid_prefix='act_'))
@@ -964,6 +971,25 @@ class SemanticWorker(base.Worker):
             self._fv2_shadow_decide(req, p, candidates or [], frames)
         except Exception as _fv2_err:
             base.diag('fv2-callsite-error: ' + str(_fv2_err)[:300])
+        # 2026-09-30 G 批 · 发射闸单钥匙化：单钥匙化后 v1(M7-6) 与 fv2 两车道可能对**同一 observation** 各产一帧；
+        # 两者 activationId 同源（均走 _build_activation，只由 obs 派生）⇒ 同 id 双帧。
+        # 不靠下游收件箱的「重复」门兜底：此处按 activationId **保序去重**（保留首帧）。
+        try:
+            _seen_aid, _uniq = set(), []
+            for _f in frames:
+                _aid = ''
+                if isinstance(_f, dict) and _f.get('type') == 'activation_request':
+                    _pl = _f.get('payload') or {}
+                    _ac = _pl.get('activation') if isinstance(_pl, dict) else None
+                    _aid = str((_ac or {}).get('activationId') or '') if isinstance(_ac, dict) else ''
+                    if _aid and _aid in _seen_aid:
+                        continue
+                    if _aid:
+                        _seen_aid.add(_aid)
+                _uniq.append(_f)
+            frames = _uniq
+        except Exception as _dd_err:
+            base.diag('activation-dedup-error: ' + str(_dd_err)[:200])
         return frames
 
     def handle_frame(self, req):

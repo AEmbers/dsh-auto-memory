@@ -205,8 +205,26 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //      存量用户迁移另有一次性升级器（只升一次，显式设过 false 者不动）。
 //   ② lib/semantic-js.js 与 lib/python-runtime.js 属 E 批（C2 的 devTreeRoot 多基探测 /
 //      C3 的探测超时归因 + 一次重试），不属本文件，故本基线只反映 ①。
+//      ★口径纠正：初版本条声称「存量用户迁移另有一次性升级器」——**该升级器并不存在**
+//      （全仓无 upgradeActivationDefaults* ）。实况：从未动过该键的用户盘上**没有这个键**，
+//      新默认直接生效；显式关过的用户盘上是 false，保持关。⇒ 本就无需迁移，属注释不实。
+// ★2026-09-30 基线再演 R67→R68（G 批 · 发射闸单钥匙化，增量归因）：
+//   用户裁定「另一把闸也要做好联动，用户确定要开自动唤回就一定能开，Python 和 js 都要」。
+//   实测根因：发射闸共**三处**读数、却只有**两把钥匙**——activationEmitMode（JS 判定臂
+//   context-host:495 + Python fv2 车道 worker:1261 都读它，有 UI 写入面）与
+//   activationPolicy.mode（Python **v1 通道** worker:956 单独读它）。后者在用户面**零写入点**
+//   （设置页/新手向导/semantic-emit 端点三处全只写前者）⇒ 用户把「记忆唤起」开成 active，
+//   v1 通道恒 shadow：判定照跑、shadow 行照写，但 activation_request 帧永不发出。
+//   ① index.js：semantic-emit 端点写入时把两键**对齐**（active⇒两把全开，其余档⇒两把全关），
+//      磁盘状态自洽；诊断块新增 activationPolicyModeLive 回显第二把闸，便于核对两闸一致。
+//   ② python/worker_semantic_v1.py（不属本文件，另由 G 批测试覆盖）：v1 通道判定改为
+//      「activationEmitMode==active 放行，或 activationPolicy.mode==active 显式放行」；
+//      并对同 observation 的双车道帧按 activationId **保序去重**（两车道 id 同源，会双帧）。
+//   ⚠️ 非引擎联动：JS 与 Python 两套语义引擎的选择逻辑完全不动（语义引擎铁律不变）。
+//   判据守恒：路由数 68 不变；配置键 143 不变（activationPolicy 属 embedding-config，不在 DEFAULT_CONFIG）；
+//   依赖面 {} 不变。本基线只反映 index.js 的 ①。
 //   判据守恒：路由数 68 不变、配置键 143 不变、依赖面 {} 不变；仅默认值与注释演进。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '3C8DC99346306AF9', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R67 基线（R65 合并基线 + F 批语义唤回三闸门默认改开 + 注释口径纠正；归一化 LF 后计）；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色资源）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器（provider/实现名不再混用）+ #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'AC71FE7F57AFEFED', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R68 基线（R67 + G 批发射闸单钥匙化：semantic-emit 端点同步写 activationPolicy.mode + 诊断新增 activationPolicyModeLive；归一化 LF 后计）；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色资源）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器（provider/实现名不再混用）+ #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

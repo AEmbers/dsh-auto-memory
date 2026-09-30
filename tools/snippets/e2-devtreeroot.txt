@@ -1,0 +1,29 @@
+/**
+ * ★P10-B（2026-09-22）+ ★E 批修正（2026-09-30，真机实证）：
+ *   `artifacts/m7-live-pre/js-semantic-trial` 是**维护者机器路径**（.gitignore 排除 models/ 与
+ *   node_modules/，用户机结构性不存在）。判定从「环境变量显式开启」改为**存在性判定**。
+ *   E 批修的是**层级口径**：本函数的 `pluginDir` 参数有两个来源 ——
+ *     ① `createJsSemanticEnginePre({ pluginDir })` 传的是 `pluginRootDir()` = <包根>；
+ *     ② 另一些调用点传的是 `<包根>/lib`（模块自身所在目录）。
+ *   原实现固定用 `path.join(pluginDir, "..", "artifacts", ...)`，即假定入参是 `<包根>/lib`；
+ *   于是从 ① 调用时解析成 `<包根的上级>/artifacts/...`（实测得到 `D:\artifacts\...`）⇒
+ *   存在性判定恒 false ⇒ **开发机上 C2 语义臂被判「模型缺失」**，而模型（112.8MB e5-small q8）
+ *   其实就在 `<包根>/artifacts/m7-live-pre/js-semantic-trial/models/`。
+ *   实测证据（2026-09-30，真执行 probeJsSemanticAssets）：
+ *     assetPresent=false, assetPath=<dshHome>/models/js-semantic/...onnx, peerPresent=true
+ *     embedPassages 抛 "model asset missing under ~/.dsh/models/js-semantic"
+ *   ⇒ 改为「逐级上溯探测」：对入参本身、其上一级两种解释都试，命中即用（纯存在性，零耦合调用方）。
+ *   发布包行为不变：用户机上两处都不存在 ⇒ 仍返回 null。
+ */
+function devTreeRoot(pluginDir) {
+  const bases = [String(pluginDir || "")]
+  try {
+    const up = path.resolve(String(pluginDir || ""), "..")
+    if (up && !bases.includes(up)) bases.push(up)
+  } catch (_) {}
+  for (const base of bases) {
+    const root = path.join(base, "artifacts", "m7-live-pre", "js-semantic-trial")
+    if (DEV_TREE_ENABLED || existsSync(root)) return root
+  }
+  return null
+}

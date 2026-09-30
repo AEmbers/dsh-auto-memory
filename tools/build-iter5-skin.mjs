@@ -349,14 +349,43 @@ client = client.replace("h(DamSkinV4Page, { nonce: nonce, onExit:", "h(Iter5Page
   if (!client.includes('function damSkinLegacy()')) {
     client = client.replace('    function damSkinSet(name) {', legacyKnob + '    function damSkinSet(name) {')
   }
-  if (!client.includes('damSkinLegacy() ? LEGACY_ITER5_CSS')) {
-    const oldCss = "el.textContent = '/* dam-skin:begin (v4) */\n' + DAM_SKIN_V4_CSS + '\n' + ITER5_CSS + '\n/* dam-skin:end (v4) */'"
-    const newCss = "el.textContent = '/* dam-skin:begin (v4) */\n' + DAM_SKIN_V4_CSS + '\n' + (damSkinLegacy() ? LEGACY_ITER5_CSS : ITER5_CSS) + '\n/* dam-skin:end (v4) */'"
-    if (client.includes(oldCss)) client = client.replace(oldCss, newCss)
+    // ★2026-09-30（A 批：皮肤可插拔 · 基线永不变）样式表按**当前皮肤**分派——
+  //   两份皮肤 CSS 共用 i5-* 命名空间，绝不同时注入；flavor 兼作 data-dam-skin-css 标记值，
+  //   换肤时判等失败即重建（修 P0「切皮肤不换样式」）。此处为**从旧基线再生成**的路径。
+  if (!client.includes('function damSkinCssFlavor()')) {
+    const oldEnsureHead = "      var el = document.getElementById('dam-skin-v4-style')\n      if (el) return\n"
+    const newEnsureHead = [
+      "      var flavor = damSkinCssFlavor()",
+      "      var want = damSkinCssText()",
+      "      var el = document.getElementById('dam-skin-v4-style')",
+      "      if (el && el.getAttribute('data-dam-skin-css') === flavor) return",
+      "      if (el && el.parentNode) el.parentNode.removeChild(el)",
+      "      if (!want) return",
+      "",
+    ].join('\n')
+    if (client.includes(oldEnsureHead)) client = client.replace(oldEnsureHead, newEnsureHead)
+    const oldText = "el.textContent = '/* dam-skin:begin (v4) */\\n' + DAM_SKIN_V4_CSS + '\\n' + ITER5_CSS + '\\n/* dam-skin:end (v4) */'"
+    if (client.includes(oldText)) client = client.replace(oldText, 'el.textContent = want')
+    const oldMark = "el.setAttribute('data-dam-skin-css', 'v4')"
+    if (client.includes(oldMark)) client = client.replace(oldMark, "el.setAttribute('data-dam-skin-css', flavor)")
+    const helper = [
+      "      function damSkinCssFlavor() {",
+      "        if (damSkinActive() === 'classic') return 'classic'",
+      "        return damSkinLegacy() ? 'legacy' : 'iter5'",
+      "      }",
+      "      function damSkinCssText() {",
+      "        var flavor = damSkinCssFlavor()",
+      "        if (flavor === 'classic') return ''",
+      "        if (flavor === 'legacy') return '/* dam-skin:begin (legacy) */\\n' + DAM_SKIN_V4_CSS + '\\n' + LEGACY_ITER5_CSS + '\\n/* dam-skin:end (legacy) */'",
+      "        return '/* dam-skin:begin (v4) */\\n' + DAM_SKIN_V4_CSS + '\\n' + ITER5_CSS + '\\n/* dam-skin:end (v4) */'",
+      "      }",
+      "",
+    ].join('\n')
+    if (!client.includes('function damSkinCssText()')) client = client.replace('    function damSkinEnsureCss() {', helper + '    function damSkinEnsureCss() {')
   }
 }
 
-client = client.replace('try { ensureStyle() } catch', "try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch")
+client = client.replace('try { ensureStyle() } catch', "try { ensureStyle(); if (damSkinActive() !== 'classic') damSkinEnsureCss() } catch")
 // Upstream welcome branch called a hook after its early return, causing React #310
 // on first replay. Keep the hook unconditional; all tour actions stay unchanged.
 if (!/function DialogHost\(\) \{[\s\S]{0,1800}?var tourDeep = use(?:Iter5|Deep)Theme\(\)/.test(client)) client = client.replace('function DialogHost() {\n      var tickPair = useTick()', 'function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()')

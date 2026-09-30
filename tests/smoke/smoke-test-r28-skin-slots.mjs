@@ -65,7 +65,7 @@ ok(SRC.includes("className: 'dam-skin-slot dam-skin-slot-' + kind") || SRC.inclu
 
 /* ── D. ★真执行 SkinSlot（图未就绪 ⇒ 占位；图就绪 ⇒ <img>） ── */
 const i0 = SRC.indexOf('    function SkinImg(props) {')
-const i1 = SRC.indexOf('\r\n    }\r\n', SRC.indexOf('function SkinSlot(props)')) + 7
+const i1 = SRC.indexOf('\n    }', SRC.indexOf('function SkinSlot(props)')) + 6
 ok(i0 > 0 && i1 > i0, 'D0 SkinImg..SkinSlot 可整段抽取')
 const SEG = SRC.slice(i0, i1)
 const h = function (type, props) { const rest = Array.prototype.slice.call(arguments, 2), kids = []

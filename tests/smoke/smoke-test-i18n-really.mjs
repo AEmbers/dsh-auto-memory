@@ -1,7 +1,7 @@
 /**
  * 多语言功能验收（真执行，非源码字符串断言）
  *
- * 做法：用 acorn 从 lib/client.js 的 factory 源码中**抽取真实定义**
+ * 做法：从 lib/client.js 的明确国际化区间**抽取真实定义**（零外部依赖）
  *   - `function L(a, b)`
  *   - `function L3(a, b, ja)`
  *   - `var L10N = {...}`（第三语言查表）
@@ -13,12 +13,8 @@
  */
 import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
-
-const require = createRequire(damPath('package.json'))
-const acorn = require('acorn')
 
 const SRC = readFileSync(damPath('lib/client.js'), 'utf8')
 
@@ -26,62 +22,23 @@ let pass = 0, fail = 0
 const fails = []
 const ok = (c, m) => { if (c) pass++; else { fail++; fails.push(m) } }
 
-// ── 用 acorn 定位真实定义节点 ──────────────────────────────
-const ast = acorn.parse(SRC, { ecmaVersion: 2022 })
-function findTop(node, pred, out = []) {
-  if (!node || typeof node.type !== 'string') return out
-  if (pred(node)) out.push(node)
-  for (const k of Object.keys(node)) {
-    const v = node[k]
-    if (Array.isArray(v)) v.forEach((x) => x && x.type && findTop(x, pred, out))
-    else if (v && v.type) findTop(v, pred, out)
-  }
-  return out
+// Execute the real contiguous localization declarations, including I18N.ja assignments.
+// Explicit unique boundaries fail on source drift; no parser package or copied dictionary.
+const startMarker = '    var I18N = {'
+const endMarker = "    var localeMode = 'system'"
+const start = SRC.indexOf(startMarker), end = SRC.indexOf(endMarker)
+if (start < 0 || end <= start || SRC.indexOf(startMarker, start + 1) >= 0 || SRC.indexOf(endMarker, end + 1) >= 0) throw Error('Localization source boundaries changed')
+const declarations = SRC.slice(start, end)
+for (const name of ['L', 'L3', 'normLocale']) {
+  const count = (declarations.match(new RegExp('function ' + name + '\\(', 'g')) || []).length
+  ok(count === 1, 'Exactly one real localization function: ' + name)
 }
-const sliceOf = (n) => SRC.slice(n.start, n.end)
-
-const lFnN = findTop(ast, (n) => n.type === 'FunctionDeclaration' && n.id && n.id.name === 'L')
-const l3FnN = findTop(ast, (n) => n.type === 'FunctionDeclaration' && n.id && n.id.name === 'L3')
-const nlFnN = findTop(ast, (n) => n.type === 'FunctionDeclaration' && n.id && n.id.name === 'normLocale')
-const l10nN = findTop(ast, (n) => n.type === 'VariableDeclarator' && n.id && n.id.name === 'L10N')
-const i18nN = findTop(ast, (n) => n.type === 'VariableDeclarator' && n.id && n.id.name === 'I18N')
-const localeAllN = findTop(ast, (n) => n.type === 'VariableDeclarator' && n.id && n.id.name === 'LOCALE_ALL')
-// ★I18N.<lang> = {...} 是**字面量之后的独立赋值语句**（不是 `var I18N = {ja:{...}}` 的嵌套属性），
-//   acorn 取 init 拿不到 ⇒ 必须把顶层赋值语句一并抄进来，否则 I18N.ja 恒为 0 键。
-const i18nAssigns = findTop(
-  ast,
-  (n) =>
-    n.type === 'ExpressionStatement' &&
-    n.expression &&
-    n.expression.type === 'AssignmentExpression' &&
-    n.expression.left &&
-    n.expression.left.type === 'MemberExpression' &&
-    n.expression.left.object &&
-    n.expression.left.object.name === 'I18N',
-)
-
-ok(lFnN.length === 1, `恰好 1 个 function L(a, b) 定义（实测 ${lFnN.length}）`)
-ok(nlFnN.length >= 1, `存在 normLocale 定义（实测 ${nlFnN.length}）`)
-ok(l10nN.length === 1, `恰好 1 个 var L10N（实测 ${l10nN.length}）`)
-ok(i18nN.length === 1, `恰好 1 个 var I18N（实测 ${i18nN.length}）`)
-ok(localeAllN.length === 1, `恰好 1 个 var LOCALE_ALL（实测 ${localeAllN.length}）`)
-ok(i18nAssigns.length >= 1, `存在 I18N.<lang> 独立赋值（实测 ${i18nAssigns.length} 条：` +
-  i18nAssigns.map((n) => sliceOf(n.expression.left)).join(',') + '）')
-
-// ── 在 vm 里真执行这些定义 ────────────────────────────────
-const code = [
-  'var locale = "zh";',
-  // ★对象字面量必须包在括号里当表达式，否则 `{zh:{...}}` 会被解析成块 + label（实测报 Unexpected token ':'）
-  'var LOCALE_ALL = ' + sliceOf(localeAllN[0].init) + ';',
-  'var L10N = (' + sliceOf(l10nN[0].init) + ');',
-  'var I18N = (' + sliceOf(i18nN[0].init) + ');',
-  // ★I18N.ja 等是独立赋值语句，必须逐条抄回
-  ...i18nAssigns.map((n) => sliceOf(n) + ';'),
-  sliceOf(lFnN[0]),
-  l3FnN.length ? sliceOf(l3FnN[0]) : 'function L3(a,b,ja){ return L(a,b) }',
-  sliceOf(nlFnN[0]),
-  'globalThis.__T = { L: L, L3: L3, normLocale: normLocale, L10N: L10N, I18N: I18N, setLoc: function(v){ locale = v } }',
-].join('\n')
+for (const name of ['I18N', 'L10N', 'LOCALE_ALL']) {
+  const count = (declarations.match(new RegExp('var ' + name + ' =', 'g')) || []).length
+  ok(count === 1, 'Exactly one real localization dictionary: ' + name)
+}
+const code = declarations + '\n' +
+  'globalThis.__T = { L, L3, normLocale, L10N, I18N, setLoc: function(v){ locale = v } }'
 
 const sb = { console }
 sb.globalThis = sb

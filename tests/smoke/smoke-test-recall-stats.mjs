@@ -163,8 +163,12 @@ ok(cnt(CL, "statsTab: '统计'") === 1 && cnt(CL, "statsTab: 'Stats'") === 1, 'S
 // ★用户要求：三条通路分开呈现、看得懂、有图表
 // ★S4g2 判据演进（#149，2026-09-30）：旧判据锁「data.channels 出现 1 次」——那正是 bug 本身
 //   （宿主返回 {enabled, stats: snapshot()}，channels 嵌在 stats 之下，直读 data.channels 恒 {}）。
-//   新判据：全文件不再有旧扁平直读，StatsTab 改经解包后的 st.* 读（见 S4g3/S10）。
+//   现全文件不再有旧扁平直读；StatsTab 与新皮肤 Iter5Stats 均经解包后的 st.* 读（同一 bug 的两个现场）。
 ok(cnt(CL, 'data.channels') === 0, 'S4g2 旧扁平直读 data.channels 已彻底移除（演进自「出现1次」）')
+{
+  const i5s = CL.slice(CL.indexOf('function Iter5Stats() {'), CL.indexOf('// ITER5-GENERATED:END'))
+  ok(!i5s.includes('data.channels') && i5s.includes('st.channels'), 'S4g2b 新皮肤 Iter5Stats 同步解包 stats（新组件未复制旧有的恒 0 读法）')
+} 
 {
   // ★S4g3 判据修正（2026-09-22 实测）：全局 `data.stats` 有 2 处命中，但它们在 **DebugCenter 的
   //   「Hub stats」行**（那里的 `data` 是 debug 路由应答体，与统计页无关）⇒ 全局计数是假红。

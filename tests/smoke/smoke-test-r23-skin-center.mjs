@@ -92,9 +92,9 @@ const h = function (type, props) { const rest = Array.prototype.slice.call(argum
 const _iS = SRC.indexOf('    // ===================== S2-skin:begin ====================='), _iE = SRC.indexOf(MEND)
 const S2SEG = SRC.slice(_iS, _iE)
 const _iR = SRC.indexOf('function fetchSkinCenter')
-const _iRend = SRC.indexOf('\n    }\r\n', SRC.indexOf('function SkinSlotRows'))
+const _iRend = SRC.indexOf('\n    }', SRC.indexOf('function SkinSlotRows'))
 ok(_iRend > 0, 'A0 ★R23 段终点锚可定位')
-const R23SEG = SRC.slice(_iR, _iRend + 8)
+const R23SEG = SRC.slice(_iR, _iRend + 6)
 const SEG = S2SEG + '\r\n' + R23SEG
 const sandbox = { console, h, locale: 'zh', String, Object, Array, JSON, Date, useTick: () => [0, () => {}], apiGet: () => Promise.resolve(null), API: {}, useState: (v) => [typeof v === 'function' ? v() : v, () => {}], useEffect: () => {} }
 sandbox.globalThis = sandbox

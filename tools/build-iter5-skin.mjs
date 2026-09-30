@@ -392,6 +392,47 @@ if (!/function DialogHost\(\) \{[\s\S]{0,1800}?var tourDeep = use(?:Iter5|Deep)T
 client = client.replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })")
 // Welcome artwork must follow the same explicit light/dark preference as its portal.
 client = client.replace('var tourDeep = useDeepTheme()', 'var tourDeep = useIter5Theme()')
+// ★2026-09-30（D2 · 用户裁定「设置页必须全量同步」）——两个 I5 实例补「广播即重取」effect。
+//   为什么放生成器而不是手改 client.js：Iter5Settings（宿主面板 + 工作台页两个实例）是**生成产物**，
+//   手改会被下一次再生成覆盖（实测：手插后 --check 报 stale、clean 生成会丢掉该块）。
+//   放在这里 ⇒ 与 damSkinActive/ensureCss 等经典侧 seam 同源，可重生成、可幂等。
+//   语义：订阅唯一写出口 saveConfigPatch 的广播（见 client.js 内 emit），任何入口保存成功后重取远端配置；
+//   三条安全线 —— 有未保存草稿时只提示不覆盖 / busy 中不重取 / 身份不符（i5Ok 为假）放弃。
+const d2Subscribe = [
+  "      // ★2026-09-30（D2 · 用户裁定「设置页必须全量同步」）：订阅唯一写出口的广播（见 saveConfigPatch 内 emit）。",
+  "      //   两个入口此前各持挂载时快照 ⇒ A 保存后 B 还是旧值；现在任何地方保存成功即重取远端配置。",
+  "      //   三条安全线：①有未保存草稿时不覆盖用户输入（只提示）；②busy 中不重取；③身份不符放弃。",
+  "      useEffect(function () {",
+  "        return controller.subscribe(function () {",
+  "          if (busy) return",
+  "          if (!i5Ok()) return",
+  "          apiGet(API.config).then(function (d) {",
+  "            if (!i5Ok()) return",
+  "            var remote = configOf(d)",
+  "            i5Base.current = remote",
+  "            if (Object.keys(i5Draft.current).length) {",
+  "              var changed = Object.keys(i5Draft.current).filter(function (key) { return JSON.stringify(remote[key]) !== JSON.stringify(i5Draft.current[key]) })",
+  "              if (changed.length) setMsg(L(\"检测到其他入口的修改：\", \"Changes detected from another entry: \") + changed.join(\", \") + L(\"。你的未保存输入未被覆盖。\", \" Your unsaved edits were not overwritten.\"))",
+  "              setCfg(function (prev) { return Object.assign({}, remote, i5Draft.current) })",
+  "            } else {",
+  "              setCfg(remote)",
+  "              setDirty(false)",
+  "            }",
+  "          }).catch(function () {})",
+  "        })",
+  "      }, [busy])",
+  ""
+].join("\n")
+// 幂等标记：进入生成前的快照里没有该注释才注入（对本脚本读入的 client 变量判一次即可）。
+if (!client.includes('订阅唯一写出口的广播')) {
+  const aliveAnchor = "        return function () { i5Alive.current = false; window.removeEventListener('beforeunload', before) }\n      }, [])"
+  if (!client.includes(aliveAnchor)) throw new Error('D2: i5Alive anchor missing')
+  client = client.replace(aliveAnchor, aliveAnchor + '\n' + d2Subscribe)
+  // 第二个 I5 实例缩进多两级（生成块内嵌更深）
+  const aliveAnchor2 = "          return function () { i5Alive.current = false; window.removeEventListener('beforeunload', before) }\n        }, [])"
+  if (client.includes(aliveAnchor2)) client = client.replace(aliveAnchor2, aliveAnchor2 + '\n' + d2Subscribe.replace(/^      /gm, '        '))
+}
+
 const output = client.replace(/\n/g, newline)
 if (process.argv.includes('--check')) {
   if (readFileSync(file, 'utf8') !== output) throw new Error('Embedded iter5 skin is stale; run node tools/build-iter5-skin.mjs')

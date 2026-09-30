@@ -17,6 +17,10 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { shouldArmAutoContinuePre } from '../../lib/water-window.js'
+// ★2026-09-30:宿主接续标题新增时间戳,走模块级纯函数 contTitleStampPre —— 抽取重建的 hostAutoContinue
+// 会引用它,必须按注入表纪律一并注入(见 makeEngine 内注释),否则 ReferenceError 被 catch 吞掉,
+// 表现为"接续静默不生效"。
+import { contTitleStampPre } from '../../lib/index.js'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const SRC = readFileSync(path.resolve(HERE, '..', '..', 'lib', 'index.js'), 'utf8')
@@ -132,9 +136,9 @@ function makeEngine(opts) {
     // 纪律:此后凡被抽出的函数**新增外部依赖**(模块级绑定/全局),都必须加进这张注入表,
     // 否则同样以"静默不生效"的形式失败。
     const obj = new Function('diag', 'AbortSignal', 'shouldArmAutoContinuePre',
-      'DEFAULT_AUTO_CONTINUE_THRESHOLD', 'DEFAULT_WATER_LEVEL_THRESHOLD',
+      'DEFAULT_AUTO_CONTINUE_THRESHOLD', 'DEFAULT_WATER_LEVEL_THRESHOLD', 'contTitleStampPre',
       'return {' + extractFn(h) + '};')(
-      () => {}, { timeout: () => undefined }, shouldArmAutoContinuePre, 0.75, 0.75)
+      () => {}, { timeout: () => undefined }, shouldArmAutoContinuePre, 0.75, 0.75, contTitleStampPre)
     const key = Object.keys(obj)[0]
     fns[key] = obj[key].bind(eng)
   }
@@ -429,10 +433,11 @@ console.log('[autocont-host] A9 接续会话标题 + 双口径(2026-09-10 实机
   eTitle.fns.armAutoContinue(agent, wl)
   await eTitle.fns.hostAutoContinue()
   ok(eTitle.calls.rename.length === 1 && eTitle.calls.rename[0].sessionId === 'session-new-1' &&
-     eTitle.calls.rename[0].title === '接续 #7 · dsh-auto-memory',
-    '宿主接续给新会话设「接续 #N · 工作区」标题(与浏览器路径同名)')
+     /^接续 #7 · dsh-auto-memory · \d{2}-\d{2} \d{2}:\d{2}$/.test(eTitle.calls.rename[0].title),
+    '宿主接续给新会话设「接续 #N · 工作区 · MM-dd HH:mm」标题(与浏览器路径同名;★2026-09-30 用户要求加时间戳)')
   ok(/if \(d\.contSeq && typeof sc\.rename === 'function'\)/.test(SRC), 'rename 缺失时 fail-soft(旧 harness 不炸)')
   ok(/const title = '接续 #' \+ String\(d\.contSeq\)/.test(SRC), '标题格式与 client 路径逐字一致')
+  ok(/contTitleStampPre\(\)/.test(SRC), '标题时间戳走 contTitleStampPre 单一真源(本地时区 MM-dd HH:mm)')
   // ②双口径(2026-09-13 起):水位/ring 同用一个分母(判定窗 = 官方声明窗口,provider 自报过硬限时取 min)——
   //   旧「可用额度(窗口−预留)」分母已废(reserve 退出分母,NEXT-VERSION-TODO 改点1);
   //   保留的第二个数是「距硬墙余量」(硬限 − 预留)。ring 与触发比例同分母是硬性验收项。

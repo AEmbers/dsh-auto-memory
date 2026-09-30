@@ -180,8 +180,20 @@ ok(HSRC.includes('st.rejectedEdgeAt = armedEdge') && HSRC.includes('now - st.rej
   'G12 rejection recorded host-side (10min window, re-evaluated at next boundary)')
 ok(HSRC.includes('Date.now() < st.armed.expiresAt') && HSRC.includes('await this.hostAutoContinue()'),
   'G12 host timeout auto-continues (unattended fallback)')
-ok(SRC.includes('async function refreshOldSession(') && SRC.includes('async function waitForRefresh(') && SRC.includes('await refreshOldSession(onMsg)'),
-  'G12 ③refresh ritual before material assembly (PLAN+ledger, fail-soft)')
+// ★2026-09-30 守卫演进(用户报障「A区点接续，新会话建到B区」):
+//   刷新仪式调用现在带点击瞬间钉死的 clickedSid —— 旧字面量 'await refreshOldSession(onMsg)'
+//   已不再存在。同时把「身份必须在点击时钉死、仪式等待后不重取」本身钉成守卫:
+//   currentSessionIdClient() 是 mainView 启发式(mainView>0 里 updatedAt 最大者),多窗口下
+//   等待期间任何别的会话一活跃(如另一窗口的慢模型流式输出)updatedAt 就反超,
+//   fromSessionId 漂到别的会话 ⇒ 材料/工作区/模型全部跟错。
+ok(SRC.includes('async function refreshOldSession(') && SRC.includes('async function waitForRefresh(') && SRC.includes('await refreshOldSession(onMsg, clickedSid)'),
+  'G12 ③refresh ritual before material assembly (PLAN+ledger, fail-soft;2026-09-30 起带钉死的 clickedSid)')
+ok(/var clickedSid = String\(currentSessionIdClient\(\) \|\| ''\)/.test(SRC) &&
+   SRC.includes('if (ritual) { try { await refreshOldSession(onMsg, clickedSid) } catch (eRf) {} }') &&
+   SRC.includes("var fromSidForCarry = String(clickedSid || lastRefreshSessionId || '')"),
+  'G16 源会话身份在点击瞬间钉死(clickedSid),仪式等待后不重取(A区点接续、新会话在B区的漂移通道①)')
+ok(bodyOf(SRC, 'async function refreshOldSession(onMsg, pinnedSid) {').includes('var selfSid = String(pinnedSid || currentSessionIdClient() || "")'),
+  'G16 刷新仪式优先用钉死的 pinnedSid 取刷新目标(不现场重取身份)')
 ok(HSRC.includes('refreshRitualPrompt()') && HSRC.includes('autoContinueRefreshRitual === false') && HSRC.includes('refresh: this.config.autoContinueRefreshRitual'),
   'G12 host exposes refresh ritual (config-gated) via handoff-state')
 for (const layer of ['【第0层 · 白板 PLAN.md(节选)】', '【第1层 · 交接账本 ', '【第2层 · 近期线程', '【第3层 · 完整转写与检索(按需)】']) {

@@ -1,0 +1,6 @@
+            localStorage.setItem('dam-skin-style', it.family)
+            // ★2026-09-30（F 批 · 用户报「选择了之后面板没有反应」）——必须走 iter5SetStyle 而非裸写 localStorage：
+            //   变体块用模块级缓存 iter5StyleValue 读样式（iter5ReadStyle 命中缓存即不再读盘），
+            //   并靠 iter5StyleListeners 广播驱动重渲染。裸写盘 ⇒ 缓存不失效、监听器不触发 ⇒ 界面零反应。
+            //   iter5SetStyle 做三件事：写盘 + 失效缓存 + 广播（并同步 dam-skin-style，与 damSkinStyleGet 一致）。
+            try { if (typeof iter5SetStyle === 'function') iter5SetStyle(it.family) } catch (eI5) {}

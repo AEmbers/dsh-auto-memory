@@ -1,0 +1,25 @@
+      useEffect(function () {
+        // ★2026-09-30（F 批 · 用户报「切回 3.2.5 基线后，新手引导/更新日志/左下浮窗仍被三套新皮肤污染」）——
+        //   根因：本 effect 此前**无条件**注入 ITER5_CSS（三套变体的样式表）。而模块级注册的浮层
+        //   （shell.overlay: 面板/弹窗/自动接续、conversation.view、settings.section）用的正是**这个**
+        //   变体 Surface ⇒ 只要插件加载过，三套变体的 CSS 就常驻 <head>，与当前选的是基线还是变体无关。
+        //   修：按当前皮肤分派 —— 仅 flavor=iter5（仪器/编辑/活水）注入变体表；
+        //   基线(legacy)与经典(classic)一律不注入（样式由 damSkinCssText 的基线表提供）。
+        var flavor = 'classic'
+        try { flavor = damSkinCssFlavor() } catch (eF) {}
+        if (flavor !== 'iter5') return function () {}
+        var style = document.getElementById('dam-shared-ui-style')
+        if (!style) {
+          style = document.createElement('style')
+          style.id = 'dam-shared-ui-style'
+          style.dataset.plugin = '@a9i5k4/dsh-auto-memory'
+          style.textContent = ITER5_CSS
+          document.head.appendChild(style)
+        }
+        style.dataset.users = String(Number(style.dataset.users || 0) + 1)
+        return function () {
+          var count = Number(style.dataset.users || 1) - 1
+          style.dataset.users = String(count)
+          if (!count) style.remove()
+        }
+      }, [skinStyle])

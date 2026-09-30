@@ -433,6 +433,29 @@ if (!client.includes('订阅唯一写出口的广播')) {
   if (client.includes(aliveAnchor2)) client = client.replace(aliveAnchor2, aliveAnchor2 + '\n' + d2Subscribe.replace(/^      /gm, '        '))
 }
 
+
+// ★2026-09-30（F 批 · 用户报「切回 3.2.5 基线后，新手引导/更新日志/左下浮窗仍被三套新皮肤污染」）
+//   根因：两处 Iter5Surface（冻结基线块 + 变体生成块）的共享样式 effect **无条件**注入 ITER5_CSS
+//   （三套变体的样式表，40,000 B / 228 条 .i5- 规则）。而模块级注册的浮层（shell.overlay 面板与弹窗、
+//   conversation.view、settings.section）用的正是这个 Surface ⇒ 只要插件加载过，变体 CSS 就常驻
+//   <head>，与当前选的是基线还是变体**无关**。修：按当前皮肤分派 —— 仅 flavor=iter5 注入变体表；
+//   基线(legacy)/经典(classic)一律不注入。
+//   为什么放生成器：这两处都在生成区内（手改会被下一次再生成覆盖，--check 也会判 stale）。
+if (!client.includes('F6 · 共享样式按皮肤分派')) {
+  const sharedAnchor = /^(\s*)var style = document\.getElementById\('dam-shared-ui-style'\)$/gm
+  const hits = (client.match(sharedAnchor) || []).length
+  if (hits !== 2) throw new Error('F6: expected 2 shared-style anchors, got ' + hits)
+  client = client.replace(sharedAnchor, function (line, indent) {
+    return [
+      indent + '// ★2026-09-30（F 批 · 共享样式按皮肤分派）：仅 iter5 档注入变体样式表；基线/经典不注入。',
+      indent + "//   否则引导/更新日志/左下浮窗（模块级浮层，恒用本 Surface）会被三套新皮肤污染。",
+      indent + "var damFlavor = 'classic'",
+      indent + 'try { damFlavor = damSkinCssFlavor() } catch (eF6) {}',
+      indent + 'if (damFlavor !== \'iter5\') return function () {}',
+      line,
+    ].join('\n')
+  })
+}
 const output = client.replace(/\n/g, newline)
 if (process.argv.includes('--check')) {
   if (readFileSync(file, 'utf8') !== output) throw new Error('Embedded iter5 skin is stale; run node tools/build-iter5-skin.mjs')

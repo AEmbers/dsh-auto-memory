@@ -1,0 +1,10 @@
+            localStorage.setItem('dam-skin-style', it.family)
+            // ★2026-09-30（F 批 · 修「选了没反应」+ 修 F 批自身的半修）：**双写**。
+            //   ① 直接写 presentation.v1（变体块的键）——这是**权威镜像**，任何环境下都必须落盘：
+            //      首版只调 iter5SetStyle，而它定义在生成块内（作用域不一定可达）⇒ 键根本没写，
+            //      守卫 smoke-test-skin-pluggable 精准抓到（'variant pick must mirror into the variants key'）。
+            //   ② 再调 iter5SetStyle（若可达）——它额外做「失效模块级缓存 iter5StyleValue + 广播
+            //      iter5StyleListeners」，否则监听器不触发、界面零反应（原报告的「面板没反应」）。
+            //   两者缺一不可：① 保证状态正确，② 保证界面刷新。
+            try { localStorage.setItem('dsh-auto-memory.presentation.v1', it.family) } catch (eI5) {}
+            try { if (typeof iter5SetStyle === 'function') iter5SetStyle(it.family) } catch (eI5b) {}

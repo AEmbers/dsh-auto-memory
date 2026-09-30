@@ -1,0 +1,4 @@
+            // ★2026-09-30（F 批）：旧「新款」总卡已退场 ⇒ 判据只覆盖「家族档 / 经典 / 主题层」三类，互斥唯一。
+            var on = it.theme ? (cur === 'v4' && variant === it.id)
+              : (it.family ? (cur !== 'classic' && curFamily === it.family)
+                : (it.id === 'classic' && cur === 'classic'))

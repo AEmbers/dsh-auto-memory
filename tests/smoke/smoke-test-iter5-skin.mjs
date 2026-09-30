@@ -53,7 +53,14 @@ const classic = source
 //   (4) 挂载门与挂载期注入门由 === v4 放宽为 !== classic（否则默认档被挡在门外，皮肤整个不见）；
 //   (5) 经典侧入口按钮口径改为「经典 <-> 新皮肤族」。
 //   守卫语义不变：生成块之外的任何**非意外**改动仍会被本锁抓住。
-assert.equal(createHash('sha256').update(classic).digest('hex'), '72112370416244e118be3b99632dfed380c961f404cfe4ca5573e4ea5c50fb49', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+// ★2026-09-30 本快照第九次演进（F 批 · 皮肤可插拔收尾，增量归因）：
+//   (1) SkinPicker 旧「总卡」退场（用户报「两个对勾同时存在」根因：旧卡判据 cur===it.id 与族卡同时命中）；
+//   (2) pick() 家族档改**双写**：直接落 presentation.v1 + 调 iter5SetStyle（修「选了没反应」——
+//       变体块用模块级缓存读样式且靠广播重渲染，裸写盘不触发）；
+//   (3) 高亮判据收敛为「主题层 / 家族档 / 经典」三类互斥（旧总卡退场后不再需要第四支）；
+//   (4) 随之删除失效 i18n 词条（旧总卡标签，退场后零消费点）。
+//   守卫语义不变：生成块之外的任何**非意外**改动仍会被本锁抓住。
+assert.equal(createHash('sha256').update(classic).digest('hex'), '8fe05721e0d3ba4ad6603803bad9c54707a112c3d103486c043c91eb357fced4', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

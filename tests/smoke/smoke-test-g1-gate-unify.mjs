@@ -9,6 +9,10 @@
 //   ⇒ 用户把「记忆唤起」开成 active 时，v1 通道恒 shadow：判定照跑、shadow 行照写，
 //     但 activation_request 帧永不发出。「两把钥匙，其中一把没人转」。
 //
+// ★2026-09-30 H 批改判（用户裁定：v1 车道正式退休、仅调参实验、不可接入正式用户线）：
+//   本套件记录的是 G 批「单钥匙化」的**过渡**语义；其中 T1/T2 已按 H 批改判为「v1 任何钥匙都不再发帧」。
+//   v1 退休的完整守卫（含 shadow 行照写 / fv2 不连坐）见 smoke-test-h1-v1-lane-retired.mjs。
+//
 // 本测试真起 Python worker（hash-pre-v1 确定性 provider，零联网零模型），真调 context_push，
 // 断言 onActivation 回调的实际收帧数 —— 这是功能证据，不是静态守卫。
 import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs'
@@ -105,20 +109,22 @@ async function run(tag, embExtra, queries) {
 const Q = [GOLD, GOLD];
 
 // ---- T1：**旧行为复现**（负路径）——只设 activationPolicy.mode=active，不设 activationEmitMode
-console.log('[T1] 反证旧行为：只有 activationPolicy.mode=active（旧「另一把闸」单独打开）')
+// ★2026-09-30 H 批改判（用户裁定「正式退休 v1 车道…不可接入正式用户线」）：
+//   G 批当时让 v1 通道「以投递开关为准即可发帧」是**过渡修复**；H 批直接把它的发射权退休。
+//   故 T1 语义由「仍能发帧」改为「**任何钥匙都不再打开 v1**」。
+//   「fv2 车道仍能发帧」的正路径现由 smoke-test-h1-v1-lane-retired.mjs T2 承担（需 memoryRefs）。
+console.log('[T1] v1 已退休：旧钥匙 activationPolicy.mode=active 也不再发帧')
 const t1 = await run('t1', { activationPolicy: { mode: 'active', tOn: 0.1, tOff: 0.05, cooldownObs: 0 } }, Q);
 ok(t1.synced, 'T1 语料同步成功（前置）')
-ok(t1.acts.length >= 1, 'T1 v1 通道在 activationPolicy.mode=active 下**仍能**发帧（显式路径保留；实收 ' + t1.acts.length + '）')
+ok(t1.acts.length === 0, 'T1 v1 退休：policy.mode=active 亦零帧（实收 ' + t1.acts.length + '；退休前为 2）')
 
 // ---- T2：**用户真实场景**（正路径）——只设 activationEmitMode=active（UI 唯一能写的键）
-console.log('[T2] 正路径：只设 activationEmitMode=active（UI 能写的唯一键）')
+// H 批后：本用例原先量的 2 帧其实是 **v1** 发的（fv2 explicit 车道需 memoryRefs，本用例未给）。
+//   v1 退休后此处应为 0；fv2 的正路径见 h1 套件（带 refs）。
+console.log('[T2] v1 退休：emitMode=active 且无 refs 时亦零帧')
 const t2 = await run('t2', { activationEmitMode: 'active', activationPolicy: { mode: 'shadow', tOn: 0.1, tOff: 0.05, cooldownObs: 0 } }, Q);
 ok(t2.synced, 'T2 语料同步成功（前置）')
-ok(t2.acts.length >= 1, 'T2 ★核心：activationEmitMode=active 即发帧（修复前此处为 0 —— v1 通道恒 shadow）实收 ' + t2.acts.length)
-if (t2.acts[0]) {
-  const v = INBOX.validateActivationRequestPre(t2.acts[0])
-  ok(v.ok === true, 'T2 帧过 validateActivationRequestPre(' + (v.ok ? '' : v.reason) + ')')
-}
+ok(t2.acts.length === 0, 'T2 v1 退休：emitMode=active 无 refs 零帧（实收 ' + t2.acts.length + '；退休前为 2，那 2 帧来自 v1）')
 
 // ---- T3：shadow 档必须**零帧**（fail closed 不得被本次改动破坏）
 console.log('[T3] fail closed：全 shadow 档必须零帧')

@@ -20,7 +20,7 @@ const client = fs.readFileSync(path.join(root, 'lib/client.js'), 'utf8')
 const temp = fs.mkdtempSync(path.join(tmpdir(), 'issue162-'))
 after(() => fs.rmSync(temp, { recursive: true, force: true }))
 const url = (name) => pathToFileURL(path.join(root, 'lib', name)).href
-const { decodeZstdFramesHead } = await import(url('subagent-gc.js'))
+const { decodeZstdFramesHead, decodeZstdFrames, scanZstdFrames } = await import(url('subagent-gc.js'))
 const extract = (marker) => {
   const start = source.indexOf('  ' + marker)
   assert.ok(start >= 0, 'production method exists: ' + marker)
@@ -205,7 +205,7 @@ test('scan read/decode failures aggregate once and preserve usable hits', async 
   host._sessionQuery = brokenQuery()
   const result = await host.recall('needle', 8, undefined, 'sessions')
   assert.match(result, /usable/)
-  assert.match(result, /目录\/文件读取失败或无可解码头部 2 次/)
+  assert.match(result, /目录\/文件读取或头部解码失败 2 次/)
   assert.equal(host._degradeSink.countOf('session-scan'), 1)
   assert.equal(host._degradeSink.countOf('session-search'), 1)
   absentSecrets(result)
@@ -358,6 +358,7 @@ test('real debugInfo/persistence/dashboard path exposes failures and persistence
   assert.match(rendered, /session-search/)
   assert.match(rendered, /Error \/ EACCES/)
   assert.match(rendered, /累计失败历史/)
+  assert.match(rendered, /刷新诊断时更新到磁盘/)
   absentSecrets(tree)
 
   const failed = await harness({ writeFileSync: () => { throw secretError() } })
@@ -474,4 +475,83 @@ test('analogous Python rank catch records an actual sidecar exception once, whil
   const result = await engine._pySemanticRank(snap, 'needle')
   assert.equal(result.scores.get(memoryId), 0.8)
   assert.equal(engine._degradeSink.countOf('semantic-arm'), 1)
+})
+
+
+test('migration candidates use newest mtime, v3 wins ties, and stat failure retains a usable candidate', async () => {
+  const { home, host } = await harness()
+  session(home, 'migrated', 'stale unrelated', { mtime: 1000 })
+  session(home, 'migrated', 'needle newest', { name: 'session.v3.jsonl.zstd', mtime: 2000 })
+  const latest = host.lexicalSessionScanFallback('needle')
+  assert.equal(latest.length, 2) // One hit plus the compatibility footer.
+  assert.match(latest[0], /needle newest/)
+  session(home, 'migrated', 'needle tied v3', { name: 'session.v3.jsonl.zstd', mtime: 1000 })
+  assert.match(host.lexicalSessionScanFallback('needle')[0], /needle tied v3/)
+  // The old-name file can also be newer: compatibility is based on observation.
+  session(home, 'migrated', 'needle newest old', { mtime: 3000 })
+  assert.match(host.lexicalSessionScanFallback('needle')[0], /needle newest old/)
+  for (const failingName of ['session.jsonl.zstd', 'session.v3.jsonl.zstd']) {
+    const fixture = await harness({ statSync: (file) => {
+      if (path.basename(file) === failingName) throw secretError()
+      return fs.statSync(file)
+    } })
+    session(fixture.home, 'stat-failure', 'needle old')
+    session(fixture.home, 'stat-failure', 'needle v3', { name: 'session.v3.jsonl.zstd' })
+    const result = fixture.host.lexicalSessionScanFallback('needle')
+    assert.equal(result.length, 2) // One hit plus the compatibility footer.
+    assert.equal(fixture.host._degradeSink.countOf('session-scan'), 1)
+    assert.match(result.diagnostic, /目录\/文件读取或头部解码失败 1 次/)
+    absentSecrets(result)
+  }
+})
+
+test('head decoder recovers prefix and reports structural corruption only inside frame and byte budgets', () => {
+  const prefix = 'recoverable-prefix'
+  const frame = zstdCompressSync(Buffer.from(prefix))
+  for (const tail of [Buffer.from('garbage'), Buffer.from([0x28, 0xb5, 0x2f, 0xfd])]) {
+    const buf = Buffer.concat([frame, tail])
+    const inBudget = {}
+    assert.equal(decodeZstdFramesHead(buf, 2, 1024, inBudget), prefix)
+    assert.deepEqual(inBudget, { failedFrames: 1, limited: false })
+    for (const [frames, bytes] of [[1, 1024], [2, Buffer.byteLength(prefix)], [0, 1024], [2, 0]]) {
+      const observation = {}
+      assert.equal(decodeZstdFramesHead(buf, frames, bytes, observation), frames && bytes ? prefix : '')
+      assert.deepEqual(observation, { failedFrames: 0, limited: true })
+    }
+    assert.deepEqual(scanZstdFrames(buf), [{ start: 0, end: frame.length }])
+    assert.equal(decodeZstdFrames(buf), prefix)
+  }
+  const complete = {}
+  assert.equal(decodeZstdFramesHead(frame, 1, Buffer.byteLength(prefix), complete), prefix)
+  assert.deepEqual(complete, { failedFrames: 0, limited: false })
+  const oversized = {}
+  assert.equal(decodeZstdFramesHead(frame, 2, 3, oversized), '')
+  assert.deepEqual(oversized, { failedFrames: 0, limited: true })
+})
+
+test('truncated header, block, checksum and reserved block type retain preceding complete frames', () => {
+  const prefix = zstdCompressSync(Buffer.from('prefix'))
+  // Minimal single-segment header (FCS=1), then one final raw block of one byte.
+  const raw = Buffer.from([0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x01, 0x09, 0, 0, 0x78])
+  const badTails = [raw.subarray(0, 5), raw.subarray(0, 7), raw.subarray(0, 9),
+    Buffer.from([0x28, 0xb5, 0x2f, 0xfd, 0x24, 0x01, 0x09, 0, 0, 0x78]),
+    Buffer.from([0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x01, 0x07, 0, 0])]
+  for (const tail of badTails) {
+    const buf = Buffer.concat([prefix, tail])
+    const observation = {}
+    assert.equal(decodeZstdFramesHead(buf, 8, 1024, observation), 'prefix')
+    assert.deepEqual(observation, { failedFrames: 1, limited: false })
+    assert.deepEqual(scanZstdFrames(buf), [{ start: 0, end: prefix.length }])
+  }
+})
+
+test('fallback keeps usable hits while aggregating an in-budget corrupt tail into the real sink', async () => {
+  const { home, host } = await harness()
+  const file = session(home, 'partial-corrupt', 'needle')
+  fs.appendFileSync(file, Buffer.from([0x28, 0xb5, 0x2f, 0xfd]))
+  const result = host.lexicalSessionScanFallback('needle')
+  assert.equal(result.length, 2) // One hit plus the compatibility footer.
+  assert.match(result[0], /needle/)
+  assert.equal(host._degradeSink.countOf('session-scan'), 1)
+  assert.match(result.diagnostic, /目录\/文件读取或头部解码失败 1 次/)
 })

@@ -54,7 +54,7 @@
 2. `lib/diagnostic-error.js`：允许列表异常投影与安全 sink 调用。
 3. `lib/subagent-gc.js`：实际头帧/字节限制及本次截断观测。
 4. `lib/client.js`：共享 DebugCenter 的相关台账投影；未改生成皮肤块。
-5. `tests/smoke/smoke-test-issue162-diagnostic-integrity.mjs`：21 项产线方法行为回归。
+5. `tests/smoke/smoke-test-issue162-diagnostic-integrity.mjs`：25 项产线方法行为回归。
 6. `tests/smoke/smoke-test-session-search-fallback.mjs`：移除编造的事故归因、使用 v3 正常夹具，
    增强真 sink/空扫描说明断言，保留说明变异检查。
 7. `tests/smoke/smoke-test-g3-note-status-wire.mjs`：接线守卫适配真实 catch/写盘状态，
@@ -62,6 +62,8 @@
 8. `tests/smoke/smoke-test-r26-cross-layer.mjs`：精确 index 哈希更新及依据，仍检查整文件。
 9. `tests/smoke/smoke-test-iter5-skin.mjs`：共享诊断 UI 的精确经典区哈希更新及依据。
 10. `docs/internal/ISSUE162-DIAGNOSTIC-REVIEW.md`：本审计与设计复核材料。
+11. `README.md`：诊断刷新驱动快照持久化的英文用户说明。
+12. `README.zh-CN.md`：同一机制的中文用户说明。
 
 ## 行为证据与可复现检查
 
@@ -86,7 +88,7 @@
 | 台账变成无限历史或重复登记 | retention/eviction / once-per-call / aggregated scan failure |
 | Python 内层吞错使外层诊断不可达 | real _pySemanticRank sidecar exception / empty / success |
 
-修复后的新增套件 21/21 通过；对基线真实生产路径运行同一套件，20 项失败，1 项通过。
+初次修复的 21 项套件全部通过；对原 upstream 基线运行当时同一套件，20 项失败，1 项通过。
 那 1 项是独立新异常投影 helper 的防御性测试；基线红例不是缺模块/语法失败。
 既有 session fallback、G3、degrade、subagent GC 与皮肤生成检查一并保留。
 
@@ -104,6 +106,33 @@ CI 配置本身排除的 6 项：fresh-download-live、peer-probe-live、team-mi
 m79-feature-v2、m710-fv2-emit、c4-fresh-install。前三项需要真实网络/服务；后三项需要
 本地模型/发布包等产物。排除不是通过。仓库无独立通用 eslint/package build 脚本，
 执行 lib/tools 的 Node 语法检查和既有 generator `--check`；不发布 release。
+
+## 父代理复审后的有限修正
+
+父代理对初次 head `503a8835e0042106fea625231c7755a90977ab6d` 复审发现两个遗漏，
+确定性夹具确认意见成立；新增 4 组行为回归对该提交为 0/4 通过，修正后完整新套件为 25/25。
+
+- 同一会话的两种文件名分别 stat，只选最新可 stat 的常规文件；mtime 相等优先 v3。
+  一个候选 stat 出错保留另一个可用候选，并进入本次聚合失败；普通 ENOENT 是正常的缺失候选。
+  仍然每会话最多读取一个文件，80 次尝试及 16MiB 预读取限制保留。
+  选中文件在 stat 后读取失败仍可能发生，不用陈旧候选掩盖失败。
+- 共享私有单帧解析器检查头、块、校验尾的结构边界；公共 scanner 的健康帧数组 API 不变，
+  损坏尾部停止定位并保留完整前缀。head decoder 每次解析前先检查帧/字节预算，
+  预算内不可定位的损坏尾部记一次 failedFrames；预算外内容既不解析，也不声称有损坏。
+  可恢复命中继续返回；说明将“无可解码头部”改为“头部解码失败”，避免有前缀时措辞失实。
+- 中英文 README 及真实诊断面板明确 `latest.json` 在诊断刷新时更新，沿用原持久化时机。
+
+| 复审失败模式 | 新回归的直接证据 |
+| --- | --- |
+| 旧名遮住新 v3 / stat 一个失败隐藏另一候选 | stale old no-hit + newer v3 hit；反向更新；相等时间；两种候选各自 stat 抛错 |
+| 有效前缀 + 垃圾尾静默 / 4 字节 magic 抛 RangeError | 两种尾部均保留前缀；预算内 failedFrames=1；公共 scanner/full decoder 兼容 |
+| 超过头预算仍读取损坏内容 | maxFrames=1、精确 maxBytes、零预算均为 limited=true / failedFrames=0 |
+| 截断头/块/校验及非法块类型 | 保留前缀并只计一次观测失败 |
+| 损坏尾部让词法命中丢失或未留痕 | 实际词法方法仍返回命中，真实 session-scan 计数为 1 |
+
+选择共享单帧解析器而非复制两套 scanner，避免边界校验漂移；未改变公共导出签名，
+未尝试在未知结构坏尾中猜测新的帧起点。完整合法帧的解压失败仍消耗一次预算并可继续下一帧。
+精确源码哈希守卫随这两处产线调整及 UI 文案更新，仍校验整文件/完整经典区域。
 
 ## 审计范围与保留的限制
 

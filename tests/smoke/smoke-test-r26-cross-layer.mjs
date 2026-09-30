@@ -158,7 +158,17 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   ⑥ 前端三态以后端 state 为准 + mode-aware 文案（修「未安装、当前模式不受影响」在
 //      Python 档下的错误措辞）。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '0CBB6114B7E5C450', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R61 基线；R60→R61 放行 = 真跑通矛盾修复批：漏导入补正 + state 五态 + 档位同源同判，理由见上）')
+// ★2026-09-30 基线演进 R61→R62（接续工作区漂移修复批，增量归因；用户报障「A区点击接续，新会话在B区」）：
+//   三条漂移通道全修：
+//   ① buildPrevSessionPack：want 显式给出但无持久化文件时，**不再静默改用 _lastAgent**（最近活跃
+//      会话）的转写包顶替 —— 旧实现把 cwd/模型/转写整体换成别的会话，且 pack.cwd 存在 ⇒
+//      wsFallback 警告都不触发（多窗口下=「A 区点接续，新会话在 B 区」的直接来源）；
+//      现诚实降级 {sessionId: want}，工作区仍走 registry/持久化头反查（行为级守卫=continue-host H11）；
+//   ② buildContinueCarry：pack=null 时 prevSid 沿用显式 preferSid（旧实现落全局 currentSessionId()）；
+//      prevSessionId 回传同样补 preferSid 兜底（前端权限继承不因转写包缺失而断）；
+//   ③ hostAutoContinue 接续标题加时间戳（contTitleStampPre，本地时区 MM-dd HH:mm，用户要求）；
+//   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'A51163FEF30A5A30', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R62 基线；R61→R62 放行 = 接续工作区漂移修复批：禁 _lastAgent 顶替 + prevSid 沿用 preferSid + 标题时间戳，理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

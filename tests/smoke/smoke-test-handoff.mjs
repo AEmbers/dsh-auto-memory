@@ -243,7 +243,8 @@ const readSettingsTextPre = async () => {
   }
   return ''
 }
-const waterDeps = { parseModelWindowsPre, pickWindowPre, readSettingsTextPre }
+const parseAgentDefaultModelPre = new Function('return (' + extractFn('function parseAgentDefaultModelPre(text) {') + ')')()
+const waterDeps = { parseModelWindowsPre, pickWindowPre, readSettingsTextPre, parseAgentDefaultModelPre }
 const fakeRw = makeWaterFake({ waterLevelWindowTokens: 0 }, [])
 const resolveWaterWindow = bindMethod("async resolveWaterWindow(providerOverride = '', modelOverride = '') {", fakeRw, Object.assign({ dshHome: () => fakeHome }, waterDeps))
 const w1 = await resolveWaterWindow()

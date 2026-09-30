@@ -60,7 +60,14 @@ const classic = source
 //   (3) 高亮判据收敛为「主题层 / 家族档 / 经典」三类互斥（旧总卡退场后不再需要第四支）；
 //   (4) 随之删除失效 i18n 词条（旧总卡标签，退场后零消费点）。
 //   守卫语义不变：生成块之外的任何**非意外**改动仍会被本锁抓住。
-assert.equal(createHash('sha256').update(classic).digest('hex'), '8fe05721e0d3ba4ad6603803bad9c54707a112c3d103486c043c91eb357fced4', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+// ★2026-09-30 本快照第十次演进（H2 批 · 向导 where 分区名对齐，用户裁定「留在向导，只把 where 改成与设置页一致」）：
+//   (1) TOUR_STEPS 内 7 处 where: L('自动记忆引擎', 'Semantic engine') ⇒ L('语义记忆总开关', 'Memory engine')——
+//       与设置页 sectionLabels.engine 实名对齐（该实名自合并后即为「语义记忆总开关」）；
+//       其中 3 处为既有、4 处为 F 批新增，同源同错，一并改完（避免半修）；
+//   (2) 附「向导 where ⇒ 设置页实名单」对照核验：11 个分区名逐条比对，本批后 4 种 where 取值中
+//       「语义记忆总开关」命中最多次（7 次），其余 3 种（记忆窗口 / 自动化 / 记忆中枢）为**批前既有**，未在本批范围内。
+//   守卫语义不变：生成块之外的任何**非意外**改动仍会被本锁抓住；本批期望值随之上移。
+assert.equal(createHash('sha256').update(classic).digest('hex'), '94835bf7825664cfea896ca63892fcdd4e5932ac63af86afac3c5f0f955a3b4b', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

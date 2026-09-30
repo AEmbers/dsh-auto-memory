@@ -1,0 +1,20 @@
+{
+  "fontSize": 14,
+  "checks": [
+    "isolated profile",
+    "body text follows host at 14px",
+    "recall mode visible without advanced",
+    "tuning initially folded",
+    "advanced tunable accessible",
+    "memory guidance visible",
+    "recording remains a switch",
+    "draft survives regrouped navigation",
+    "discard restores original value",
+    "外观与目录 readable",
+    "接续与维护 readable",
+    "mobile root fits",
+    "dark host remains neutral",
+    "no browser errors"
+  ],
+  "errors": []
+}

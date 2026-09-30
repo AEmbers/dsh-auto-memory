@@ -16,7 +16,6 @@ function replaceOnce(text, old, value) {
 }
 let settings = client.slice(client.indexOf('    function SettingsPage() {'), client.indexOf('    // ───────────────────────── 插件挂载'))
 settings = replaceOnce(settings, 'function SettingsPage()', 'function Iter5Settings(props)')
-settings = replaceOnce(settings, "var guidePair = useState('')", "var guidePair = useState('js')")
 settings = replaceOnce(settings, '      var tickPair = useTick()', `      var tickPair = useTick()
       var i5Group = useState(props && props.intent && ['engine', 'memory', 'appearance', 'behavior'].indexOf(props.intent.group) >= 0 ? props.intent.group : 'engine')
       var i5Base = useRef(null)
@@ -81,20 +80,21 @@ settings = settings.slice(0, saveStart) + `      function save() {
       }
 ` + settings.slice(fieldStart)
 settings = replaceOnce(settings, "      function field(label, control, hint) {\n        return", `      function field(label, control, hint) {
-        if (control && (control.type === 'input' || control.type === 'select' || control.type === 'textarea')) control = React.cloneElement(control, { 'aria-label': label, disabled: busy || control.props.disabled, role: control.type === 'input' && control.props.type === 'checkbox' ? 'switch' : undefined })
+        var plain = iter5SettingCopy(label)
+        var shownLabel = plain ? plain.label : label
+        if (control && (control.type === 'input' || control.type === 'select' || control.type === 'textarea')) control = React.cloneElement(control, { 'aria-label': shownLabel, disabled: busy || control.props.disabled, role: control.type === 'input' && control.props.type === 'checkbox' ? 'switch' : undefined })
         return`)
 settings = replaceOnce(settings, "return h('div', { 'data-dam-settings-row': '' },", "return h('div', { 'data-dam-settings-row': '', 'data-i5-field': label },")
 settings = replaceOnce(settings,
   "h('div', { 'data-dam-slot': 'list', 'data-dam-row': '' }, h('label', null, label), control),\n          hint ? h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint) : null)",
   `h('div', { 'data-dam-slot': 'list', 'data-dam-row': '', className: 'i5-setting-field', 'data-wide': String(!!control && (control.type !== 'input' && control.type !== 'select' || control.props.type === 'text')) },
-            h('div', { className: 'i5-setting-copy' }, h('label', null, label), hint ? (function () {
+            h('div', { className: 'i5-setting-copy' }, h('label', null, shownLabel), plain ? h('div', { 'data-dam-hint': '' }, plain.summary) : hint ? (function () {
               if (typeof hint !== 'string') return h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint)
               var cut = hint.indexOf('。'), tail = cut + 1
               if (cut < 0) { cut = hint.indexOf('. '); tail = cut + 2 }
               if (cut < 8 || cut >= hint.length - 2) return h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, hint)
               var lead = hint.slice(0, tail)
-              if (lead.length > 64) lead = lead.slice(0, 64).replace(/[，、；,\s]+$/, '') + '…'
-              return h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, h('span', { className: 'i5-hint-lead' }, lead), h('details', { className: 'i5-hint-more' }, h('summary', null, L('更多说明', 'More')), h('span', null, hint)))
+              return h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, h('span', { className: 'i5-hint-lead' }, lead), h('details', { className: 'i5-hint-more' }, h('summary', null, L('详细说明', 'Details')), h('span', null, hint.slice(tail))))
             })() : null),
             h('div', { className: 'i5-setting-control' }, control)))`)
 const modeStart = settings.indexOf('      function onEngineModeChange(e) {')
@@ -135,22 +135,37 @@ settings = replaceOnce(settings,
             if (!node) return
             var label = node.props && node.props['data-i5-field']
             if (label === t('semMode')) mode.push(node)
-            else if (label === t('fAssocEngine') || label === t('fAnchorIndex')) primary.push(node)
+            else if (label === t('fAssocEngine') || label === t('fEmitMode')) primary.push(node)
             else if (label) advanced.push(node)
             else support.push(node)
           })
           return h('div', { id: 'dam-settings-' + key, className: 'i5-engine-grid', hidden: hidden },
-            h(Iter5Card, { className: 'i5-mode-card', title: L('检索模式', 'Retrieval mode'), icon: 'search', hue: 'blue' }, mode),
-            h(Iter5Card, { className: 'i5-setup-card', title: L('引擎状态与安装', 'Engine status & setup'), icon: 'spark', hue: 'purple' }, support),
-            h(Iter5Card, { title: title, icon: 'pulse', hue: 'green' }, primary, h('details', null, h('summary', null, L('高级：发射模式、判定参数与观测', 'Advanced: emission, thresholds & observation')), advanced)))
+            h(Iter5Card, { title: L('让 AI 想起相关的事', 'Recall relevant memories'), icon: 'pulse', hue: 'green' }, primary),
+            h(Iter5Card, { className: 'i5-mode-card', title: L('如何查找记忆', 'How to find memories'), icon: 'search', hue: 'blue' }, mode),
+            h('details', { className: 'i5-settings-advanced i5-setup-card', open: !!guide || detOpen }, h('summary', null, L('安装与检查查找工具', 'Install and check search tools')), support),
+            h('details', { className: 'i5-settings-advanced' }, h('summary', null, L('进阶：回忆频率、准确度与索引维护', 'Advanced: recall frequency, matching and index maintenance')), advanced))
+        }
+        var titles = { window: L('把已有记忆交给 AI', 'Give AI existing memories'), capacity: L('记录对话与保留内容', 'Record conversations and keep content'), skills: L('从经历中积累可复用流程', 'Build reusable workflows'), handoff: L('长对话换窗口后继续', 'Continue long tasks in a new session'), auto: L('免打扰与定时整理', 'Quiet mode and scheduled upkeep'), store: L('记忆文件保存在哪里', 'Where memory files are stored'), look: L('显示与操作习惯', 'Display and interaction'), team: L('与团队共享记忆', 'Share memory with a team'), skin: L('自定义插画素材', 'Custom illustration assets') }
+        title = titles[key] || title
+        var common = { window: ['fInject', 'fBudget', 'fDays'], capacity: ['fAutoConsolidate', 'fConsolidate', 'fConsolidateMax'], skills: ['fMemoryHub', 'fProcInject', 'fProcRisk'], handoff: ['fHandoff', 'fAutoContinue'], auto: ['fAutoPopup', 'fUnattended', 'fUnattendedAuto', 'fAutoSum', 'fConsSchedule', 'fConsScheduleTime', 'fConsScheduleDays', 'fMaintSchedule', 'fMaintScheduleTime'], store: ['fMemoryRoot', 'fUserDir', 'fProjectDir'], look: ['fWelcomeTour', 'fLocale', 'fFontSize', 'fPanelPos'] }
+        if (common[key]) {
+          var basic = [], extra = [], extrasStarted = false
+          content.forEach(function (node) {
+            if (!node) return
+            var label = node.props && node.props['data-i5-field']
+            if (label) extrasStarted = !common[key].some(function (k) { return t(k) === label })
+            ;(extrasStarted ? extra : basic).push(node)
+          })
+          if (key === 'capacity') basic.sort(function (a, b) { return common[key].map(t).indexOf(a.props['data-i5-field']) - common[key].map(t).indexOf(b.props['data-i5-field']) })
+          content = basic.concat(extra.length ? [h('details', { className: 'i5-settings-advanced' }, h('summary', null, L('进阶选项：', 'Advanced: ') + title), extra)] : [])
         }
         var icons = { window: 'library', capacity: 'storage', skills: 'skills', handoff: 'handoff', auto: 'timeline', store: 'folder', look: 'settings', team: 'mindmap', skin: 'spark', about: 'note' }
-        var subs = { window: L('控制何时将记忆注入对话上下文，以及注入的规模。', 'When and how much memory is injected into the conversation.'), capacity: L('记忆存储容量与归档策略，控制本地存储的规模。', 'Storage capacity and archival policy for local memory.'), skills: L('记忆相关的内置技能，增强整理、检索与应用能力。', 'Built-in memory skills for organizing, retrieval and application.'), handoff: L('跨会话接续当前任务与上下文。', 'Continue tasks and context across sessions.'), auto: L('自动沉淀、提醒与免打扰行为。', 'Automation, reminders and quiet hours.'), store: L('记忆目录、外部来源与存储维护。', 'Memory directories, external sources and storage.'), look: L('主题、字号与交互偏好。', 'Theme, font size and interaction.'), team: L('团队共享与协作同步。', 'Team sharing and sync.'), skin: L('界面皮肤与插画素材。', 'Skin and illustration assets.') }
+        var subs = {}
         return h('section', { id: 'dam-settings-' + key, 'data-dam-settings-group': '', hidden: hidden }, h('h3', { className: 'i5-card-title' }, h('span', { className: 'i5-badge', 'data-hue': key === 'skills' ? 'green' : key === 'handoff' ? 'cyan' : key === 'auto' ? 'orange' : 'blue' }, h(Iter5Icon, { name: icons[key] || 'settings' })), h('span', { className: 'i5-card-title-txt' }, title, subs[key] ? h('span', { className: 'i5-card-sub' }, subs[key]) : null)), content)
       }`)
 settings = replaceOnce(settings, "      return h('div', { 'data-dam-settings': '' },", `      return h('div', { 'data-dam-settings': '', 'data-i5-dirty': dirty ? 'true' : 'false' },
         h(Iter5Tabs, { id: 'i5-settings', label: L('设置分组', 'Settings groups'), value: i5Group[0], onChange: i5Group[1], items: [['engine', L('引擎', 'Engine')], ['memory', L('记忆', 'Memory')], ['appearance', L('外观与目录', 'Appearance & paths')], ['behavior', L('行为与维护', 'Behavior & maintenance')]].map(function (r) { return [r[0], r[1], Object.keys(i5Groups.current).some(function (k) { return i5Groups.current[k] === r[0] })] }) }),`)
-settings = replaceOnce(settings, "h('div', { 'data-dam-settings-content': '' },", "h('div', { 'data-dam-settings-content': '', role: 'tabpanel', id: 'i5-settings-panel', 'aria-labelledby': 'i5-settings-tab-' + i5Group[0] },")
+settings = replaceOnce(settings, "h('div', { 'data-dam-settings-content': '' },", "h('div', { 'data-dam-settings-content': '', role: 'tabpanel', id: 'i5-settings-panel', 'aria-labelledby': 'i5-settings-tab-' + i5Group[0] }, iter5SettingsIntro(i5Group[0]),")
 const radioOld = `h('select', { 'data-dam-select': '', style: { flex: 1 }, value: cfg.semanticEngineMode || 'auto', onChange: onEngineModeChange },
               h('option', { value: 'auto' }, t('semAuto')),
               h('option', { value: 'lexical' }, t('semLexOnly')),
@@ -255,7 +270,11 @@ const css = (readSkin('skin.css') + '\n' + readSkin('native-tour.css') + '\n' + 
   .replace('[data-iter5]{--i5-blue:', '[data-iter5],[data-dam-theme]{--i5-blue:')
   .replace('[data-iter5][data-deep=true]{--i5-blue:', '[data-iter5][data-deep=true],[data-dam-theme][data-deep=true],[data-dam-theme][data-deep=true] [data-iter5]{--i5-blue:')
 const ui = readSkin('style-choice.js').trimEnd() + '\n' + readSkin('alternate-home.js').trimEnd() + '\n' + readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd() + '\n' + readSkin('native-panel.js').trimEnd() + '\n' + readSkin('native-workbench.js').trimEnd() + '\n' + readSkin('native-search.js').trimEnd() + '\n' + readSkin('native-skills.js').trimEnd() + '\n' + readSkin('native-storage.js').trimEnd() + '\n' + readSkin('native-team.js').trimEnd() + '\n' + readSkin('native-map.js').trimEnd() + '\n' + readSkin('native-messages.js').trimEnd()
-const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + settings + storage + skills + stats + end + '\n'
+settings = settings.replace("L('引擎', 'Engine')", "L('查找与回忆', 'Find & recall')").replace("L('记忆', 'Memory')", "L('记录与使用', 'Record & use')").replace("L('行为与维护', 'Behavior & maintenance')", "L('接续与维护', 'Continue & maintain')")
+settings = settings.replace("L('shadow 只记录', 'shadow (record only)')", "L('只观察，不交给 AI', 'Observe only; do not supply to AI')").replace("L('canary 显式回忆注入', 'canary (explicit recall)')", "L('明确要求回忆时提供', 'Supply on explicit recall requests')").replace("L('active 全部注入', 'active (all)')", "L('主动提供相关记忆', 'Proactively supply matching memories')")
+settings = settings.replace("L('balanced 3×40', 'balanced 3×40')", "L('平衡：3 条 × 40 字符', 'Balanced: 3 × 40 characters')").replace("L('dense 6×20', 'dense 6×20')", "L('广泛：6 条 × 20 字符', 'Broad: 6 × 20 characters')").replace("L('custom 自定义', 'custom')", "L('自定义', 'Custom')")
+settings = settings.replace("['lexical', t('semLexOnly')], ['js', t('semJs')], ['python', t('semPy')]", "['lexical', L('按关键词查找（无需下载模型）', 'Keywords (no model download)')], ['js', L('按意思查找（需本地模型）', 'Meaning (requires a local model)')], ['python', L('Python 搜索工具（需单独安装）', 'Python search tools (separate setup)')]")
+const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + readSkin('settings-copy.js') + '\n' + settings + storage + skills + stats + end + '\n'
 const seam = '    // ===================== dam-skin:end (v4) ====================='
 client = replaceOnce(client, seam, generated + seam)
 // Only the opt-in skin mount and its stylesheet gain the new implementation.

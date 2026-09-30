@@ -183,3 +183,15 @@
 
 [data-dam-theme=settings] .i5-workbench-appearance{display:flex;align-items:center;flex-wrap:wrap;gap:10px;flex:none;padding:0 0 16px;}
 [data-dam-theme=settings] [data-iter5][data-i5-embedded]>.i5-settings-frame-head>button{margin-left:auto;}
+
+/* Keep guidance inside the scroll area; controls and their explanations stay together. */
+[data-iter5] .i5-settings-intro{margin:0 0 4px;color:var(--i5-secondary);line-height:1.65;max-width:72ch;}
+[data-iter5] .i5-settings-advanced{border-top:1px solid var(--i5-line);padding-top:14px;margin-top:12px;}
+[data-iter5] .i5-settings-advanced>summary{cursor:pointer;color:var(--i5-secondary);padding:8px 0;font-weight:600;line-height:1.5;}
+[data-iter5] .i5-settings-advanced>summary:focus-visible{outline:2px solid var(--i5-blue);outline-offset:3px;}
+[data-iter5] .i5-settings-advanced[open]>summary{margin-bottom:12px;}
+[data-iter5] .i5-setting-copy [data-dam-hint]{line-height:1.6;max-width:68ch;}
+[data-dam-theme=settings] [data-iter5][data-i5-embedded] [data-dam-settings]>.i5-tabs{gap:16px;}
+[data-iter5] .i5-mode-card .i5-setting-field{display:block;}
+[data-iter5] .i5-mode-card .i5-setting-copy{display:block;margin-bottom:12px;}
+[data-iter5] .i5-mode-card .i5-setting-copy>label{display:none;}

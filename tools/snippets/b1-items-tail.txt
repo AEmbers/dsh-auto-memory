@@ -1,0 +1,16 @@
+      ]
+      // ★2026-09-30（B 批 · 用户裁定「皮肤可插拔 · 基线永不变」）：皮肤族**四款直选**。
+      //   动因（真机死锁）：四款下拉只挂在变体页侧栏，而默认档渲染基线块 ⇒ 用户在默认档
+      //   里既看不到三套新皮肤、也无路可回 ——「皮肤页面什么都没展示」即由此而来。
+      //   口径与 damSkinCssFlavor() 严格一致：基线=legacy；三套变体=instrument/editorial/water。
+      //   排序：经典 → **基线（默认）** → 三套变体 → 主题层/皮肤库（用户自装）。
+      .concat([
+        { family: 'legacy', id: 'legacy', label: L('基线皮肤（默认 · 3.2.5 原样）', 'Baseline (default · as shipped in 3.2.5)'), desc: L('出厂基线，所有用户可稳定回退的锚；功能与设置以它为准。', 'The shipped baseline every user can fall back to; functionality follows it.') },
+        { family: 'instrument', id: 'instrument', label: L('仪器（社区 @Minervaowl7）', 'Instrument (community)'), credit: 'Minervaowl7', desc: L('机箱 / 凹槽 / 电平柱的仪表风皮肤。', 'Console-and-gauge skin.') },
+        { family: 'editorial', id: 'editorial', label: L('编辑（社区 @Minervaowl7）', 'Editorial (community)'), credit: 'Minervaowl7', desc: L('薄线 / 连续排版 / 大数字的出版风皮肤。', 'Thin rules, continuous type, large numerals.') },
+        { family: 'water', id: 'water', label: L('活水（社区 @Minervaowl7）', 'Living water (community)'), credit: 'Minervaowl7', desc: L('水箱 / 细水线 / 岩芯沉积层的流体质感皮肤。', 'Tank, water line and sediment-core skin.') },
+      ]).concat(layers.filter(function (l) {
+        return String(l.name) !== 'v4' && String(l.name) !== 'classic'
+      }).map(function (l) {
+        return { id: String(l.name), label: String(l.name) + (l.layer === 'team' ? (L('（团队）', ' (team)')) : ''), desc: (L('主题层 · ', 'theme layer · ')) + String(l.tokenCount || 0) + ' token', theme: true }
+      }))

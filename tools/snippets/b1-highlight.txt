@@ -1,0 +1,6 @@
+            // ★2026-09-30（B 批）：高亮须覆盖四款皮肤（原来只认 classic / v4 两档）。
+            var curFamily = 'legacy'
+            try { var famRaw = String(localStorage.getItem('dam-skin-style') || ''); if (famRaw === 'legacy' || famRaw === 'instrument' || famRaw === 'editorial' || famRaw === 'water') curFamily = famRaw } catch (eFam) {}
+            var on = it.theme ? (cur === 'v4' && variant === it.id)
+              : (it.family ? (cur !== 'classic' && curFamily === it.family)
+                : (cur === it.id && !variant))

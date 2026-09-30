@@ -1,0 +1,24 @@
+      /**
+       * ★2026-09-30（B 批）皮肤切换的唯一写点。两类互斥存储：
+       *   · 家族档（经典 / 基线 / 三套变体）写 dam-skin + dam-skin-style；
+       *   · 主题层（用户自装，it.theme）写 dam-skin=v4 + dam-skin-variant。
+       * 三套变体同时写 presentation.v1（变体块自己的键）——两键同写只为让
+       * 「换回基线再换回来」保持用户上次选的款（否则会退回 legacy）。
+       */
+      var pick = function (it) {
+        try {
+          if (it.theme) {
+            localStorage.setItem('dam-skin', 'v4')
+            localStorage.setItem('dam-skin-variant', it.id)
+          } else if (it.family) {
+            localStorage.removeItem('dam-skin-variant')
+            localStorage.setItem('dam-skin', 'v4')
+            localStorage.setItem('dam-skin-style', it.family)
+            try { localStorage.setItem('dsh-auto-memory.presentation.v1', it.family) } catch (eI5) {}
+          } else {
+            localStorage.setItem('dam-skin', it.id === 'v4' ? 'v4' : 'classic')
+            localStorage.removeItem('dam-skin-variant')
+          }
+        } catch (e0) {}
+        if (props && props.onSwitch) props.onSwitch()
+      }

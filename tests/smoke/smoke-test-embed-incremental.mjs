@@ -104,6 +104,29 @@ const mivOf = () => 'idx_pre_' + (++mivSeq).toString(16).padStart(32, '0')
   ok(r5.scores.size === 4, 'D2 换 id 后索引仍覆盖 4 条')
 }
 
+// Dynamic host getter: each rebuild must observe saved changes in both directions.
+{
+  let enabled = true
+  const calls = []
+  const eng = createJsSemanticEnginePre({
+    pluginDir: path.join(ROOT, 'lib'),
+    get incremental() { return enabled },
+    injectEmbedder: {
+      async embedQuery() { return new Float32Array([1, 0]) },
+      async embedPassages(texts) { calls.push(texts.length); return texts.map(() => new Float32Array([1, 0])) },
+    },
+  })
+  const base = [mkRec(ID(1), 'first'), mkRec(ID(2), 'second')]
+  await eng.rank({ memoryIndexVersion: mivOf(), records: base }, 'query')
+  enabled = false
+  const grown = base.concat(mkRec(ID(3), 'third'))
+  await eng.rank({ memoryIndexVersion: mivOf(), records: grown }, 'query')
+  ok(calls[1] === 3, 'E2 saved true-to-false getter change re-embeds all 3 records')
+  enabled = true
+  await eng.rank({ memoryIndexVersion: mivOf(), records: grown.concat(mkRec(ID(4), 'fourth')) }, 'query')
+  ok(calls[2] === 1, 'E3 saved false-to-true getter change reuses vectors and embeds only the new record')
+}
+
 // ── F. 池上限保护 ──
 ok(/const POOL_MAX = 20000/.test(fs.readFileSync(path.join(ROOT, 'lib/semantic-js.js'), 'utf8')), 'F1 池上限 POOL_MAX 存在（内存保护）')
 ok(/while \(byHash\.size > POOL_MAX\)/.test(fs.readFileSync(path.join(ROOT, 'lib/semantic-js.js'), 'utf8')), 'F2 超限逐出逻辑存在')

@@ -20,7 +20,7 @@ const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
 //   故此处剥离生成区再断言 —— 不是放宽判据，而是把作用域限定到它真正该守的经典档。
 //   皮肤自身由 smoke-test-iter5-skin.mjs 验收（含「剥离后与基线逐字节一致」的守恒断言）。
 const SRC = stripGeneratedSkin(readFileSync(damPath('lib/client.js'), 'utf8'))
-const IX = readFileSync(damPath('lib/index.js'), 'utf8')
+const IX = readFileSync(damPath('lib/index.js'), 'utf8').replace(/\r\n/g, '\n')
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }
 const eq = (a, b, m) => ok(Object.is(a, b), m + ' [got=' + JSON.stringify(a) + ' want=' + JSON.stringify(b) + ']')
@@ -181,7 +181,8 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   守卫演进：recall-stats S4g2/S4g3 旧判据（「data.channels 恰好 1 次」「StatsTab 内 data.stats=0」）
 //   焊死的是 bug 本身，已带归因改写；p9 注入表 +5 绑定、新增 #147 行为段；l0-extract +5 例。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '71E3EC4FD207C309', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R63 基线；R62→R63 放行 = 三 issue 修复批：#147 空锚点卡剥离接线 + #148 L0 剥 kind 标记 + import MARKER_RE，理由见上）')
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'A80EF8FCDCBF0FFC', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R64 基线；R63→R64 放行 = #153 默认模型回退 + #154 接续工作区保护，理由见上）')
+// R64 (LF-normalized hash): #153 shared profile/block model parser and paired fallback route; #154 source-workspace create guard.
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

@@ -1,6 +1,6 @@
 ---
-name: "DSH Auto Memory · C 原生桌面"
-description: "白浅蓝、深蓝文字、蓝色操作；欢迎精致，工作页紧凑，独立表面共享主题。"
+name: "DSH Auto Memory · L2-1 浅色仪器"
+description: "L2-1 浅色仪器：白瓷机箱、索引凹井、连续读面与紧凑控制。"
 colors:
   i5-blue: "#1764FF"
   i5-fill: "#1764FF"
@@ -44,6 +44,11 @@ colors:
   i5-pink-dark: "#FFB3C7"
   i5-cyan-dark: "#8FD6E7"
   i5-slate-dark: "#C4D1E8"
+  i5-face: "#FFFFFF"
+  i5-face-edge: "#E8F1FC"
+  i5-recess: "#F4F7FC"
+  i5-bezel: "#C7D2E0"
+  i5-bezel-dark: "#A8B6CA"
 typography:
   headline:
     fontSize: "calc(22px * var(--dam-user-scale,1))"
@@ -64,7 +69,8 @@ typography:
     fontSize: "12px"
     lineHeight: 1.6
 rounded:
-  i5-radius: "12px"
+  i5-radius: "14px"
+  i5-well-radius: "10px"
   i5-control-radius: "8px"
   i5-tag-radius: "6px"
 spacing:
@@ -77,7 +83,8 @@ components:
     padding: "6px 12px"
     typography: "{typography.body}"
   button-primary:
-    textColor: "{colors.i5-surface}"
+    backgroundColor: "{colors.i5-primary}"
+    textColor: "{colors.i5-on-accent}"
     rounded: "{rounded.i5-control-radius}"
     padding: "6px 12px"
   button-primary-soft:
@@ -113,82 +120,68 @@ components:
     padding: "14px"
 ---
 
-# Design System: DSH Auto Memory · C 原生桌面
+# Design System: DSH Auto Memory · L2-1 浅色仪器
 
 ## Overview
 
-> 状态：current implementation inventory / not visually accepted。用户已明确拒绝当前视觉结果，认为未达到 C 参考复刻目标；本文仅盘点现有代码，不构成已接受的设计规范或验收通过，后续完整视觉复核优先。
+2026-09-30 新增用户选择：保留 L2-1 仪器，并将已确认的 L2-2 编辑与 L2-3 活水实现为独立皮肤。三者均提供浅色、深色、跟随宿主，明暗与皮肤分开保存。以下机箱规则属于仪器皮肤；编辑皮肤使用纸面、细线与排印，活水皮肤使用连续水面与分层记录。它们共享功能和数据，但不强制共享首页构图。新证据见 `artifacts/three-skins-20260930/ACCEPTANCE.md`，此前九张浅色复审不自动扩展到新皮肤。
 
-**Creative North Star: "C 原生桌面 · 白浅蓝记忆工作空间"**
+**Creative North Star: "L2-1 浅色仪器"**
 
-采用用户明确选择的 C 系列参考：白色内容面、浅蓝环境、深蓝文字与清晰蓝色操作。欢迎流程保留独立插画与舒展节奏，工作页以紧凑分区和可读信息行承载日常操作。
+白瓷珐琅面板承载任务，凹井盛放数据，刻字标明用途，机加工键执行动作，LED 报告状态。用户明确要求严格贴近 L2-1 HTML 示例的质感和密度，并否决层层白卡与浅蓝框拼接的旧实现。
 
-运行于 DSH Web 宿主，原生桌面是视觉方向。工作台、宿主设置、轻面板和浮层共享语义主题，各自保有容器与密度。
+视觉权威为主仓库 `_design-lab-20260929/design-demos/L2-1-浅色仪器.html`；最新截图与证据在 `artifacts/iter5-instrument-rebuild-20260930/`。独立视觉复审意见为 ship，范围是所审的九张浅色截图可以交付用户查看，尚非用户视觉验收。
 
 **Key Characteristics:**
 
-- 白浅蓝表面与深蓝文本
-- 欢迎精致、工作页紧凑
-- 独立宿主表面共享主题
-- 真实内容和状态优先
-
-依据：PRODUCT.md、OpenSpec 实施方案、skins/iter5 实际源码与生成顺序。64 张参考位于原工作目录 artifacts/pr146-all-ui-references-20260929；由用户指定，未执行随机 concept roll。coverage.json 是入口/证据映射，不是 64 页视觉通过证明；有限独立复核及修正结论以 artifacts/pr146-native-ui/finish-review.md 为准。本文件未做像素一比一或 comp-diff 成绩声明。
+- 一层主要机箱与一层功能凹井
+- 连续读面，不再给详情套卡
+- 文字导航与紧凑控制
+- 真实数据与原有操作保留
 
 ## Colors
 
-Primary：i5-primary 是实色主操作，i5-blue 用于可点击文字与选中态，i5-fill 用于进度/选择标记，i5-on-accent 用于实色主操作文字。浅色三种蓝当前同值，但语义不能合并；深色的 blue/fill 改亮，primary/on-accent 保持浅色定义。
+蓝白亮色为主。primary/on-accent 承担实色主键；blue 承担交互文字；fill 承担选中刻度。face 是白瓷读面，recess 是索引凹井，bezel 是控件边缘。类型与状态颜色只承担局部标记。暗色由 skin.css 的主题变量继承，本轮没有完整暗色实拍矩阵。
 
-Neutral：i5-surface 是内容面，i5-bg 是冷浅蓝环境，i5-side 是侧边环境，i5-soft 是选择底色；i5-text、i5-secondary、i5-muted 分别承载正文、说明与弱信息，i5-line 建立分隔。ok/error/warning 为状态，indigo/purple/green/orange/pink/cyan/slate 为类型提示，不能替代文字状态。
-
-前置 colors 使用 CSS 变量去掉开头两个连字符的原名；带 -dark 的条目对应 data-deep=true 的覆盖值，并非另造运行时变量。来源为 skin.css，生成器同时复制到 data-dam-theme 独立边界。
-
-**The Shared Theme Rule.** 每个独立挂载或 portal 表面携带主题边界，不能依赖工作台恰好在场。
+**The Semantic Color Rule.** 使用现有语义变量，不把类型色扩展为大面积装饰。
 
 ## Typography
 
-正文使用前置 body 字体栈，无网络字体。标题层级为页面 headline、分区 title、正文 body、辅助 label；代码原文用 mono。数值使用 tabular-nums。工作台正文有 .005em 字距；字号表达式保留 --dam-user-scale，不把用户缩放烘焙成固定像素。
-
-欢迎标题当前为 30px × 用户字号、700、1.3 行高，首步 32px；窄屏分别为 24px / 23px。欢迎说明为 15px × 用户字号、1.85 行高、最长 72ch，首步为 14px。它是当前组件事实；系统字体作为展示标题的处理尚不晋升为新页面的展示字体规范。
+正文使用现有系统中英文字体栈，字号保留用户缩放。工作页铭牌为 14px、文档标题为 16px、正文为 14px、辅助标签为 12px；首页保留较大仪表读数。数值使用 tabular-nums。全界面字级仍有历史差异，不以局部截图证明所有文字均达到既定字号与对比度目标。
 
 ## Layout
 
-**The Different Density Rule.** 共享色彩与控件语言，按欢迎、工作页和轻面板分别安排空间。
+顶部导轨为 64px，工作台使用显式 grid。导航采用文字式分组，刷新和聚焦控件放入导轨并保留无障碍标签。工作页主标题仍保留在无障碍结构中，视觉上不再占用独立标题带。1440px 导轨导航完整显示；窄屏切换为菜单行和可展开侧栏。
 
-工作台：侧栏 208px、标题栏 44px、底栏 34px，主区 padding 20px 24px；首页仪表带（上下文水位环、近 7 日新增柱图、记忆构成占比条，全部真实数据）后接双列内容。欢迎窗口上限 1120px × 780px、四周预留 48px，侧栏 224px；正文独立滚动，底部操作占独立网格行。宿主设置复用字段布局，但嵌入容器正文滚动、保存区位于独立 flex 行；轻面板也以内容滚动加固定操作区组织。
+浏览、检索、接续、唤起使用一层机箱，左侧索引凹井与右侧连续读面共享内部网格。检索的数量与耗时进入铭牌右端。日程把格盘和议程放入同一面板；关系图只保留一个画布凹井。容器 740px 以下相应双栏上下排列；列表保持有界滚动。
 
-工作控件 --i5-compact-control 为 34px，--i5-compact-gap 为 12px；欢迎按钮至少 44px。720px 以下欢迎改横向步骤导航，窗口宽高分别扣 16px / 24px；工作台改为 44px 标题栏、42px 菜单行、内容、34px 状态栏。基础侧栏在 viewport 900px 或 data-narrow 下抽屉化；不要只看单一断点。容器 780px 以下工作台双列合并，设置字段在容器 520px / viewport 600px 下堆叠，开关仍与标签并列；容器 600px 以下通用控件扩至 44px。窄屏与粗指针的尺寸仍需以最终选择器级联核对，不能声称每个控件都达到同一触控尺寸。
+设置保留有实际功能含义的分组。存储的读数条、账册与维护区在同一机箱中以分隔线组织，取消嵌套健康卡和大红危险卡外框。白板、经典托管区域保留原组件与动作。
+
+**The Single Chassis Rule.** 页面外壳承担整体深度，详情正文不重复包卡。
 
 ## Elevation & Depth
 
-常规卡片 --i5-shadow 为 none，以描边、浅蓝选择面和内部分隔建立层级。浮层保留柔和阴影；共享规则对欢迎/轻面板施加 0 16px 48px color-mix(in srgb,var(--i5-text) 16%,transparent)，其 !important 优先于局部普通声明。部分工作主按钮仍使用渐变及微阴影，因此不制定“所有按钮必须纯色”或“完全无阴影”的禁令。完整片段及阴影在 sidecar。
-
-欢迎换页淡入为 160ms ease-out；减少动态效果模式关闭动画、过渡和平滑滚动。加载状态的循环动画只表达等待，不提供虚构进度。
+机箱使用轻微白瓷表面变化、统一顶部高光与柔和低投影；四角螺丝只用于主要工作面板。数据井使用蓝调内阴影，控件使用顶部高光与短按键程。主操作保持实色。工作页无编排入场动画；减少动态效果偏好关闭动画和过渡。首页既有少量状态特效保留，柱图不再过渡 height。
 
 ## Shapes
 
-前置 rounded 保留原有圆角变量。常规卡片使用 i5-radius；工作台局部卡片、列表详情、设置分组采用 8px，轻面板外框 14px，欢迎 12px。这些是不同容器的现存取值，不需强制归一。边框主要为 1px i5-line，选中行通过浅蓝底与内侧色线强化。开关为胶囊轨道与圆形滑块。
+主面板 14px、凹井 10px、普通控制 7–8px、标签 6px，轻面板外框允许 16px。选中索引使用 2px 内侧蓝色刻度。圆盘、LED 与仪表使用圆形几何；旧组件的其他圆角不是新界面的规范。
 
 ## Components
 
-按钮：工作台次操作使用内容面、描边与紧凑 padding；主操作保留代码中的蓝色渐变，欢迎/保存/轻面板的主操作使用 i5-primary 实色。轻主按钮与文字链接仍是现存变体。hover、选中、disabled 与 focus-visible 应保留；统一焦点为 2px i5-blue、offset 3px，disabled opacity .55。
+主键用 primary 与 on-accent，实拍检查了检索键常态、悬停、键盘聚焦的文字对比度，均至少 4.5:1。统一焦点为 2px blue、offset 3px，禁用状态保持现有语义。
 
-输入：白色/深色内容面与细边，紧凑 padding，复用字号；保留输入、错误与重试路径。导航：选中项浅蓝底、蓝字、600 字重；工作台当前项取消旧竖条，记忆文件列表仍保留独立选中标记。标签用于来源/类型，不把静态标签变成交互按钮。卡片默认无阴影，设置卡片使用标题带和字段行。
+索引行使用细分隔线、类型点、来源和时间；右侧保留宿主原文。日历提供 LED、+N 溢出读数及原有增删完成操作。反馈使用 A/P/S/H/E 按键，仍提交原审查队列。
 
-轻面板记录：小型类型图标、标题、两行摘要与时间，记录可展开；底部两列次操作与整行主操作。这些组件不依赖工作台父节点。Iter5Surface 给 panel/dialogs/autocont 的 portal 自带 data-dam-theme 和 data-deep；Iter5HostSettings 保留独立嵌入/展开，生成器按 skin、tour、panel、settings、workbench、library、operations、secondary 的顺序合并 CSS。
+关系图使用带表面层次的圆盘，中心双圈，主题按归一化标签去重，长标签按词与中英文宽度折行。工作区节点保留键盘选择；主题不再伪装成工作区切换按钮，完整文本保留在 title 和主题列表。
 
-插画：lib/skin-assets.js 的 hero.welcome 映射到 lib/assets/skin/slots/hero.native-folio-v1.png，深色为 hero.native-folio-dark-v1.png；分别由 OpenAI image_gen 基于 C01 / C62 生成透明 PNG，来源见 artifacts/pr146-native-ui/asset-manifest.json 与 dark-asset-manifest.json。empty.library 使用 empty.native-document-v1.png（浅深共用），其生成来源未在本次读取的清单中确认，不补造来源。图片只承载插画，标题、说明与按钮由真实组件渲染。旧 skins/iter5/README.md 的山水/内联 SVG 描述属于既有漂移，不据此覆盖当前路由。
-
-sidecar 的组件为无 React 依赖的静态样式样本，变量不位于全局 :root，故样本内使用源码浅色字面值；交互伪类用于样式展示，不宣称具备宿主业务行为。色阶为面板预览合成 OKLCH，非新增生产 tokens。
+对话框保留焦点约束、关闭 SVG、取消和 Escape。轻面板、通知、摘要、更新和自动接续保留独立挂载与主题边界。欢迎九步和插画结构不改。皮肤源经 tools/build-iter5-skin.mjs 生成，禁止手改 client.js 的生成区。
 
 ## Do's and Don'ts
 
-### Do:
-
-- Do 复用语义变量、真实字段和现有可操作组件。
-- Do 在独立宿主设置、轻面板及浅深主题中分别检查正文和操作区。
-- Do 保留焦点轮廓、字号偏好、窄屏滚动与减少动态效果支持。
-
-### Don't:
-
-- Don't 将参考截图或图片中的文字当作可操作界面。
-- Don't 将参考示例数字、共享样式或 coverage 映射当作全量验收。
+- Do 以已选 L2-1 HTML 为视觉依据，使用真实宿主数据。
+- Do 保留键盘焦点、字号偏好、主题与窄屏操作。
+- Do 区分功能检查、截图复审与用户验收。
+- Don't 通过重复外框、横幅与卡片叠层制造分区。
+- Don't 以静态演示替代真实交互。
+- Don't 把浅色截图复审推广为全主题、全状态的验收。

@@ -219,22 +219,21 @@ storage = storage.slice(0, migrationStart) + `    var migRows = h(Iter5Migration
 ` + storage.slice(migrationEnd)
 storage = replaceOnce(storage, 'function migPreview() {', 'function migPreview(conflict) {')
 storage = replaceOnce(storage, "apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined })", "apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined, onConflict: conflict || migConflict })")
-storage = replaceOnce(storage, "return h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows)", `return h('div', { className: 'i5-storage-view' },
+storage = replaceOnce(storage, "return h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows)", `return h('div', { className: 'i5-storage-view i5-panel i5-instrument' }, h(Iter5Screws),
         deleteRequest[0] ? h(Iter5DeleteConfirmation, { payload: deleteRequest[0].payload, onClose: function () { deleteRequest[1](null) }, onConfirm: function () { var pending = deleteRequest[0]; deleteRequest[1](null); act('delete', pending.payload, pending.onDone, true) } }) : null,
         h('div', { className: 'i5-stats i5-stats-four' },
           h(Iter5Stat, { icon: 'storage', hue: 'blue', label: L('扫描来源', 'Scanned sources'), value: data.counts ? counts.total : null, hint: L('当前语料来源数', 'Current corpus sources') }),
           h(Iter5Stat, { icon: 'check', hue: 'green', label: L('索引一致', 'Consistent'), value: data.indexEnabled === false ? null : data.counts ? counts.ok : null, hint: data.indexEnabled === false ? L('索引尚未启用', 'Index disabled') : L('正文与索引校验一致', 'Source and index agree') }),
           h(Iter5Stat, { icon: 'pulse', hue: 'orange', label: L('等待修复', 'Needs repair'), value: data.indexEnabled === false ? null : data.counts ? counts.stale : null, hint: L('可以重建的索引副本', 'Rebuildable index copies') }),
           h(Iter5Stat, { icon: 'note', hue: 'purple', label: L('需人工检查', 'Needs inspection'), value: data.indexEnabled === false ? null : data.counts ? counts.unrepairable : null, hint: L('无法自动修复的来源', 'Sources needing manual review') })),
-        h('div', { className: 'i5-hosted i5-maintenance-grid', 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows.map(function (node, i) { return node && node.props && node.props.title === L('删除记忆(三联动)', 'Delete memory (cascading)') ? h('div', { key: i, className: 'i5-maintenance-danger' }, node) : node })))`)
+        h('div', { className: 'i5-maintenance-grid', 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows.map(function (node, i) { return node && node.props && node.props.title === L('删除记忆(三联动)', 'Delete memory (cascading)') ? h('div', { key: i, className: 'i5-maintenance-danger' }, node) : node })))`)
 let skills = client.slice(client.indexOf('    function MemoryHubTab(props) {'), client.indexOf('    function StorageTab(props) {'))
 skills = replaceOnce(skills, 'function MemoryHubTab(props)', 'function Iter5Skills(props)')
 skills = replaceOnce(skills, "      function hubAct(action, procedureId, v) {", `      function hubAct(action, procedureId, v) {
         var names = { promote: L('晋升技能', 'Promote skill'), approve: L('人工批准技能', 'Approve skill'), 'force-promote': L('强制晋升技能', 'Force promotion'), activate: L('激活技能', 'Activate skill'), deprecate: L('弃用技能', 'Deprecate skill') }
         if (names[action] && !window.confirm(names[action] + '？' + L('此操作将改变技能的可用状态。', 'This changes the skill availability.'))) return`)
-skills = replaceOnce(skills, "      var nonce = props && props.nonce ? props.nonce : 0", "      var nonce = props && props.nonce ? props.nonce : 0\n      var i5Filter = useState('all')")
 skills = replaceOnce(skills, "h(SkinEmpty, { slot: 'empty.library', size: skinSlotSize('empty.library') }, t('hubSkillsEmpty'))", "h(Iter5Empty, { title: L('经验，会慢慢长成技能', 'Experience grows into skills'), text: t('hubSkillsEmpty') })")
-skills = replaceOnce(skills, "return h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows)", `return h('div', { className: 'i5-skills-view' },
+skills = replaceOnce(skills, "return h('div', { 'data-dam-slot': 'timeline', 'data-dam-flow': '' }, rows)", `return h('div', { className: 'i5-skills-view i5-panel i5-instrument' }, h(Iter5Screws),
         h('div', { className: 'i5-stats i5-stats-four' },
           h(Iter5Stat, { icon: 'skills', hue: 'green', label: L('已生效技能', 'Active skills'), value: procs ? activeList.length : null, hint: L('可复用的工作方法', 'Reusable working methods') }),
           h(Iter5Stat, { icon: 'pulse', hue: 'orange', label: L('观察与审批', 'Under review'), value: procs ? pipeline.length : null, hint: L('等待积累或人工确认', 'Awaiting evidence or approval') }),
@@ -245,12 +244,15 @@ let stats = client.slice(client.indexOf('function StatsTab() {'), client.indexOf
 stats = replaceOnce(stats, 'function StatsTab()', 'function Iter5Stats()')
 stats = replaceOnce(stats, "return h('div', null,\n    h(Card, { title: t('statsTitle') },", "return h('div', { className: 'i5-native-stats' },\n    h(Iter5StatsOverview, null,")
 stats = replaceOnce(stats, "h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4 } },", "h('div', { className: 'i5-native-stat-metrics' },")
-stats = replaceOnce(stats, "return h(Card, { title: m.name },", "return h(Iter5Card, { title: m.name, icon: id === 'model' ? 'search' : id === 'inject' ? 'library' : 'recall', className: 'i5-native-stat-card' },")
+stats = replaceOnce(stats, "return h(Card, { title: m.name },", "return h(Iter5Card, { title: m.name, icon: id === 'model' ? 'search' : id === 'inject' ? 'library' : 'recall', className: 'i5-native-stat-card', 'data-chan': id },")
+stats = replaceOnce(stats, "      h('div', { style: { opacity: .72, fontSize: '12px', marginBottom: 2 } }, m.hint),", "      h('div', { className: 'i5-native-stat-hint' }, m.hint),")
+// Zero-event channels used to repeat statsNoInject in all three cards; their own hint now carries the empty state.
+stats = replaceOnce(stats, "        : h('div', { style: { opacity: .5, fontSize: '12px' } }, t('statsNoInject'))))", "        : ch.events ? h('div', { className: 'i5-native-stat-empty' }, t('statsNoInject')) : null))")
 const readSkin = name => readFileSync(path.join(root, 'skins/iter5', name), 'utf8').replace(/\r\n/g, '\n')
-const css = (readSkin('skin.css') + '\n' + readSkin('native-tour.css') + '\n' + readSkin('native-panel.css') + '\n' + readSkin('native-settings.css') + '\n' + readSkin('native-workbench.css') + '\n' + readSkin('native-library.css') + '\n' + readSkin('native-operations.css') + '\n' + readSkin('native-secondary.css')).trim()
+const css = (readSkin('skin.css') + '\n' + readSkin('native-tour.css') + '\n' + readSkin('native-panel.css') + '\n' + readSkin('native-settings.css') + '\n' + readSkin('native-workbench.css') + '\n' + readSkin('native-library.css') + '\n' + readSkin('native-operations.css') + '\n' + readSkin('native-secondary.css') + '\n' + readSkin('style-variants.css')).trim()
   .replace('[data-iter5]{--i5-blue:', '[data-iter5],[data-dam-theme]{--i5-blue:')
   .replace('[data-iter5][data-deep=true]{--i5-blue:', '[data-iter5][data-deep=true],[data-dam-theme][data-deep=true],[data-dam-theme][data-deep=true] [data-iter5]{--i5-blue:')
-const ui = readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd() + '\n' + readSkin('native-panel.js').trimEnd() + '\n' + readSkin('native-workbench.js').trimEnd() + '\n' + readSkin('native-search.js').trimEnd() + '\n' + readSkin('native-skills.js').trimEnd() + '\n' + readSkin('native-storage.js').trimEnd() + '\n' + readSkin('native-team.js').trimEnd() + '\n' + readSkin('native-map.js').trimEnd() + '\n' + readSkin('native-messages.js').trimEnd()
+const ui = readSkin('style-choice.js').trimEnd() + '\n' + readSkin('alternate-home.js').trimEnd() + '\n' + readSkin('ui.js').trimEnd() + '\n' + readSkin('views.js').trimEnd() + '\n' + readSkin('surfaces.js').trimEnd() + '\n' + readSkin('native-panel.js').trimEnd() + '\n' + readSkin('native-workbench.js').trimEnd() + '\n' + readSkin('native-search.js').trimEnd() + '\n' + readSkin('native-skills.js').trimEnd() + '\n' + readSkin('native-storage.js').trimEnd() + '\n' + readSkin('native-team.js').trimEnd() + '\n' + readSkin('native-map.js').trimEnd() + '\n' + readSkin('native-messages.js').trimEnd()
 const generated = begin + '\n    var ITER5_CSS = ' + JSON.stringify(css) + '\n' + ui + '\n' + settings + storage + skills + stats + end + '\n'
 const seam = '    // ===================== dam-skin:end (v4) ====================='
 client = replaceOnce(client, seam, generated + seam)
@@ -262,6 +264,8 @@ client = client.replace('try { ensureStyle() } catch', "try { ensureStyle(); if 
 // on first replay. Keep the hook unconditional; all tour actions stay unchanged.
 client = client.replace('function DialogHost() {\n      var tickPair = useTick()', 'function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()')
 client = client.replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })")
+// Welcome artwork must follow the same explicit light/dark preference as its portal.
+client = client.replace('var tourDeep = useDeepTheme()', 'var tourDeep = useIter5Theme()')
 const output = client.replace(/\n/g, newline)
 if (process.argv.includes('--check')) {
   if (readFileSync(file, 'utf8') !== output) throw new Error('Embedded iter5 skin is stale; run node tools/build-iter5-skin.mjs')

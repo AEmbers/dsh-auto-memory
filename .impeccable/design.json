@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-29T05:01:50.701088+00:00",
-  "title": "Design System: DSH Auto Memory · C 原生桌面",
+  "generatedAt": "2026-09-30T02:20:10.715029+00:00",
+  "title": "Design System: DSH Auto Memory · L2-1 浅色仪器",
   "extensions": {
     "colorMeta": {
       "i5-blue": {
@@ -671,9 +671,9 @@
     ],
     "motion": [
       {
-        "name": "i5-native-tour-enter",
-        "value": "160ms ease-out",
-        "purpose": "欢迎步骤透明度 .7 至 1；减少动态效果时禁用"
+        "name": "control-press",
+        "value": "transform .18s ease",
+        "purpose": "短按键反馈；reduced-motion 关闭"
       }
     ],
     "breakpoints": [
@@ -699,22 +699,35 @@
       }
     ],
     "provenance": {
-      "tokens": "skins/iter5/skin.css",
-      "components": [
+      "authority": "_design-lab-20260929/design-demos/L2-1-浅色仪器.html",
+      "evidence": "artifacts/iter5-instrument-rebuild-20260930",
+      "source": [
         "skins/iter5/skin.css",
-        "skins/iter5/native-workbench.css",
-        "skins/iter5/native-panel.css"
-      ],
-      "tonalRamps": "Synthesized OKLCH preview only; not runtime tokens.",
-      "themeMapping": "-dark keys document data-deep=true overrides; primary and on-accent retain light definitions.",
-      "density": {
-        "cssVariable": "--i5-compact-control",
-        "value": "34px"
-      }
+        "skins/iter5/native-library.css",
+        "skins/iter5/native-operations.css",
+        "skins/iter5/native-workbench.css"
+      ]
     },
     "acceptance": {
-      "status": "current implementation inventory / not visually accepted",
-      "reason": "用户明确拒绝当前视觉结果，认为未达到 C 参考复刻目标；等待新的完整视觉复核。"
+      "visualReview": "ship",
+      "scope": "nine reviewed light-theme screenshots; not user acceptance",
+      "checks": "67 isolated-host checks",
+      "unverified": [
+        "full dark-theme matrix",
+        "all text contrast",
+        "complete scroll content"
+      ]
+    },
+    "presentations": {
+      "instrument": "L2-1: instrument gauge, porcelain panel and wells",
+      "editorial": "L2-2: typographic readings, horizontal ruler, paper ledger",
+      "water": "L2-3: continuous water surface and layered records",
+      "colorModes": [
+        "system",
+        "light",
+        "dark"
+      ],
+      "evidence": "artifacts/three-skins-20260930/ACCEPTANCE.md"
     }
   },
   "components": [
@@ -731,8 +744,8 @@
       "kind": "button",
       "refersTo": "button-primary",
       "description": "从现存组件提取的浅色样式样本。",
-      "html": "<button class=\"ds-button-primary\" >追加笔记</button>",
-      "css": ".ds-button-primary{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:8px;background:#FFFFFF;padding:6px 12px;min-height:34px;cursor:pointer;line-height:1.4;border-color:#1764FF;background:linear-gradient(120deg,#1764FF,color-mix(in srgb,#1764FF 85%,#102044));color:#FFFFFF;box-shadow:0 4px 10px color-mix(in srgb,#1764FF 15%,transparent);}.ds-button-primary:hover{background:linear-gradient(120deg,#1764FF,color-mix(in srgb,#1764FF 85%,#102044));}.ds-button-primary:disabled{opacity:.55;cursor:not-allowed;}.ds-button-primary:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+      "html": "<button class=\"ds-button-primary\">保存</button>",
+      "css": ".ds-button-primary{background:#1764FF;color:#FFFFFF;border:1px solid #1764FF;border-radius:8px;padding:6px 12px;font:14px/1.4 system-ui;box-shadow:inset 0 1px 0 #ffffff59;cursor:pointer}.ds-button-primary:hover{background:#1764FF}.ds-button-primary:focus-visible{outline:2px solid #1764FF;outline-offset:3px}.ds-button-primary:active{transform:translateY(1px)}"
     },
     {
       "name": "轻主操作",
@@ -778,7 +791,7 @@
       "name": "内容卡片",
       "kind": "card",
       "refersTo": "card",
-      "description": "从现存组件提取的浅色样式样本。",
+      "description": "独立面板的浅色样本；详情读面不再重复使用卡片外框。",
       "html": "<section class=\"ds-card\" >最近记录</section>",
       "css": ".ds-card{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;border:1px solid #DCE8F7;border-radius:12px;background:#FFFFFF;box-shadow:none;padding:16px;margin-bottom:16px;min-width:0;}"
     },
@@ -789,37 +802,45 @@
       "description": "从现存组件提取的浅色样式样本。",
       "html": "<button class=\"ds-quick-record\" aria-expanded=\"false\">项目笔记</button>",
       "css": ".ds-quick-record{font:14px/1.6 system-ui,\"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:#102044;display:flex;align-items:flex-start;gap:14px;width:100%;padding:14px;border:1px solid #DCE8F7;border-radius:10px;background:#FFFFFF;text-align:left;}.ds-quick-record:hover,.ds-quick-record[aria-expanded=true]{background:#F5FAFF;border-color:#1764FF;}.ds-quick-record:focus-visible{outline:2px solid #1764FF;outline-offset:3px;}"
+    },
+    {
+      "name": "索引井与读面",
+      "kind": "custom",
+      "description": "一层功能凹井与无框读面共享同一白瓷机箱。",
+      "html": "<section class=\"ds-instrument\"><header>记忆文件</header><div><aside>项目日志</aside><article>原始内容</article></div></section>",
+      "css": ".ds-instrument{color:#102044;background:linear-gradient(#fff,#fcfeff);border:1px solid #dce8f7;border-radius:14px;box-shadow:0 14px 34px #173a8014;font:14px/1.6 system-ui}.ds-instrument header{padding:15px 22px 12px;border-bottom:1px solid #dce8f7;font-weight:650}.ds-instrument>div{display:grid;grid-template-columns:1fr 2fr;gap:24px;padding:20px}.ds-instrument aside{background:#f4f7fc;border:1px solid #dce8f7;border-radius:10px;padding:12px;box-shadow:inset 0 2px 6px #1764ff0f}.ds-instrument article{padding:12px 0}"
     }
   ],
   "narrative": {
-    "northStar": "C 原生桌面 · 白浅蓝记忆工作空间",
-    "overview": "采用用户明确选择的 C 系列参考：白色内容面、浅蓝环境、深蓝文字与清晰蓝色操作。欢迎流程保留独立插画与舒展节奏，工作页以紧凑分区和可读信息行承载日常操作。\n\n运行于 DSH Web 宿主，原生桌面是视觉方向。工作台、宿主设置、轻面板和浮层共享语义主题，各自保有容器与密度。",
+    "northStar": "L2-1 浅色仪器",
+    "overview": "白瓷珐琅面板承载任务，凹井盛放数据，刻字标明用途，机加工键执行动作，LED 报告状态。用户明确要求严格贴近 L2-1 HTML 示例的质感和密度，并否决层层白卡与浅蓝框拼接的旧实现。",
     "keyCharacteristics": [
-      "白浅蓝表面与深蓝文本",
-      "欢迎精致、工作页紧凑",
-      "独立宿主表面共享主题",
-      "真实内容和状态优先"
+      "一层主要机箱与一层功能凹井",
+      "连续读面，不再给详情套卡",
+      "文字导航与紧凑控制",
+      "真实数据与原有操作保留"
     ],
     "rules": [
       {
-        "name": "The Shared Theme Rule",
-        "body": "每个独立挂载或 portal 表面携带主题边界，不能依赖工作台恰好在场。",
+        "name": "The Semantic Color Rule",
+        "body": "使用现有语义变量，不把类型色扩展为大面积装饰。",
         "section": "colors"
       },
       {
-        "name": "The Different Density Rule",
-        "body": "共享色彩与控件语言，按欢迎、工作页和轻面板分别安排空间。",
+        "name": "The Single Chassis Rule",
+        "body": "页面外壳承担整体深度，详情正文不重复包卡。",
         "section": "layout"
       }
     ],
     "dos": [
-      "Do 复用语义变量、真实字段和现有可操作组件。",
-      "Do 在独立宿主设置、轻面板及浅深主题中分别检查正文和操作区。",
-      "Do 保留焦点轮廓、字号偏好、窄屏滚动与减少动态效果支持。"
+      "Do 以已选 L2-1 HTML 为视觉依据，使用真实宿主数据。",
+      "Do 保留键盘焦点、字号偏好、主题与窄屏操作。",
+      "Do 区分功能检查、截图复审与用户验收。"
     ],
     "donts": [
-      "Don't 将参考截图或图片中的文字当作可操作界面。",
-      "Don't 将参考示例数字、共享样式或 coverage 映射当作全量验收。"
+      "Don't 通过重复外框、横幅与卡片叠层制造分区。",
+      "Don't 以静态演示替代真实交互。",
+      "Don't 把浅色截图复审推广为全主题、全状态的验收。"
     ]
   }
 }

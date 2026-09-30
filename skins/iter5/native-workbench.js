@@ -3,6 +3,7 @@
     function i5Polar(v, r) { var a = (135 + v * 2.7) * Math.PI / 180; return [280 + Math.cos(a) * r, 280 + Math.sin(a) * r] }
     function i5ArcPath(v1, v2, r) { var p1 = i5Polar(v1, r), p2 = i5Polar(v2, r); return 'M ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + ' A ' + r + ' ' + r + ' 0 0 1 ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1) }
     function Iter5Home(props) {
+      var skinStyle = useIter5Style()
       var result = useIter5Data(async function () {
         var settled = await Promise.allSettled([iter5MemorySnapshot(), apiGet(API.handoffState, { sessionId: currentSessionIdClient() }), apiGet(API.calendar), apiGet(API.semanticStatus)])
         // C10: 最近记录需要真实正文首行摘要——与轻面板相同的受控读取,仅前 8 条
@@ -11,7 +12,7 @@
         if (mem) {
           var topRows = iter5MemoryRows(mem[0], mem[1]).sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')) }).slice(0, 8)
           var got = await Promise.allSettled(topRows.map(function (r) { return apiGet(API.file, { path: r.path, ws: currentWs() }) }))
-          got.forEach(function (g, i) { if (g.status === 'fulfilled') previews[topRows[i].path] = String(g.value.content || '').split('\n').filter(function (line) { return line.trim() && !/^\s*#/.test(line) }).join(' ').slice(0, 120) })
+          got.forEach(function (g, i) { if (g.status === 'fulfilled') previews[topRows[i].path] = String(g.value.content || '').split('\n').filter(function (line) { return line.trim() && !/^\s*#/.test(line) }).map(function (line) { return line.replace(/^\s*[-*]\s+/, '') }).join(' ').slice(0, 120) })
         }
         settled.push({ status: 'fulfilled', value: previews })
         return settled
@@ -176,6 +177,7 @@
               h('span', { className: 'i5-rec-txt' }, previews[r.path] || r.label),
               h('span', { className: 'i5-rec-sz i5-num' }, fmtSize(r.size)))
           }) : h(Iter5Empty, { title: files ? L('还没有记录', 'No records yet') : L('记忆暂不可用', 'Memory unavailable'), text: L('记忆文件会按当前工作区显示。', 'Memory files appear for the current workspace.') })))
+      if (skinStyle !== 'instrument') return h(Iter5AlternateHome, { variant: skinStyle, result: result, values: values, files: files, recent: recent, previews: previews, water: water, known: known, pct: pctRaw, band: band, hot: hot, days: days, weekTotal: weekTotal, comp: comp, compTotal: compTotal, events: events, today: today, calText: calText, state: state, semantic: data(3), onNav: props.onNav, nonce: props.nonce })
       return h('div', { className: 'i5-home i5-native-home' },
         result.error || values.some(function (r) { return r.status === 'rejected' }) ? h(Iter5Error, { error: result.error || L('部分数据暂不可用', 'Some data is unavailable'), retry: result.retry }) : null,
         h('div', { className: 'i5-home-grid', 'aria-busy': result.loading },

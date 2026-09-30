@@ -62,7 +62,8 @@
         if (!chosen || !navigator.clipboard) { copied[1](L('无法访问剪贴板，请选择正文复制。', 'Clipboard unavailable. Select and copy the text.')); return }
         navigator.clipboard.writeText(chosen.text).then(function () { if (valid()) copied[1](L('已复制当前内容', 'Content copied')) }, function () { if (valid()) copied[1](L('复制失败，请选择正文复制。', 'Copy failed. Select and copy the text.')) })
       }
-      return h('div', { className: 'i5-native-search' },
+      return h('div', { className: 'i5-native-search i5-panel i5-instrument' }, h(Iter5Screws),
+        h('div', { className: 'i5-ph' }, h('h2', null, L('检索记忆', 'Search memories')), h('span', { className: 'i5-ph-right i5-num i5-search-count', role: 'status' }, response ? entries.filter(function (entry) { return !entry.summary }).length + L(' 组来源片段', ' source passages') + ' · ' + result[0].elapsed.toFixed(2) + L(' 秒', ' s') : '—')),
         h('form', { className: 'i5-native-search-form', onSubmit: search },
           h('label', { className: 'i5-native-query' }, h(Iter5Icon, { name: 'search' }), h('input', { type: 'search', 'aria-label': L('检索记忆', 'Search memories'), value: query[0], placeholder: L('搜索项目、决定、工作方法…', 'Search projects, decisions, working methods…'), onChange: function (e) { query[1](e.target.value) } })),
           h('button', { className: 'i5-primary', type: 'submit', disabled: busy[0] || !query[0].trim() }, busy[0] ? L('检索中…', 'Searching…') : L('检索', 'Search')),
@@ -72,9 +73,8 @@
         error[0] ? h(Iter5Error, { error: error[0] }) : null,
         busy[0] ? h('div', { role: 'status', className: 'i5-search-tip' }, h(Loading), L('正在检索当前工作区…', 'Searching this workspace…')) : null,
         response ? h(React.Fragment, null,
-          h('p', { className: 'i5-search-count', role: 'status' }, entries.filter(function (entry) { return !entry.summary }).length ? entries.filter(function (entry) { return !entry.summary }).length + L(' 组来源片段', ' source passages') : L('宿主检索结果', 'Host search result'), summary ? L(' · 含检索原文/摘要', ' · with search output/summary') : '', ' · ', result[0].elapsed.toFixed(2), L(' 秒', ' s')),
           entries.length ? h('div', { className: 'i5-search-columns' },
-            h('div', { className: 'i5-search-results', 'aria-label': L('检索结果', 'Search results') }, entries.map(function (entry, i) { return h('button', { className: 'i5-search-result', key: i, 'aria-current': chosen === entry ? 'true' : undefined, onClick: function () { select(i) } }, h(Iter5Icon, { name: 'note' }), h('span', null, h('strong', null, entry.title), entry.mark ? h('small', null, entry.mark) : null, h('span', { className: 'i5-search-excerpt' }, h(Iter5Highlight, { text: entry.text, term: result[0].query })))) })),
+            h('div', { className: 'i5-search-results', 'aria-label': L('检索结果', 'Search results') }, entries.map(function (entry, i) { return h('button', { className: 'i5-search-result', key: i, 'aria-current': chosen === entry ? 'true' : undefined, onClick: function () { select(i) } }, h('i', { className: 'i5-type-led', 'aria-hidden': true }), h('span', null, h('strong', null, entry.title), entry.mark ? h('small', null, entry.mark) : null, h('span', { className: 'i5-search-excerpt' }, h(Iter5Highlight, { text: entry.text, term: result[0].query })))) })),
             h('section', { className: 'i5-card i5-search-detail', ref: detail, 'aria-label': L('检索详情', 'Search detail') },
               h('div', { className: 'i5-source-heading' }, h('span', { className: 'i5-badge' }, h(Iter5Icon, { name: 'note' })), h('h2', { tabIndex: -1 }, chosen.title)),
               h('div', { className: 'i5-search-content' }, h(Iter5Highlight, { text: chosen.text, term: result[0].query })),

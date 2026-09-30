@@ -14,7 +14,7 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
   .replace("try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch", 'try { ensureStyle() } catch')
   .replace('function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()', 'function DialogHost() {\n      var tickPair = useTick()')
   .replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })")
-assert.equal(createHash('sha256').update(classic).digest('hex'), '59d6f2e62fc589d27aefbefa43be9fe4bf5c8151df36e2a55ee92dff262b056e', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), '6d7f03636c7c0f950fcd40d9a02d8cfd68dd239bd47e210d20a5269e64e2d1ae', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
@@ -46,7 +46,7 @@ const localStorage = { getItem: () => null, setItem() {}, removeItem() {}, lengt
 const document = { documentElement: { getAttribute: () => '', style: { setProperty() {} }, classList: { contains: () => false } }, querySelector: () => null, getElementById: () => null }
 const window = { localStorage, addEventListener() {}, removeEventListener() {}, confirm() { confirmCount++; return accept }, __ModuleLoader__: { load(def) { exposed = def.factory(name => { if (name === 'react') return React; throw Error('Test module unavailable: ' + name) }) } } }
 const context = vm.createContext({ window, document, localStorage, console: { log() {}, warn() {}, info() {}, error() {} }, navigator: { language: 'zh-CN' }, URL, URLSearchParams, requestAnimationFrame: fn=>fn(), setTimeout, clearTimeout, setInterval: () => 1, clearInterval() {}, fetch: () => { throw Error('Unexpected raw fetch') } })
-vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { Iter5Notice: Iter5Notice, Iter5Summary: Iter5Summary, Iter5AutoContinue: Iter5AutoContinue, Iter5Storage: Iter5Storage, Iter5Migration: Iter5Migration, Iter5DeleteConfirmation: Iter5DeleteConfirmation, iter5WorkspaceLayout: iter5WorkspaceLayout, iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
+vm.runInContext(source.replace('    return module.exports', `    exports._i5test = { Iter5Notice: Iter5Notice, Iter5Summary: Iter5Summary, Iter5AutoContinue: Iter5AutoContinue, Iter5Storage: Iter5Storage, Iter5Migration: Iter5Migration, Iter5DeleteConfirmation: Iter5DeleteConfirmation, iter5WorkspaceLayout: iter5WorkspaceLayout, iter5MapLabel: iter5MapLabel, Iter5WorkspaceGraph: Iter5WorkspaceGraph, iter5SkillContent: iter5SkillContent, Iter5SkillBrowser: Iter5SkillBrowser, iter5SearchEntries: iter5SearchEntries, Iter5Note: Iter5Note, Iter5Search: Iter5Search, useIter5Data: useIter5Data, Iter5Home: Iter5Home, Iter5Settings: Iter5Settings, Iter5Tabs: Iter5Tabs, iter5MemoryRows: iter5MemoryRows, iter5MemorySnapshot: iter5MemorySnapshot, iter5LedgerTitle: iter5LedgerTitle, DialogHost: DialogHost, setDialog: function (d) { dialogState = d }, t: t,
       transport: function (get, post) { apiGet = get; apiPost = post }, identity: function (value) { iter5Identity = function () { return value } } }
     return module.exports`), context, { filename: fileURLToPath(new URL('../../lib/client.js', import.meta.url)) })
 const test = exposed._i5test
@@ -236,7 +236,7 @@ assert.equal(results.length,3,'The host summary and both source passages are ind
 results[1].props.onClick()
 search=renderNative(test.Iter5Search,{nonce:0})
 assert.equal(nodes(search,n=>n.props?.className==='i5-search-result'&&n.props['aria-current']==='true').length,1)
-assert.equal(nodes(search,n=>n.type==='h2')[0].props.children[0],'log-b.md','Selecting a source updates the detail heading')
+assert.equal(nodes(search,n=>n.type==='h2'&&n.props.tabIndex===-1)[0].props.children[0],'log-b.md','Selecting a source updates the detail heading')
 const lexical=test.iter5SearchEntries({result:'[记忆检索] 验收\n== 本地记忆文件命中 ==\n· log-a.md:\n  - exact source A\n· log-b.md:\n  - exact source B'},'recall')
 assert.equal(lexical.length,3)
 assert.equal(lexical[0].title,'log-a.md')
@@ -326,7 +326,7 @@ try {
   for(const dir of ['lib','tools','skins/iter5'])mkdirSync(path.join(fixture,dir),{recursive:true})
   writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
   for(const newline of ['\n','\r\n']) {
-    for(const name of ['ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js','native-operations.css','native-skills.js','native-storage.js','native-team.js','native-map.js','native-messages.js','native-secondary.css']) {
+    for(const name of ['style-choice.js','alternate-home.js','style-variants.css','ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js','native-operations.css','native-skills.js','native-storage.js','native-team.js','native-map.js','native-messages.js','native-secondary.css']) {
       const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
       writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
     }
@@ -342,3 +342,19 @@ try {
   rmSync(fixture,{recursive:true,force:true})
 }
 console.log('PASS generator is idempotent with LF and CRLF checkouts')
+
+// Topic deduplication, readable labels and non-actionable topic semantics.
+const uniqueGraph = test.iter5WorkspaceLayout([{path:'/fixture',name:'Fixture',items:['Topic',' Topic ', 'Other']}], {})
+assert.equal(uniqueGraph.nodes.filter(n=>n.kind==='topic').length, 2)
+assert.equal(Array.from(test.iter5MapLabel('Long workspace title with meaningful word boundaries')).length, 2)
+assert(test.iter5MapLabel('Long workspace title with meaningful word boundaries')[1].endsWith('…'))
+assert.deepEqual(Array.from(test.iter5MapLabel('Memory search')), ['Memory search'])
+console.log('PASS instrument topic deduplication and word-boundary labels')
+
+resetNative()
+const topicTree=renderNative(test.Iter5WorkspaceGraph,{workspaces:[{path:'/fixture',name:'Fixture',items:['Topic']}],onSelect(){throw Error('Topic must not switch workspace')},scale:1})
+const topicNode=nodes(topicTree,n=>n.props?.['data-native-map-node']==='topic')[0]
+assert.equal(topicNode.props.onClick,undefined)
+assert.equal(topicNode.props.tabIndex,undefined)
+assert.equal(topicNode.props.role,'img')
+console.log('PASS topic nodes expose content without a misleading workspace action')

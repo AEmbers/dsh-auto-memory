@@ -1,6 +1,6 @@
     function Iter5Notice(props) {
       return h('aside', { className: 'i5-native-notice', 'data-native-dialog': props.kind, 'data-urgent': props.urgent ? 'true' : undefined, role: props.urgent ? 'alert' : 'region', 'aria-label': props.title },
-        h('header', null, h(Iter5Icon, { name: props.kind === 'welcomeBack' ? 'timeline' : 'note' }), h('h2', null, props.title)),
+        h('header', null, props.urgent ? h('i', { className: 'i5-notice-led', 'data-lit': 'true', 'aria-hidden': 'true' }) : h(Iter5Icon, { name: props.kind === 'welcomeBack' ? 'timeline' : 'note' }), h('h2', null, props.title)),
         h('p', { className: 'i5-notice-copy' }, props.message),
         h('footer', null, props.actions))
     }
@@ -29,7 +29,7 @@
       var confirmation = props.confirmation
       return h('section', { 'data-dam-autocont': '', 'data-native-continuation': confirmation ? 'confirm' : props.executing ? 'progress' : 'notice', role: 'region', 'aria-label': L('会话接续', 'Session continuation') },
         h('header', { className: 'i5-continuation-heading' }, h(Iter5Icon, { name: 'handoff' }), h('h2', null, confirmation ? L('准备接续当前会话', 'Ready to continue this session') : props.executing ? L('正在接续', 'Continuing session') : L('接续状态', 'Continuation status')),
-          h('button', { 'data-dam-autocont-close': '', 'aria-label': L('关闭交接提示', 'Dismiss handoff notice'), onClick: props.onDismiss }, '×')),
+          h('button', { 'data-dam-autocont-close': '', 'aria-label': L('关闭交接提示', 'Dismiss handoff notice'), onClick: props.onDismiss }, h('svg', { width: 12, height: 12, viewBox: '0 0 12 12', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', 'aria-hidden': true }, h('path', { d: 'M3 3l6 6M9 3l-6 6' })))),
         confirmation ? h('div', { 'data-dam-autocont-confirm': '' },
           h('p', { className: 'i5-continuation-warning' }, t('autoContConfirm').replace('{p}', String(Math.round((confirmation.ratio || 0) * 100)))),
           h('dl', { className: 'i5-continuation-facts' },

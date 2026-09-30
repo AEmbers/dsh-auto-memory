@@ -41,3 +41,10 @@ node tests/smoke/smoke-test-iter5-skin.mjs
 结果和截图见 `docs/ui-redesign-2026-09-25/INTEGRATION-RESULT.md` 与 `artifacts/iter5-integration/`。截图使用独立 DSH_HOME、独立工作区和显式验收数据，写入测试前校验记忆目录位于临时验收目录。
 
 真实模型生成、完整跨会话接续、130MB/563MB 模型下载及 Desktop/Mica 尚未验收；这些能力保留上游实现。集成验收后按用户要求提交并创建 PR；未发布安装包，也没有替换日常 DSH profile 中的已安装包。
+
+
+## 三种皮肤与明暗模式（2026-09-30）
+
+顶栏和宿主设置标题栏提供独立选择：仪器 / 编辑 / 活水，以及跟随宿主 / 浅色 / 深色。选择仅保存于浏览器，刷新恢复；切换不重挂当前页面或清除草稿。经典回退继续使用原 dam-skin key，三种新皮肤共用现有 opt-in 入口。
+
+实现：style-choice.js 管理偏好及主题覆盖，alternate-home.js 用同一首页数据渲染编辑/活水布局，style-variants.css 控制跨页与独立浮层外观。新增源文件需随生成器 fixture 一起维护。验证见 artifacts/three-skins-20260930/ACCEPTANCE.md。

@@ -1,6 +1,6 @@
     // Each registered surface owns a theme boundary, including sibling overlays.
     function Iter5Surface(props) {
-      var deep = useDeepTheme()
+      var deep = useIter5Theme(), skinStyle = useIter5Style()
       var tick = useTick()
       var boundary = useRef(null)
       useEffect(function () { return controller.subscribe(tick[1]) }, [])
@@ -39,7 +39,7 @@
           if (!count) style.remove()
         }
       }, [])
-      var node = h('div', { ref: boundary, 'data-dam-theme': props.kind || 'overlay', 'data-deep': String(deep),
+      var node = h('div', { ref: boundary, 'data-dam-theme': props.kind || 'overlay', 'data-i5-style': skinStyle, 'data-deep': String(deep),
         style: { '--dam-user-scale': FONT_SCALE_VALUES[fontScale] || '1' } }, props.children)
       // shell.overlay lives in a z-index:20 host stacking context, below settings.
       // Portal the boundary too, so sibling dialogs retain their theme tokens.
@@ -47,6 +47,7 @@
         ? createPortal(node, document.body) : node
     }
     function Iter5HostSettings(props) {
+      var skinStyle = useIter5Style()
       var identity = useState(iter5Identity)
       var root = useRef(null)
       var slot = useRef(null)
@@ -97,7 +98,7 @@
         return function () { clearInterval(timer) }
       }, [])
       var form = h(Iter5Surface, { kind: 'settings' },
-        h('div', { ref: root, 'data-iter5': '', 'data-i5-embedded': '', 'data-expanded': String(expanded[0]),
+        h('div', { ref: root, 'data-iter5': '', 'data-i5-embedded': '', 'data-i5-style': skinStyle, 'data-expanded': String(expanded[0]),
           role: expanded[0] ? 'dialog' : undefined, 'aria-modal': expanded[0] ? true : undefined,
           'aria-label': L('记忆设置', 'Memory settings'),
           onKeyDown: function (e) {
@@ -107,7 +108,7 @@
             if (e.shiftKey && document.activeElement === nodes[0]) { e.preventDefault(); nodes[nodes.length - 1].focus() }
             else if (!e.shiftKey && document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus() }
           } },
-          h('header', { className: 'i5-settings-frame-head' }, h('strong', null, L('记忆设置', 'Memory settings')),
+          h('header', { className: 'i5-settings-frame-head' }, h('strong', null, L('记忆设置', 'Memory settings')), h(Iter5StylePicker), h(Iter5ModePicker),
             h('button', { 'data-i5-settings-return': '', onClick: function () { expanded[1](!expanded[0]) } }, expanded[0] ? L('返回宿主设置', 'Back to host settings') : L('展开设置', 'Expand settings'))),
           h('div', { className: 'i5-main' }, h(Iter5Settings, { key: identity[0], draftScope: 'host', close: props && props.close }))))
       return h('div', { ref: slot, 'data-i5-settings-slot': '' },

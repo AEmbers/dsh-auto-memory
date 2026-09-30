@@ -1,6 +1,6 @@
     // Product views: reference artwork informs layout, never invents data or actions.
     function Iter5Art(props) {
-      var deep = useDeepTheme()
+      var deep = useIter5Theme()
       return h('img', { className: props.className || 'i5-art', src: skinAssetUrl(props.slot || 'hero.welcome', deep), alt: '', 'aria-hidden': true, loading: 'lazy' })
     }
     function Iter5Stat(props) {
@@ -36,14 +36,14 @@
     }
     function Iter5Dialog(props) {
       var ref = useRef(null)
-      var deep = useDeepTheme()
+      var deep = useIter5Theme(), skinStyle = useIter5Style()
       useEffect(function () {
         var before = document.activeElement
         var node = ref.current && (ref.current.querySelector('input:not(:disabled),textarea:not(:disabled),select:not(:disabled)') || ref.current.querySelector('button'))
         if (node) node.focus()
         return function () { if (before && before.isConnected && before.focus) before.focus() }
       }, [])
-      return kxPortal(h('div', { 'data-iter5': '', 'data-deep': deep ? 'true' : 'false', className: 'i5-overlay-root', style: { position: 'fixed', inset: 0, zIndex: 2147483200, height: 'auto', background: 'transparent', display: 'block' } }, h('div', { className: 'i5-dialog-backdrop', onMouseDown: function (e) { if (e.target === e.currentTarget) props.onClose() } },
+      return kxPortal(h('div', { 'data-iter5': '', 'data-deep': deep ? 'true' : 'false', className: 'i5-overlay-root', 'data-i5-style': skinStyle, style: { position: 'fixed', inset: 0, zIndex: 2147483200, height: 'auto', background: 'transparent', display: 'block' } }, h('div', { className: 'i5-dialog-backdrop', onMouseDown: function (e) { if (e.target === e.currentTarget) props.onClose() } },
         h('section', { ref: ref, className: 'i5-dialog', role: 'dialog', 'aria-modal': true, 'aria-label': props.title, onKeyDown: function (e) {
           if (e.key === 'Escape') { e.stopPropagation(); props.onClose() }
           if (e.key !== 'Tab') return
@@ -51,7 +51,7 @@
           if (!all.length) return
           if (e.shiftKey && document.activeElement === all[0]) { e.preventDefault(); all[all.length - 1].focus() }
           else if (!e.shiftKey && document.activeElement === all[all.length - 1]) { e.preventDefault(); all[0].focus() }
-        } }, h('div', { className: 'i5-section-heading' }, h('h2', null, props.title), h('button', { onClick: props.onClose, 'aria-label': L('关闭对话框', 'Close dialog') }, '×')), props.children))))
+        } }, h('div', { className: 'i5-section-heading' }, h('h2', null, props.title), h('button', { onClick: props.onClose, 'aria-label': L('关闭对话框', 'Close dialog') }, h('svg', { width: 10, height: 10, viewBox: '0 0 10 10', 'aria-hidden': true }, h('path', { d: 'M1 1L9 9M9 1L1 9', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 })))), props.children))))
     }
     function Iter5Calendar(props) {
       var current = new Date(), today = iter5Date(current)
@@ -79,7 +79,8 @@
       var cells = [], y = month[0].getFullYear(), m = month[0].getMonth()
       for (var i = 0; i < new Date(y,m,1).getDay(); i++) cells.push(null)
       for (var d = 1; d <= new Date(y,m+1,0).getDate(); d++) cells.push(iter5Date(new Date(y,m,d)))
-      return h('div', { className: 'i5-calendar-view' },
+      while (cells.length % 7) cells.push(null)
+      return h('div', { className: 'i5-calendar-view i5-panel i5-instrument' },h(Iter5Screws),
         response.error ? h(Iter5Error, { error: response.error, retry: response.retry }) : null,
         error[0] ? h(Iter5Error, { error: error[0] }) : null,
         h('div', { className: 'i5-calendar-columns' },
@@ -87,10 +88,10 @@
             h('div',{className:'i5-month-grid',role:'group','aria-label':L('选择日期','Choose date')}, (locale==='zh'?['日','一','二','三','四','五','六']:['Su','Mo','Tu','We','Th','Fr','Sa']).map(function(w){return h('small',{key:w},w)}),cells.map(function(date, idx){
               if(!date)return h('span',{key:'empty'+idx})
               var es=entries.filter(function(e){return e.date===date})
-              return h('button',{key:date,'aria-label':date+(es.length?' · '+es.length+L(' 项日程',' events'):''),'aria-pressed':date===selected[0],'data-today':String(date===today),onClick:function(){selected[1](date)}},h('span',null,Number(date.slice(-2))),h('div',{className:'i5-day-dots'},es.slice(0,3).map(function(e,j){return h('i',{key:j,'data-done':String(!!e.done)})})))
+              return h('button',{key:date,'aria-label':date+(es.length?' · '+es.length+L(' 项日程',' events'):''),'aria-pressed':date===selected[0],'data-today':String(date===today),onClick:function(){selected[1](date)}},h('span',null,Number(date.slice(-2))),h('div',{className:'i5-day-dots'},es.slice(0,3).map(function(e,j){return h('i',{key:j,'data-done':String(!!e.done)})}),es.length>3?h('small',{className:'i5-day-overflow'},'+'+(es.length-3)):null))
             })),h('div',{className:'i5-calendar-legend'},h('i'),L('有日程','Scheduled'),h('i',{'data-done':'true'}),L('已完成','Completed'))),
           h(Iter5Card,{className:'i5-day-agenda'},h('div',{className:'i5-section-heading'},h('h2',null,selected[0]),h('button',{className:'i5-primary',onClick:newEvent},'+ ',L('添加事项','Add event'))),
-            response.loading ? h(Loading) : days.length ? days.map(function(e,i){return h('article',{className:'i5-event-card',key:i},h('span',{className:'i5-badge','data-hue':e.done?'green':'orange'},h(Iter5Icon,{name:e.done?'check':'calendar'})),h('div',{className:'i5-event-copy'},h('strong',null,e.title),e.note?h('p',null,e.note):null,h('div',{className:'i5-event-meta'},h('span',null,e.time||'—'),h('span',{className:'i5-tag'},e.quadrant||L('未分类','Unclassified')))),h('div',{className:'i5-event-actions'},h('button',{'aria-label':L('标记完成：','Complete: ')+e.title,disabled:busy[0]||e.done,onClick:function(){act({action:'done',date:e.date,time:e.time,title:e.title})}},e.done?'✓':L('完成','Done')),h('button',{className:'i5-link i5-danger','aria-label':L('删除日程：','Delete event: ')+e.title,disabled:busy[0],onClick:function(){if(window.confirm(L('确认删除日程：','Delete event: ')+e.title+'？'))act({action:'remove',date:e.date,time:e.time,title:e.title})}},L('删除','Delete'))))}) : h(Iter5Empty,{slot:'empty.timeline',title:L('这一天，还留着空白','Room for something new'),text:L('添加待办、会议或提醒，让重要的事按时发生。','Add a task, meeting or reminder for this day.')},h('button',{className:'i5-primary-soft',onClick:newEvent},'+ ',L('添加第一项日程','Add your first event'))))),
+            response.loading ? h(Loading) : days.length ? days.map(function(e,i){return h('article',{className:'i5-event-card',key:i},h('span',{className:'i5-lamp','data-lit':String(!e.done),'aria-hidden':true}),h('div',{className:'i5-event-copy'},h('strong',null,e.title),e.note?h('p',null,e.note):null,h('div',{className:'i5-event-meta'},h('span',null,e.time||'—'),h('span',{className:'i5-tag'},e.quadrant||L('未分类','Unclassified')))),h('div',{className:'i5-event-actions'},h('button',{'aria-label':L('标记完成：','Complete: ')+e.title,disabled:busy[0]||e.done,onClick:function(){act({action:'done',date:e.date,time:e.time,title:e.title})}},e.done?'✓':L('完成','Done')),h('button',{className:'i5-link i5-danger','aria-label':L('删除日程：','Delete event: ')+e.title,disabled:busy[0],onClick:function(){if(window.confirm(L('确认删除日程：','Delete event: ')+e.title+'？'))act({action:'remove',date:e.date,time:e.time,title:e.title})}},L('删除','Delete'))))}) : h(Iter5Empty,{slot:'empty.timeline',title:L('这一天，还留着空白','Room for something new'),text:L('添加待办、会议或提醒，让重要的事按时发生。','Add a task, meeting or reminder for this day.')},h('button',{className:'i5-primary-soft',onClick:newEvent},'+ ',L('添加第一项日程','Add your first event'))))),
         h('details', { className: 'i5-card i5-secondary-details' }, h('summary', null, L('日程统计', 'Schedule statistics')), h('div', { className: 'i5-stats i5-stats-four' }, [
           ['calendar','blue',L('待办事项','Pending'),counts[0],L('所有未完成日程','All unfinished events')], ['timeline','orange',L('今日待办','Due today'),counts[1],L('今天需要关注的事项','Items to focus on today')], ['check','green',L('已完成','Completed'),counts[2],L('已标记完成的日程','Events marked complete')], ['calendar','purple',L('本月日程','This month'),counts[3],monthPrefix],
         ].map(function (a) { return h(Iter5Stat, { key:a[2],icon:a[0],hue:a[1],label:a[2],value:a[3],hint:a[4] }) }))),
@@ -121,7 +122,7 @@
           sent[1](function (old) { var n=Object.assign({},old);n[id]=choice;return n })
         }).catch(function (e) { if(alive.current && identity===iter5Identity())error[1](e.message) }).finally(function(){if(alive.current)busy[1]('')})
       }
-      return h('div', { className:'i5-recall-view' },
+      return h('div', { className:'i5-recall-view i5-panel i5-instrument' },h(Iter5Screws), h('div',{className:'i5-ph'},h('h2',null,L('唤起记录','Recall records')),h('span',{className:'i5-ph-right i5-num'},visible.length)),
         h('details', { className: 'i5-native-summary' }, h('summary', null, L('判定统计', 'Decision statistics')), h('div',{className:'i5-stats i5-stats-four'},[
           ['recall','blue',L('最近判定','Recent decisions'),'all',L('接口返回的最近记录，最多 24 条','Latest host records, up to 24')],
           ['check','green',L('投递判定','Emit decisions'),'emit',L('决定向会话提供记忆','Decided to provide memory')],
@@ -161,7 +162,7 @@
         finally{if(alive.current)running[1](false)}
       }
       var docs=[{name:'',title:L('当前 PLAN 白板','Current PLAN'),kind:'plan'}].concat(ledgers.map(function(v){return{name:v.name,title:iter5LedgerTitle(v.name),kind:'ledger'}}),versions.map(function(v){return{name:v.name,title:iter5LedgerTitle(v.name),kind:'archive'}}))
-      return h('div',{className:'i5-handoff-view'+(props.boardOnly?' i5-board-reference':'')},
+      return h('div',{className:'i5-handoff-view i5-panel i5-instrument'+(props.boardOnly?' i5-board-reference':'')},h(Iter5Screws),
         h('div', { className: 'i5-native-handoff-banner' }, h('div', null, h('strong', null, L('接续让上下文不断档', 'Continue with your context')), h('p', null, L('将白板和交接材料带入新会话，继续当前任务。', 'Carry the whiteboard and handoff material into a new session.'))), h('div',{className:'i5-handoff-actions'},h('button',{className:'i5-primary',disabled:running[0],onClick:continueNow},running[0]?L('正在接续…','Continuing…'):L('一键接续','Continue in a new session')),h('small',null,L('沿用宿主工作区与模型，交接材料自动装入新会话。','Uses the host workspace and model, and loads handoff material.')))),
         h('div', { className: 'i5-native-handoff-status' }, L('上下文水位：', 'Context usage: '), known ? Math.round(water.ratio*100)+'%' : L('尚无可靠计量', 'Not measured'), ' · ', ledgers.length, L(' 份交接账本', ' handoff records')),
         result.error?h(Iter5Error,{error:result.error,retry:result.retry}):null,
@@ -171,7 +172,7 @@
           h(Iter5Card,{className:'i5-handoff-document'},h('div',{className:'i5-source-heading'},h('span',{className:'i5-badge i5-badge-lg','data-hue':'blue'},h(Iter5Icon,{name:'folder'})),h('div',null,h('h2',null,chosen[0]?iter5LedgerTitle(chosen[0]):L('当前任务 · PLAN 白板','Current task · PLAN')),h('small',null,data&&data.ws?pathName(data.ws):L('当前工作区','Current workspace')))),h('div',{className:'i5-source-meta'},h('span',{className:'i5-tag'},L('只读原文','Read-only source')),text?h('span',null,text.length+L(' 字符',' characters')):null),
             file.error?h(Iter5Error,{error:file.error,retry:file.retry}):result.loading||(chosen[0]&&file.loading)?h(Loading):text?h(Iter5Document,{text:text}):h(Iter5Empty,{slot:'empty.timeline',title:L('交接材料尚未生成','No handoff material yet'),text:data&&data.wsBound===false?L('当前会话尚未绑定工作区。','This session has no workspace binding.'):L('开启白板或完成一次阶段交接后，可以在这里回顾。','Enable the whiteboard or complete a handoff to review it here.')}),
 status[0]?h('p',{className:'i5-muted',role:'status'},status[0]):null,failure[0]?h(Iter5Error,{error:failure[0]}):null)),
-        h('details',{className:'i5-card i5-secondary-details'},h('summary',null,L('接续开关、水位详情与完整白板看板','Continuation controls, measurement details and full whiteboard')),h('div',{className:'i5-hosted'},h(PlanTab))))
+        h('details',{className:'i5-card i5-secondary-details'},h('summary',null,L('接续开关、水位详情与完整白板看板','Continuation controls, measurement details and full whiteboard')),h('div',{className:'i5-hosted'},h('div',{className:'i5-engr i5-hosted-label'},L('白板','Whiteboard')),h(PlanTab))))
     }
     function Iter5External(props) {
       var revision=useState(0), selected=useState(''), busy=useState(false), message=useState(''), error=useState(''), search=useState('')
@@ -239,7 +240,7 @@ status[0]?h('p',{className:'i5-muted',role:'status'},status[0]):null,failure[0]?
       var current=selected[0]&&workspaces.find(function(w){return w.path===selected[0].path})||workspaces[0]
       var logs=workspaces.every(function(w){return typeof w.logCount==='number'})?workspaces.reduce(function(n,w){return n+w.logCount},0):null
       function resize(n){scale[1](Math.max(.55,Math.min(1.75,n)))}
-      return h('div',{className:'i5-workspaces-view'},h('details', { className: 'i5-native-summary' }, h('summary', null, L('工作区统计', 'Workspace statistics')), h('div',{className:'i5-stats i5-stats-three'},
+      return h('div',{className:'i5-workspaces-view i5-panel i5-instrument'},h(Iter5Screws),h('details', { className: 'i5-native-summary' }, h('summary', null, L('工作区统计', 'Workspace statistics')), h('div',{className:'i5-stats i5-stats-three'},
         h(Iter5Stat,{icon:'folder',hue:'green',label:L('已发现工作区','Discovered workspaces'),value:data?workspaces.length:null,hint:L('有记忆记录的工作空间','Workspaces with memory records')}),
         h(Iter5Stat,{icon:'timeline',hue:'purple',label:L('日志文件','Log files'),value:data?logs:null,hint:L('这些工作区中的记录累计','Records in these workspaces')}),
         h(Iter5Stat,{icon:'mindmap',hue:'blue',label:L('主题关联','Topic connections'),value:data&&data.graph&&Array.isArray(data.graph.links)?data.graph.links.length:null,hint:L('宿主返回的工作区关联','Workspace connections returned by the host')}))),
@@ -249,7 +250,7 @@ status[0]?h('p',{className:'i5-muted',role:'status'},status[0]):null,failure[0]?
           h('div',{className:'i5-map-legend'},h('span',null,L('中心：工作区','Centers: workspaces')),h('span',null,L('分支：记忆主题','Branches: topics')),h('span',null,L('虚线：共享主题','Dashed links: shared topics')))),
           current?h(Iter5Card,{className:'i5-map-detail'},h('div',{className:'i5-source-heading'},h('span',{className:'i5-badge i5-badge-lg','data-hue':'green'},h(Iter5Icon,{name:'folder'})),h('div',null,h('h2',null,current.name||pathName(current.path)),h('small',null,L('工作区记忆节点','Workspace memory node')))),
             current.summary?h(Iter5Document,{text:current.summary}):h('p',{className:'i5-muted'},L('这个工作区暂未生成摘要。','No summary has been generated for this workspace.')),
-            h('h3',null,L('记忆主题','Memory topics')),(current.items||[]).length?h('div',{className:'i5-topic-list'},current.items.map(function(item,i){return h('div',{key:i},h(Iter5Icon,{name:'note'}),typeof item==='string'?item:JSON.stringify(item))})):h('p',{className:'i5-muted'},L('暂无主题','No topics yet')),
+            h('h3',null,L('记忆主题','Memory topics')),iter5UniqueTopics(current.items||[]).length?h('div',{className:'i5-topic-list'},iter5UniqueTopics(current.items||[]).map(function(item,i){return h('div',{key:i},h(Iter5Icon,{name:'note'}),typeof item==='string'?item:JSON.stringify(item))})):h('p',{className:'i5-muted'},L('暂无主题','No topics yet')),
             h('div',{className:'i5-source-origin'},h('strong',null,L('工作区来源','Workspace source')),h('small',null,current.path),current.dateRange?h('small',null,current.dateRange):null),
             current.path===currentWs()?h('button',{className:'i5-primary-soft',onClick:function(){props.onNav('library')}},L('查看本工作区记忆','Open workspace memory'),' →'):h('p',{className:'i5-muted'},L('可在宿主侧栏切换到该工作区，继续查看记忆。','Switch to this workspace in the host sidebar to explore its memory.'))):null),
         h('div',{className:'i5-toolbar'},h('button',{disabled:result.loading,onClick:function(){revision[1](revision[0]+1)}},result.loading?L('更新中…','Refreshing…'):L('重新整理工作区','Refresh workspace map')),h('small',null,data&&data.generatedAt?L('生成于 ','Generated at ')+new Date(data.generatedAt).toLocaleString():L('摘要与关系来自宿主工作区汇总。','Summaries and links come from the host workspace index.'))))

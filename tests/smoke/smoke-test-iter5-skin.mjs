@@ -18,8 +18,9 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
 //   现包含 3.2.5 的合法修复（接续身份钉死 clickedSid、StatsTab/Iter5Stats 解包 data.stats、
 //   时间戳标题等），故快照哈希随之变化；守卫语义不变：
 //   生成块之外的任何**非意外**改动仍会被本锁抓住。
+// PR161 repair: immutable rule draft bindings and per-submission cleanup.
 // #160 baseline: shared tab guard, rules version/draft safety, migration binding, Python progress/cancel, zero-safe settings.
-assert.equal(createHash('sha256').update(classic).digest('hex'), '95f31442863f7e36fd7458033b44a911df05b7780c48d4f3a248823b096bce25', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), 'd825df6b357ddec24b35da95d5d898246259026615e180ef22a91949b52ca5ad', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

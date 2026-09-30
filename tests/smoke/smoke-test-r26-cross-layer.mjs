@@ -206,7 +206,7 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   ② lib/semantic-js.js 与 lib/python-runtime.js 属 E 批（C2 的 devTreeRoot 多基探测 /
 //      C3 的探测超时归因 + 一次重试），不属本文件，故本基线只反映 ①。
 //   判据守恒：路由数 68 不变、配置键 143 不变、依赖面 {} 不变；仅默认值与注释演进。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '78EC7BDB6E2B5F26', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R67 基线（R65 合并基线 + F 批语义唤回三闸门默认改开；归一化 LF 后计）；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色资源）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器（provider/实现名不再混用）+ #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '3C8DC99346306AF9', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R67 基线（R65 合并基线 + F 批语义唤回三闸门默认改开 + 注释口径纠正；归一化 LF 后计）；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色资源）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器（provider/实现名不再混用）+ #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())

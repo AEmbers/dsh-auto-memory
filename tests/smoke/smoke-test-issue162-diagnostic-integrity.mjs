@@ -79,6 +79,9 @@ ${methods}
     capacityLimit: () => 1000, memToday: todayStr,
     resolvePaths: async () => Object.fromEntries(['ws', 'projectDir', 'handoffDir', 'userFile', 'notesPath', 'logPath', 'reflectDir', 'calendarPath'].map((key) => [key, path.join(home, key)])),
     appendText: async (file, text) => { await fsp.appendFile(file, text); return text },
+    // ★合并适配（PR #161 + PR #162）：#161 把 writeFull 改为 docStore/rawDocStore 双路，
+    //   本 harness 只提供 rawDocStore 分支；写入失败语义由测试通过替换 writeFull 自身来注入。
+    rawDocStore: { replaceRaw: async (p, text) => { await fsp.mkdir(path.dirname(p), { recursive: true }); await fsp.writeFile(p, String(text == null ? '' : String(text)), 'utf8'); return { ok: true } } },
   })
   return { home, host }
 }

@@ -386,6 +386,8 @@ Three entities, each minding one job:
 
 **Where the deep end lives**: the cross-window continuity internals are under `docs/internal/` — the [three-tier contract](docs/internal/THREE-LAYER-CONTRACT.md) (Tier 0/1/2 budgets and acceptance predicates), the [semantic architecture spec](docs/internal/SEMANTIC-ARCHITECTURE-SPEC.md) (clauses S1–S10 and stage gates), and the [RAG + Karpathy program](docs/internal/RAG-KARPATHY-PROGRAM.md) (six-step pipeline × three stage lines as a build map).
 
+Degradation diagnostics accumulate during the current run. Opening or refreshing Settings → Debug Center updates the snapshot at `memory/degrade/latest.json` under the local DSH data directory. Each recall does not immediately write that file; refresh diagnostics and check “Ledger persistence” before inspecting it manually. Failure history remains after recovery and does not indicate that the capability is still failing.
+
 ---
 
 ## How she moves in

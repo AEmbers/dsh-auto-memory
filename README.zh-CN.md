@@ -382,6 +382,8 @@ e5-small 与 BGE-M3 的差距（0.85 vs 0.925）集中在 hard-negative 双子�
 
 **主视觉与子代理的边界**：跨窗口续命的细节在 `docs/internal/` —— [三层契约](docs/internal/THREE-LAYER-CONTRACT.md)（Tier 0/1/2 的预算与验收判据）、[语义架构规范](docs/internal/SEMANTIC-ARCHITECTURE-SPEC.md)（条款 S1–S10 与阶段门）、[RAG + Karpathy 攻关细则](docs/internal/RAG-KARPATHY-PROGRAM.md)（六步链路 × 三条阶段线的施工图）。
 
+降级诊断在运行中累计；打开或刷新「设置 → 诊断中心」时，才更新本机 DSH 数据目录下的 `memory/degrade/latest.json` 快照。每次召回不会立即写该文件；手动核查前请先刷新诊断，并查看「台账落盘」是否成功。恢复成功后仍保留累计失败历史，不代表当前能力继续故障。
+
 ---
 
 ## 她怎么搬家

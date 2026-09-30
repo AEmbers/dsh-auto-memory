@@ -187,12 +187,13 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   ③ 上述 3.2.5 全部修复保留。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-// #156 cleanup hook remains exactly once. PR159 repair adds the bounded host retry
-// gate and disposed health check; the remaining host bytes stay hash-guarded.
-// ★合并基线（#160/#161 + #159 两批同时落地）：hook 单独计数、其余字节整体哈希。
+// Issue #162: deliberate baseline update for truthful per-request session diagnostics,
+// real sink wiring, bounded scans, strict status reads, factual status failure replies and Python inner-catch recording.
+// #156 cleanup hook remains exactly once (PR159); the remaining host bytes stay hash-guarded.
+// ★合并基线（#161 + #162 两批同时落地后重算；hook 单独计数，其余字节整体哈希）。
 const jsDisposeHook = '    try { if (engine._jsSemantic) engine._jsSemantic.dispose() } catch (e) {}\n'
 eq(cnt(IX, jsDisposeHook), 1, 'E3a #156 JS engine cleanup registered exactly once')
-eq(createHash('sha256').update(IX.replace(jsDisposeHook, '')).digest('hex').slice(0, 16).toUpperCase(), '56B40AE2E3B38119', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = 合并基线 #160/#161（规则内容/全文档修订 + 共享队列写）+ #159（JS 语义子进程隔离）两批同时落地后重算；剔除 jsDisposeHook 后取哈希，hook 自身由 E3a 单独锁定。前序：R65 = PR #150 皮肤 + PR #155 运行时修复；上述 3.2.5 全部修复保留，理由见上）')
+eq(createHash('sha256').update(IX.replace(jsDisposeHook, '')).digest('hex').slice(0, 16).toUpperCase(), '9AFBE898F01C91D9', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = 合并基线 #161（#160 七项状态安全）+ #162（诊断可信化）两批同时落地后重算，剔除 jsDisposeHook 后取哈希，hook 由 E3a 单独锁定；前序 R65 = PR #150 皮肤 + PR #155 运行时修复；上述 3.2.5 全部修复保留，理由见上）')
 // R64 (LF-normalized hash): #153 shared profile/block model parser and paired fallback route; #154 source-workspace create guard.
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')

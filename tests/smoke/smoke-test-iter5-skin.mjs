@@ -17,11 +17,10 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
 // ★2026-09-30：本快照基线演进（PR #150/#155 合并到 v3.2.5 之后）——生成块**之外**的 client.js
 //   现包含 3.2.5 的合法修复（接续身份钉死 clickedSid、StatsTab/Iter5Stats 解包 data.stats、
 //   时间戳标题等），故快照哈希随之变化；守卫语义不变：
-//   生成块之外的任何**非意外**改动仍会被本锁抓住。
-// PR161 repair: immutable rule draft bindings and per-submission cleanup.
-// Issue #162: shared DebugCenter renders session/status failure history and persistence visibility.
-// ★合并基线（#161 + #162 两批同时落地后重算）；生成块之外的任何非意外改动仍会被本锁抓住。
-assert.equal(createHash('sha256').update(classic).digest('hex'), '37f974562f0a13fc2062500a134425506fede72762fe2c93c7c60f6647f10373', 'Reviewed native-reference entry baseline preserved')
+//   接续事务修复：生成块之外的手动入口改走宿主，确认操作带源身份；导航与皮肤生成块不变。
+//   PR161 规则草稿绑定 + Issue #162 诊断持久化可见性一并落地。
+// ★五批合并基线（#160/#161 + #151/#158 + #156/#159 + #162/#163 + #157 全部落地后重算）；生成块之外的任何非意外改动仍会被本锁抓住。
+assert.equal(createHash('sha256').update(classic).digest('hex'), '0cc001442ff97420eaccdc90841169794925e814296f806197f4ba4d0d3b2098', 'Reviewed native-reference entry baseline preserved')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

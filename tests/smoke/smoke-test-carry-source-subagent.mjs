@@ -69,7 +69,7 @@ ok(/wsFallback: wsFallback/.test(stripped),
 
 // ---------- ④ 前端必须把回退告知用户 ----------
 const CLIENT = readFileSync(path.join(ROOT, 'lib', 'client.js'), 'utf8')
-ok(/d\.wsFallback/.test(CLIENT), 'client.js 消费 wsFallback 并提示用户（不再静默落到错误工作区）')
+ok(SRC.includes("p.wsBound === false || !p.ws") && CLIENT.includes("result && result.error"), '源工作区无法绑定时明确拒绝，客户端展示错误，不再静默回退')
 
 console.log(`\n[carry-source] pass=${pass} fail=${fail}`)
 process.exit(fail ? 1 : 0)

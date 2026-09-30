@@ -31,3 +31,6 @@ All three skins SHALL support light, dark and follow-host modes independently of
 - WHEN the user forces light or dark
 - THEN all plugin boundaries including portals follow the choice without changing the host theme or current skin
 - AND selecting follow-host restores host theme synchronization
+
+## Final color and reference constraint
+All presentations retain the blue-white base. Memory categories use matching small accents (logs blue, notes green, reflections purple, user preferences amber) across meters, legends and records. Water uses the revised L2-3 tank and sediment composition. Upgrades preserve upstream dam-skin-theme preferences when no new appearance preference exists.

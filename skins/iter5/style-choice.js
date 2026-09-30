@@ -37,7 +37,20 @@
     var iter5ModeValue
     var iter5ModeListeners = new Set()
     function iter5NormalizeMode(value) { return ['system','light','dark'].indexOf(value) >= 0 ? value : 'system' }
-    function iter5ReadMode() { if (iter5ModeValue === undefined) { try { iter5ModeValue = iter5NormalizeMode(localStorage.getItem(ITER5_MODE_KEY)) } catch (e) { iter5ModeValue = 'system' } } return iter5ModeValue }
+    function iter5ReadMode() {
+      if (iter5ModeValue === undefined) {
+        try {
+          var saved = localStorage.getItem(ITER5_MODE_KEY)
+          // Preserve preferences set by upstream 3.2.x on the first upgrade.
+          if (saved == null) {
+            saved = iter5NormalizeMode(localStorage.getItem('dam-skin-theme'))
+            localStorage.setItem(ITER5_MODE_KEY, saved)
+          }
+          iter5ModeValue = iter5NormalizeMode(saved)
+        } catch (e) { iter5ModeValue = 'system' }
+      }
+      return iter5ModeValue
+    }
     function iter5SetMode(value, persist) { var next = iter5NormalizeMode(value); iter5ModeValue = next; if (persist !== false) { try { localStorage.setItem(ITER5_MODE_KEY, next) } catch (e) {} } iter5ModeListeners.forEach(function (listener) { listener(next) }) }
     function useIter5Mode() {
       var pair = useState(iter5ReadMode)

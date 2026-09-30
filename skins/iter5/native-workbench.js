@@ -85,7 +85,7 @@
         h('circle', { cx: 280, cy: 280, r: 250, fill: 'url(#i5-dial-grad)' }),
         h('g', { clipPath: 'url(#i5-face-clip)' },
           h('circle', { cx: 280, cy: 280, r: 248, fill: 'none', strokeWidth: 13, filter: 'url(#i5-in-shadow)', style: { stroke: 'var(--i5-blue)', strokeOpacity: .14 } }),
-          h('ellipse', { cx: 195, cy: 150, rx: 230, ry: 120, opacity: .22, transform: 'rotate(-24 195 150)', style: { fill: 'var(--i5-on-accent)' } }),
+          h('ellipse', { className: 'i5-dial-reflection', cx: 195, cy: 150, rx: 230, ry: 120, opacity: .22, transform: 'rotate(-24 195 150)', style: { fill: 'var(--i5-on-accent)' } }),
           h('rect', { x: 0, y: 0, width: 560, height: 560, fill: 'url(#i5-glass-grad)' })),
         h('g', null, ticks),
         h('g', null, numerals),

@@ -1,8 +1,10 @@
 /** R31 · 配置层「前端五面消费」逐面真执行（56 卷 §二 客户 5 件事）。 */
 import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
-import { normalizeLayoutConfig } from 'file:///D:/dsh-auto-memory/lib/layout-config.js'
-const SRC = readFileSync('D:/dsh-auto-memory/lib/client.js', 'utf8')
+const { normalizeLayoutConfig } = await import(new URL('../../lib/layout-config.js', import.meta.url).href)
+import { fileURLToPath } from 'node:url'
+const damPath = (rel) => fileURLToPath(new URL('../../' + rel, import.meta.url))
+const SRC = readFileSync(damPath('lib/client.js'), 'utf8')
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }
 const eq = (a, b, m) => ok(Object.is(a, b), m + ' [got=' + JSON.stringify(a) + ' want=' + JSON.stringify(b) + ']')

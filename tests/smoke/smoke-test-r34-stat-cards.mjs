@@ -5,7 +5,7 @@
  * 判据（70 卷 L93 逐字）：统计数与真实数据一致（可复算）；空态不崩。
  * 四类口径（48 卷图上 / 源码注释 L1002–L1006）：今日活动=条 / 本周交接=次 / 协作成员=人 / 历史归档=篇。
  */
-import { buildStatCardsPre } from 'file:///D:/dsh-auto-memory/lib/wb-sidecar.js'
+const { buildStatCardsPre } = await import(new URL('../../lib/wb-sidecar.js', import.meta.url).href)
 
 let p = 0, f = 0; const fails = []
 const ok = (c, m) => { if (c) p++; else { f++; fails.push(m) } }

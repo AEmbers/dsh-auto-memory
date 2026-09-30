@@ -22,3 +22,9 @@ for(const fn of events.get('storage'))fn({key:c.ITER5_MODE_KEY,newValue:'light'}
 assert.equal(c.iter5ReadMode(),'light')
 cleanups.forEach(fn=>fn());assert.equal(events.get('storage').size,0)
 console.log('PASS three skins, independent light/dark/system, persistence, invalid values, denied storage, cross-surface notification and subscription cleanup')
+
+// Upgrade from upstream's theme preference without overriding an explicit new selection.
+stored.delete(c.ITER5_MODE_KEY);stored.set('dam-skin-theme','dark');c=boot();assert.equal(c.iter5ReadMode(),'dark');assert.equal(stored.get(c.ITER5_MODE_KEY),'dark')
+c.iter5SetMode('light');assert.equal(boot().iter5ReadMode(),'light')
+stored.delete(c.ITER5_MODE_KEY);stored.set('dam-skin-theme','auto');assert.equal(boot().iter5ReadMode(),'system')
+console.log('PASS upstream theme preference migration and explicit override precedence')

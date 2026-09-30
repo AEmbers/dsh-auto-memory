@@ -728,6 +728,17 @@
         "dark"
       ],
       "evidence": "artifacts/three-skins-20260930/ACCEPTANCE.md"
+    },
+    "presentationFinish": {
+      "base": "blue-white",
+      "reference": "revised L2-3 HTML water tank and sediment core",
+      "memoryColors": {
+        "logs": "blue",
+        "notes": "green",
+        "reflections": "purple",
+        "user": "amber"
+      },
+      "evidence": "docs/skin-figures/iter5-final/README.md"
     }
   },
   "components": [

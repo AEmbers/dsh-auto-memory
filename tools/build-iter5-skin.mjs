@@ -262,7 +262,7 @@ client = client.replace("h(DamSkinV4Page, { nonce: nonce, onExit:", "h(Iter5Page
 client = client.replace('try { ensureStyle() } catch', "try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch")
 // Upstream welcome branch called a hook after its early return, causing React #310
 // on first replay. Keep the hook unconditional; all tour actions stay unchanged.
-client = client.replace('function DialogHost() {\n      var tickPair = useTick()', 'function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()')
+if (!/function DialogHost\(\) \{[\s\S]{0,1800}?var tourDeep = use(?:Iter5|Deep)Theme\(\)/.test(client)) client = client.replace('function DialogHost() {\n      var tickPair = useTick()', 'function DialogHost() {\n      var tourDeep = useDeepTheme()\n      var tickPair = useTick()')
 client = client.replace("tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: useDeepTheme() })", "tourStep === 0 ? h(SkinHero, { slot: 'hero.welcome', deep: tourDeep })")
 // Welcome artwork must follow the same explicit light/dark preference as its portal.
 client = client.replace('var tourDeep = useDeepTheme()', 'var tourDeep = useIter5Theme()')

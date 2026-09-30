@@ -48,44 +48,13 @@ const bodyOf = (src, header) => extractFn(src, header)
 ok(SRC.includes("exports.inject = ['slots', 'sessions', 'remote', 'remote.session']"),
   'G1 exports.inject declares remote + remote.session (06fbd10)')
 
-// —— G2:真实抽取 extractSessionId 并驱动 ——
-const extractSessionId = new Function('return (' + extractFn(SRC, 'function extractSessionId(created) {') + ')')()
-const cases = [
-  [null, null, 'null'],
-  ['sess-abc', 'sess-abc', 'bare string (官方实际形态)'],
-  [{ sessionId: 's1' }, 's1', '{sessionId}'],
-  [{ id: 's2' }, 's2', '{id}'],
-  [{ value: 's3' }, 's3', '{value}'],
-  [{ ok: true, value: { sessionId: 's4' } }, 's4', '{ok,value:{sessionId}}'],
-  [{ ok: true, value: { id: 's5' } }, 's5', '{ok,value:{id}}'],
-  [{ ok: true, value: { value: 's6' } }, null, '{ok,value:{value}} 不越界解析'],
-  [42, null, 'number'],
-]
-for (const [input, expect, name] of cases) {
-  ok(extractSessionId(input) === expect, 'G2 extractSessionId(' + name + ') => ' + String(expect))
-}
-
-// —— G3:接续链路收敛到共用执行器(create 返回值只经 extractSessionId 提取一次)——
-ok(count(SRC, /runContinueFlow\(/g) >= 2, 'G3 both entry points (oneClickContinue + runAuto) call the shared runContinueFlow')
-ok(count(SRC, /newId = extractSessionId\(created\)/g) === 1, 'G3 create result extracted once via extractSessionId (shared executor)')
-ok(SRC.includes('async function runContinueFlow(') && SRC.includes('async function executeContinue('),
-  'G3 shared executor present (runContinueFlow + executeContinue)')
-
-// —— G4:两处 session.prompt 都携带 clientTimeZone ——
-ok(count(SRC, /clientTimeZone: amCtzValue\(\)/g) === 2 && count(SRC, /session\.prompt\(/g) === 2,
-  'G4 both session.prompt calls carry clientTimeZone (6a94794)')
-
-// —— G5:create 参数经 continueCreateArgs,带 agentPreset ——
-ok(SRC.includes('rf.session.create(continueCreateArgs(d))') && SRC.includes('agentPreset: d.agentPreset || undefined'),
-  'G5 create args via continueCreateArgs with agentPreset')
-
-// —— G6:selectModel 带 reasoningEffort(保留模型思考能力)——
-ok(bodyOf(SRC, 'async function executeContinue(d, onMsg) {').includes('reasoningEffort: d.reasoningEffort || undefined'),
-  'G6 selectModel passes reasoningEffort (bffe105)')
-
-// —— G7:新会话 rename 接续序号标题(接续#N · wsBase)——
-ok(bodyOf(SRC, 'async function executeContinue(d, onMsg) {').includes("'接续 #'"),
-  'G7 new session renamed with numbered title 接续#N (bffe105)')
+// Both browser intents use the host transaction; the host owns creation/model/delivery.
+const manual = bodyOf(SRC, 'async function runContinueFlow(opts) {')
+ok(manual.indexOf('currentSessionIdClient()') < manual.indexOf('await '), 'source identity captured synchronously')
+ok(manual.includes("apiPost(API.autoContDecide, { action: 'manual', sessionId: sourceId })"), 'manual enters host continuation lock')
+ok(!manual.includes('session.create') && !manual.includes('session.prompt'), 'browser does not start an independent successor')
+ok(HSRC.includes("if (action === 'manual')") && HSRC.includes('return this.hostAutoContinue()'), 'manual shares automatic host executor')
+ok(HSRC.includes('await sc.prompt(') && HSRC.includes('await sc.selectModel('), 'host owns carry and model restoration')
 
 // —— G8(修B):模型/思考档位取自 request/header 的 data.header.config ——
 const J = (o) => JSON.stringify(o)
@@ -127,17 +96,9 @@ ok(workspaceIdForSession(null, 's1', 'D:\\proj-a') === '' && workspaceIdForSessi
 ok(HSRC.includes("ctx.get('workspaceRegistry')") && HSRC.includes('resolveWorkspaceIdForSession(') && HSRC.includes('workspaceId: workspaceId'),
   'G9 host resolves workspaceId via workspaceRegistry and returns it')
 
-// —— G10(修A):create 传 {workspaceId, agentPreset},不同时传 cwd ——
-const continueCreateArgs = new Function('return (' + extractFn(SRC, 'function continueCreateArgs(d) {') + ')')()
-const argsWs = continueCreateArgs({ workspaceId: 'ws-x', ws: 'D:\\proj', agentPreset: 'default' })
-ok(argsWs.workspaceId === 'ws-x' && argsWs.agentPreset === 'default' && argsWs.cwd === undefined,
-  'G10 workspaceId branch: {workspaceId, agentPreset}, never cwd (官方同传报 bad-request)')
-const argsCwd = continueCreateArgs({ workspaceId: '', ws: 'D:\\proj', agentPreset: 'default' })
-ok(argsCwd.cwd === 'D:\\proj' && argsCwd.workspaceId === undefined, 'G10 fallback to cwd when workspaceId unresolved')
-const argsNone = continueCreateArgs({ agentPreset: 'default' })
-ok(argsNone.agentPreset === 'default' && argsNone.cwd === undefined && argsNone.workspaceId === undefined, 'G10 neither => agentPreset only')
-ok(bodyOf(SRC, 'async function executeContinue(d, onMsg) {').includes('rf.session.create(continueCreateArgs(d))'),
-  'G10 executor creates with continueCreateArgs(d)')
+// Source workspace may fall back to the source cwd, never to an unscoped default.
+ok(HSRC.includes('...(d.workspaceId ? { workspaceId: d.workspaceId } : { cwd: d.ws })'), 'prefer source workspace binding')
+ok(HSRC.includes('if (!d.ws) throw eCreate') && !HSRC.includes('created = await sc.create(d.agentPreset'), 'fallback remains scoped to source cwd')
 
 // —— G11(①):触发权移交宿主(2.2.6)——边沿观察/倒计时全在 host;client 只轮询状态展示 ——
 ok(SRC.includes('function currentRunningInfo()') && (SRC.includes('snap.byId && snap.byId[id]') || SRC.includes('s.byId[sessionId]')),
@@ -160,7 +121,7 @@ ok(SRC.includes('apiGet(API.autoContState, sidQ ? { sessionId: sidQ } : {})') &&
   'G14 轮询携带当前会话 id(宿主据此只在本窗口弹确认卡)')
 ok(HSRC.includes("url.searchParams.get('sessionId')") && HSRC.includes('autoContinueState(selfSid)'),
   'G14 宿主侧按 sessionId 过滤 armed(取不到 id 时 fail-open)')
-ok(/setAcConfirm\(\{ ratio: Number\(arm\.ratio\) \|\| 0[\s\S]{0,220}?wall: Number\(arm\.wall\) \|\| 0/.test(SRC),
+ok(/setAcConfirm\(\{ sessionId: arm.sessionId, ratio: Number\(arm\.ratio\) \|\| 0[\s\S]{0,220}?wall: Number\(arm\.wall\) \|\| 0/.test(SRC),
   'G14 确认卡把双口径 ring/wall 拷进 acConfirm(宿主透出但这里丢了 → 那行永不渲染)')
 
 // —— G15(2026-09-28 修「接续必须搭线」):宿主兜底接续后,前端补 sessions.open 把发件人切到新会话 ——
@@ -181,27 +142,9 @@ ok(HSRC.includes('st.rejectedEdgeAt = armedEdge') && HSRC.includes('now - st.rej
 ok(HSRC.includes('Date.now() < st.armed.expiresAt') && HSRC.includes('await this.hostAutoContinue()'),
   'G12 host timeout auto-continues (unattended fallback)')
 // ★2026-09-30 守卫演进(用户报障「A区点接续，新会话建到B区」):
-//   刷新仪式调用现在带点击瞬间钉死的 clickedSid —— 旧字面量 'await refreshOldSession(onMsg)'
-//   已不再存在。同时把「身份必须在点击时钉死、仪式等待后不重取」本身钉成守卫:
-//   currentSessionIdClient() 是 mainView 启发式(mainView>0 里 updatedAt 最大者),多窗口下
-//   等待期间任何别的会话一活跃(如另一窗口的慢模型流式输出)updatedAt 就反超,
-//   fromSessionId 漂到别的会话 ⇒ 材料/工作区/模型全部跟错。
-ok(SRC.includes('async function refreshOldSession(') && SRC.includes('async function waitForRefresh(') && SRC.includes('await refreshOldSession(onMsg, clickedSid)'),
-  'G12 ③refresh ritual before material assembly (PLAN+ledger, fail-soft;2026-09-30 起带钉死的 clickedSid)')
-ok(/var clickedSid = String\(currentSessionIdClient\(\) \|\| ''\)/.test(SRC) &&
-   SRC.includes('if (ritual) { try { await refreshOldSession(onMsg, clickedSid) } catch (eRf) {} }') &&
-   SRC.includes("var fromSidForCarry = String(clickedSid || lastRefreshSessionId || '')"),
-  'G16 源会话身份在点击瞬间钉死(clickedSid),仪式等待后不重取(A区点接续、新会话在B区的漂移通道①)')
-ok(bodyOf(SRC, 'async function refreshOldSession(onMsg, pinnedSid) {').includes('var selfSid = String(pinnedSid || currentSessionIdClient() || "")'),
-  'G16 刷新仪式优先用钉死的 pinnedSid 取刷新目标(不现场重取身份)')
-ok(HSRC.includes('refreshRitualPrompt()') && HSRC.includes('autoContinueRefreshRitual === false') && HSRC.includes('refresh: this.config.autoContinueRefreshRitual'),
-  'G12 host exposes refresh ritual (config-gated) via handoff-state')
-for (const layer of ['【第0层 · 白板 PLAN.md(节选)】', '【第1层 · 交接账本 ', '【第2层 · 近期线程', '【第3层 · 完整转写与检索(按需)】']) {
-  ok(HSRC.includes(layer), 'G12 layered material: ' + layer)
-}
-ok(HSRC.includes('planMtime: planMt') && HSRC.includes('(白板比账本旧——以账本为准)'), 'G12 staleness hint + planMtime for refresh detection')
-ok(/autoContinueConfirmSeconds: 35/.test(HSRC) && /autoContinueRefreshRitual: true/.test(HSRC) && /autoContinueCooldownMinutes: 30/.test(HSRC),
-  'G12 host config defaults (35s timeout / ritual on / 30min cooldown)')
+ok(HSRC.includes('continuationRitualEndPre(snap && snap.events, reqId, baseSeq)'), 'request-correlated ritual turn must finish')
+ok(HSRC.includes('refresh ritual failed: '), 'unverified ritual prevents successor creation')
+ok(manual.includes('if (!sourceId) throw'), 'no source identity is an explicit error')
 
 // —— G13(①读取面):真实驱动 currentRunningInfo/runningOfSession(sessions 服务快照) ——
 const makeRunningFns = new Function('sessions', extractFn(SRC, 'function currentRunningInfo() {') + '\n' + extractFn(SRC, 'function runningOfSession(sessionId) {') + '\nreturn { currentRunningInfo, runningOfSession }')

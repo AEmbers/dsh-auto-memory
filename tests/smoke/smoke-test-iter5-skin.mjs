@@ -17,8 +17,9 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
 // ★2026-09-30：本快照基线演进（PR #150/#155 合并到 v3.2.5 之后）——生成块**之外**的 client.js
 //   现包含 3.2.5 的合法修复（接续身份钉死 clickedSid、StatsTab/Iter5Stats 解包 data.stats、
 //   时间戳标题等），故快照哈希随之变化；守卫语义不变：
-//   生成块之外的任何**非意外**改动仍会被本锁抓住。
-assert.equal(createHash('sha256').update(classic).digest('hex'), '64aaba6a0d4736e542d21f1b4801f0efe367d3ad52e2944d94f1f65ed516f616', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+//   接续事务修复：生成块之外的手动入口改走宿主，确认操作带源身份；导航与皮肤生成块不变。
+//   守卫继续锁定其他意外变化，行为回归见 continuation-transaction 与 continue-host H12。
+assert.equal(createHash('sha256').update(classic).digest('hex'), 'bc4f9ead43bbc9c11697b82ac40fa7d56da04e61fa0267b3addec563a47a4b49', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

@@ -355,8 +355,8 @@ console.log('[switch-decouple] D5 配置响应的外壳:{config,path} 必须解�
   ok(decide({ config: { handoffEnabled: false } }).handoff === false,
     '行为:白板开关同病同修 —— handoffEnabled=false 必须判为「关」')
   ok(CSRC.includes('function configOf(d)'), '接线:存在唯一的配置解包出口 configOf')
-  ok(CSRC.includes('var cfg = configOf(await apiGet(API.config))'), '接线:waitForRefresh 读解包后的配置(旧写法恒取默认 90s 超时)')
-  ok(CSRC.includes('cfg = configOf(await apiGet(API.config))'), '接线:接续流程读解包后的配置(旧写法使「刷新仪式」开关恒判为开)')
+  ok(SRC.includes('const sec = Number(this.config.autoContinueRefreshTimeoutSeconds)'), '接线:waitForRefresh 读解包后的配置(旧写法恒取默认 90s 超时)')
+  ok(SRC.includes('if (this.config.autoContinueRefreshRitual === false)'), '接线:统一宿主流程直接读取权威配置，刷新仪式开关不再由客户端重复解析')
   ok(CSRC.includes('setAcCfg(configOf(d))'), '接线:接续页读解包后的配置')
   ok(!/setAutoCfg\(\{ enabled: !\(c && c\.autoContinueEnabled === false\)/.test(CSRC),
     '白板页不再直读外壳(旧写法:显示恒为「开」且点击只能写 false)')

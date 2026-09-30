@@ -1,0 +1,32 @@
+          // ★2026-09-30（C1 · 用户裁定：设置面必须全量、不得缺项）——
+          //   唤起链路的**四道真闸门**此前只有宿主读、没有任何 UI 入口（实测 client.js 零引用）：
+          //   ① activationInboxEnabled = 「记忆唤回」总闸（activation-host effectiveEnabled 的第二个条件，
+          //      关着则 pre-step claim / reference-tail 渲染 / 状态三处全早退 ⇒ 设置显示正常但唤回永不投递）；
+          //   ② shadowRetrievalEnabled = 主动唤起的影子检索（shadow-host）；
+          //   ③ contextBridgeEnabled = 上下文桥（context-host）；
+          //   ④ l0IndexEnabled = L0 向量索引接线（l0-index-sync）。
+          //   ⚠️ 不给 pythonBackendEnabled / activationSource / contextSinkMode 独立控件：
+          //   它们是 semanticEngineMode 的**联动派生值**（index.js 自动对齐），单独可改会互相打架。
+          field(t('fInboxGate'), h('input', { type: 'checkbox', 'data-dam-gate': 'activationInboxEnabled', checked: cfg.activationInboxEnabled === true, onChange: function (e) { set('activationInboxEnabled', e.target.checked) } }), t('fInboxGateHint')),
+          field(t('fShadowRetrieval'), h('input', { type: 'checkbox', 'data-dam-gate': 'shadowRetrievalEnabled', checked: cfg.shadowRetrievalEnabled === true, onChange: function (e) { set('shadowRetrievalEnabled', e.target.checked) } }), t('fShadowRetrievalHint')),
+          field(t('fContextBridge'), h('input', { type: 'checkbox', 'data-dam-gate': 'contextBridgeEnabled', checked: cfg.contextBridgeEnabled === true, onChange: function (e) { set('contextBridgeEnabled', e.target.checked) } }), t('fContextBridgeHint')),
+          field(t('fL0Index'), h('input', { type: 'checkbox', 'data-dam-gate': 'l0IndexEnabled', checked: cfg.l0IndexEnabled !== false, onChange: function (e) { set('l0IndexEnabled', e.target.checked) } }), t('fL0IndexHint')),
+          // 只读诊断：把「三道门 + 当前档位」如实显示，消除「设置显示正常但不生效」的盲区。
+          // ★2026-09-30 真机教训：settings 面板曾显示「一切就绪」而 Python sidecar 根本没进程 ——
+          //   故此处**以宿主探测结果为准**（pythonInt8Present / resolvedTier / activationEmitMode），不猜。
+          (function () {
+            var rows = []
+            var emitMode = (sem && sem.activationEmitMode) || 'shadow'
+            var tier = (sem && sem.resolvedTier) || ''
+            var gateOk = cfg.associativeMemoryEnabled === true && cfg.activationInboxEnabled === true
+            rows.push(L('总闸（自动记忆 + 收件箱）', 'Master gate (associative + inbox)') + '：' + (gateOk ? L('已开', 'ON') : L('关（唤回不会投递）', 'OFF (recall will not be delivered)')))
+            rows.push(L('唤起注入模式', 'Emit mode') + '：' + emitMode)
+            rows.push(L('当前档位', 'Resolved tier') + '：' + (tier === 'c3' ? 'C3 · Python' : tier === 'c2' ? 'C2 · JS' : tier ? ('C1 · ' + tier) : L('检测中', 'detecting')))
+            if (sem && sem.pythonRuntime) {
+              var rt = sem.pythonRuntime
+              var pyOk = rt.state === 'ready' && rt.depsOk !== false
+              rows.push(L('Python 运行时', 'Python runtime') + '：' + (pyOk ? L('可用', 'available') : (L('不可用', 'unavailable') + (rt.state ? ' (' + rt.state + ')' : ''))))
+            }
+            return h('div', { 'data-dam-gate-readout': '', 'data-dam-slot': 'hint', 'data-dam-hint': '', style: { fontSize: 'calc(11.5px * var(--dam-scale))', lineHeight: 1.8, opacity: .82, marginTop: '4px' } },
+              rows.map(function (line, i) { return h('div', { key: 'r' + i }, line) }))
+          })(),

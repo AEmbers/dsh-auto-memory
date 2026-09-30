@@ -1,0 +1,8 @@
+  fInboxGate: '记忆唤回总闸（收件箱）',
+  fInboxGateHint: '关掉后：唤回判定照常运行、记录照常写入，但**结果永不投递给对话**（宿主三处早退）。排查「看不到唤回」先看这里。默认关；要用主动唤回请打开。',
+  fShadowRetrieval: '影子检索（主动唤起）',
+  fShadowRetrievalHint: '只记录候选、不投递的影子检索通道，用于校准「该不该唤起」；默认关。',
+  fContextBridge: '上下文桥',
+  fContextBridgeHint: '把会话上下文桥接给语义侧车（Python 档深度检索用）；默认关。',
+  fL0Index: 'L0 向量索引',
+  fL0IndexHint: 'C2/JS 语义臂的向量索引接线；关掉会退回词法兜底（C1）。默认开。',

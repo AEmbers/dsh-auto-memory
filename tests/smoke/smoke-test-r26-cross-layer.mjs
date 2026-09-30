@@ -187,8 +187,12 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   ③ 上述 3.2.5 全部修复保留。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-// #160 baseline: rules content/full-document revision and shared queued raw writes; inspected migration token validation.
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), 'D23A46081F6E9A70', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R66（#160）基线；前序 R65 基线（PR #150 皮肤 + PR #155 运行时修复 两批合并）；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色素材）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器 + #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
+// #156 cleanup hook remains exactly once. PR159 repair adds the bounded host retry
+// gate and disposed health check; the remaining host bytes stay hash-guarded.
+// ★合并基线（#160/#161 + #159 两批同时落地）：hook 单独计数、其余字节整体哈希。
+const jsDisposeHook = '    try { if (engine._jsSemantic) engine._jsSemantic.dispose() } catch (e) {}\n'
+eq(cnt(IX, jsDisposeHook), 1, 'E3a #156 JS engine cleanup registered exactly once')
+eq(createHash('sha256').update(IX.replace(jsDisposeHook, '')).digest('hex').slice(0, 16).toUpperCase(), '56B40AE2E3B38119', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = 合并基线 #160/#161（规则内容/全文档修订 + 共享队列写）+ #159（JS 语义子进程隔离）两批同时落地后重算；剔除 jsDisposeHook 后取哈希，hook 自身由 E3a 单独锁定。前序：R65 = PR #150 皮肤 + PR #155 运行时修复；上述 3.2.5 全部修复保留，理由见上）')
 // R64 (LF-normalized hash): #153 shared profile/block model parser and paired fallback route; #154 source-workspace create guard.
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
 eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')

@@ -462,6 +462,8 @@ pnpm approve-builds
 pnpm add @huggingface/transformers
 ```
 
+JS 推理现由独立子进程执行，transformers、ONNX 和 sharp 仅在子进程中加载，与 DSH 宿主的原生库隔离。从受影响版本升级后，必须完全退出并重启 DSH 宿主；刷新网页无法卸载宿主中已驻留的 DLL。Windows 上若发送图片报 `session/agent-busy`，请检查 `details.reason` 是否为 sharp/libvips 加载错误，再判断是否真是 agent 忙碌。临时可切换词法档并完全重启宿主规避。仅选择 Python 档不能保证完全停用 JS：既有引用检索路径仍可能使用 JS。
+
 装完重启 `dsh web`，向导的语义引擎步会自动检测到就绪（SHA256 校验 + 推理自检）。
 
 三档检索引擎，在 设置 → 自动记忆引擎 里切换：

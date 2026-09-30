@@ -18,7 +18,10 @@ const classic = source.replace(/    \/\/ ITER5-GENERATED:BEGIN[\s\S]*?    \/\/ I
 //   现包含 3.2.5 的合法修复（接续身份钉死 clickedSid、StatsTab/Iter5Stats 解包 data.stats、
 //   时间戳标题等），故快照哈希随之变化；守卫语义不变：
 //   生成块之外的任何**非意外**改动仍会被本锁抓住。
-assert.equal(createHash('sha256').update(classic).digest('hex'), '64aaba6a0d4736e542d21f1b4801f0efe367d3ad52e2944d94f1f65ed516f616', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+// Issue #162: shared DebugCenter now renders session/status failure history and
+// persistence visibility. No generated skin or issue160 changes are included.
+// Exact classic hash remains enforced; the new UI is executed in issue162 regressions.
+assert.equal(createHash('sha256').update(classic).digest('hex'), '03f465b250fa482b5bb5caca59d9938b3d8756eecca108cd884c6f038d981bdb', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

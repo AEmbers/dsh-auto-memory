@@ -66,7 +66,7 @@ await t('#2-3 ★★ 顺序：**先写入笔记成功，再改状态**', () => {
     '★ 状态应用在笔记写入之后（写入失败就不该动状态 —— 防"新结论没进去、旧结论却被标废"）')
 })
 await t('#2-4 ★ 状态失败**不得影响**已成功的笔记写入', () => {
-  ok(/catch \(e\) \{ statusNote = /.test(CODE), '有 try/catch 兜住')
+  ok(/catch \(e\) \{[\s\S]{0,200}recordDiagnosticErrorPre\(engine\._degradeSink, 'note-status'[\s\S]{0,100}statusNote = /.test(CODE), '有 try/catch 留痕并返回状态未确认说明')
   ok(!/applyNoteStatusPre[\s\S]{0,400}throw /.test(CODE.slice(CODE.indexOf('await engine.applyNoteStatusPre('), CODE.indexOf('await engine.applyNoteStatusPre(') + 400)),
     '调用点附近不抛')
 })
@@ -76,25 +76,26 @@ console.log('\n[3] 写侧 · applyNoteStatusPre 实现纪律')
 await t('#3-1 走既有写入通道（不绕过事务/备份）', () => {
   const i = CODE.indexOf('async applyNoteStatusPre(')
   ok(i > 0, '方法存在')
-  const body = CODE.slice(i, i + 4000)
+  const body = CODE.slice(i, CODE.indexOf('\n  }\n', i) + 5)
   ok(/await this\.writeFull\(notesPath, text\)/.test(body), '★ 用 writeFull（既有事务）')
   ok(!/writeFile\(notesPath/.test(body), '★ 未直接 writeFile 绕过通道')
 })
 await t('#3-2 ★ 只动目标条目（其余字节不变）', () => {
   const i = CODE.indexOf('async applyNoteStatusPre(')
-  const body = CODE.slice(i, i + 4000)
+  const body = CODE.slice(i, CODE.indexOf('\n  }\n', i) + 5)
   ok(/applyStatusToRecordPre\(/.test(body), '经纯函数生成新文（该函数保证其余字节不变）')
 })
 await t('#3-3 ★ 留痕（不新建状态源）', () => {
   const i = CODE.indexOf('async applyNoteStatusPre(')
-  const body = CODE.slice(i, i + 4000)
+  const body = CODE.slice(i, CODE.indexOf('\n  }\n', i) + 5)
   ok(/STATUS-CHANGES\.log/.test(body), '每次变更写一行留痕')
   ok(/appendText\(/.test(body), '走 append-only')
 })
 await t('#3-4 fail-soft：任何异常不抛出', () => {
   const i = CODE.indexOf('async applyNoteStatusPre(')
-  const body = CODE.slice(i, i + 4000)
-  ok(/catch \(e\) \{[\s\S]{0,300}return '\\n\(状态写入失败/.test(body), '★ 兜底返回说明而非抛出')
+  const body = CODE.slice(i, CODE.indexOf('\n  }\n', i) + 5)
+  ok(/catch \(e\) \{[\s\S]{0,300}return statusSaved/.test(body), '★ catch 按实际写盘状态返回说明')
+  ok(body.includes('(状态写入失败：未确认状态变更') && body.includes('(状态正文已写入，但后续处理失败'), '★ 区分保存失败与保存后的失败')
 })
 
 // ═══ 4. 读侧：★ 声明位置（本仓「标识符作用域」类缺陷） ═══

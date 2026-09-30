@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
@@ -9,7 +10,55 @@ const newline = client.includes('\r\n') ? '\r\n' : '\n'
 client = client.replace(/\r\n/g, '\n')
 const begin = '    // ITER5-GENERATED:BEGIN'
 const end = '    // ITER5-GENERATED:END'
-if (client.includes(begin)) client = client.slice(0, client.indexOf(begin)) + client.slice(client.indexOf(end) + end.length + 1)
+// ★2026-09-30 双皮肤块：legacy（3.2.5 旧款）源从 git 历史取，包 IIFE 后嵌入。
+const legacyBegin = '    // ===== ITER5-LEGACY-GENERATED:BEGIN ====='
+const legacyEnd = '    // ===== ITER5-LEGACY-GENERATED:END ====='
+const legacySrc = execFileSync('git', ['show', 'ecd3a44:lib/client.js'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\r\n').join('\n')
+const lbIdx = legacySrc.indexOf('    // ITER5-GENERATED:BEGIN')
+const leIdx = legacySrc.indexOf('    // ITER5-GENERATED:END')
+const legacyBody = legacySrc.slice(lbIdx, leIdx + '    // ITER5-GENERATED:END'.length)
+const legacyWrapped = legacyBegin + '\n' +
+  '    // 3.2.5 的「新款」皮肤（用户裁定的默认）。整体包 IIFE：内部仍用原来的 Iter5* 名字，' + '\n' +
+  '    // 作用域隔离 ⇒ 与三套变体块零冲突；只导出 page/css 两个跨块符号。' + '\n' +
+  '    var LEGACY_SKIN_NS = (function () {' + '\n' +
+  legacyBody.split('\n').map(function (l) { return l ? '  ' + l : l }).join('\n') + '\n' +
+  '      return { page: Iter5Page, css: ITER5_CSS }' + '\n' +
+  '    })()' + '\n' +
+  '    var Legacy5Page = LEGACY_SKIN_NS.page' + '\n' +
+  '    var LEGACY_ITER5_CSS = LEGACY_SKIN_NS.css' + '\n' +
+  legacyEnd + '\n'
+const legacyKnob = [
+  "    // ★2026-09-30（用户裁定）：默认旧款（3.2.5 新款皮肤）；三套变体经下拉选择。",
+  "    var DAM_SKIN_STYLE_KEY = 'dam-skin-style'",
+  "    var DAM_SKIN_VARIANT_IDS = ['legacy', 'instrument', 'editorial', 'water']",
+  "    function damSkinStyleGet() {",
+  "      try {",
+  "        var raw = String(localStorage.getItem(DAM_SKIN_STYLE_KEY) || '')",
+  "        if (DAM_SKIN_VARIANT_IDS.indexOf(raw) >= 0) return raw",
+  "        return 'legacy'",
+  "      } catch (eStyle) { return 'legacy' }",
+  "    }",
+  "    function damSkinLegacy() { return damSkinStyleGet() === 'legacy' }",
+  "    function damSkinStyleSet(name) {",
+  "      try {",
+  "        var v = DAM_SKIN_VARIANT_IDS.indexOf(String(name)) >= 0 ? String(name) : 'legacy'",
+  "        localStorage.setItem(DAM_SKIN_STYLE_KEY, v)",
+  "      } catch (eStyle2) {}",
+  "    }",
+  "",
+].join('\n')
+// 摘除旧 legacy 块（如有）
+if (client.includes(legacyBegin)) {
+  const li = client.indexOf(legacyBegin)
+  const lj = client.indexOf(legacyEnd, li)
+  client = client.slice(0, li) + client.slice(lj + legacyEnd.length + 1)
+}
+// 摘除旧新块（如有）——legacy 块内部含同名标记，故必须在 legacy 摘除之后定位
+if (client.includes(begin)) {
+  const b2 = client.indexOf(begin)
+  const e2 = client.indexOf(end, b2)
+  if (b2 >= 0) client = client.slice(0, b2) + client.slice(e2 + end.length + 1)
+}
 function replaceOnce(text, old, value) {
   if (text.split(old).length !== 2) throw new Error('Expected exactly one settings seam: ' + old.slice(0, 90))
   return text.replace(old, value)
@@ -280,6 +329,29 @@ client = replaceOnce(client, seam, generated + seam)
 // Only the opt-in skin mount and its stylesheet gain the new implementation.
 
 client = client.replace("h(DamSkinV4Page, { nonce: nonce, onExit:", "h(Iter5Page, { nonce: nonce, onExit:")
+// ★2026-09-30 双皮肤块：插入 legacy 块 + 挂载点双分派 + 样式旋钮
+{
+  const newBlockAnchor = '    // ITER5-GENERATED:BEGIN'
+  if (!client.includes(legacyBegin)) {
+    const ni = client.indexOf(newBlockAnchor)
+    client = client.slice(0, ni) + legacyWrapped + client.slice(ni)
+  }
+  if (!client.includes('damSkinLegacy()')) {
+    client = client.replace("h('div', { 'data-dam-skin-v4-root': '1' }, h(Iter5Page, { nonce: nonce, onExit: function () { damSkinRemoveCss(); setNonce(nonce + 1) } })))",
+      "h('div', { 'data-dam-skin-v4-root': '1' }, damSkinLegacy()\n" +
+      "            ? h(Legacy5Page, { nonce: nonce, onExit: function () { damSkinRemoveCss(); setNonce(nonce + 1) } })\n" +
+      "            : h(Iter5Page, { nonce: nonce, onExit: function () { damSkinRemoveCss(); setNonce(nonce + 1) } })))")
+  }
+  if (!client.includes('function damSkinLegacy()')) {
+    client = client.replace('    function damSkinSet(name) {', legacyKnob + '    function damSkinSet(name) {')
+  }
+  if (!client.includes('damSkinLegacy() ? LEGACY_ITER5_CSS')) {
+    const oldCss = "el.textContent = '/* dam-skin:begin (v4) */\n' + DAM_SKIN_V4_CSS + '\n' + ITER5_CSS + '\n/* dam-skin:end (v4) */'"
+    const newCss = "el.textContent = '/* dam-skin:begin (v4) */\n' + DAM_SKIN_V4_CSS + '\n' + (damSkinLegacy() ? LEGACY_ITER5_CSS : ITER5_CSS) + '\n/* dam-skin:end (v4) */'"
+    if (client.includes(oldCss)) client = client.replace(oldCss, newCss)
+  }
+}
+
 client = client.replace('try { ensureStyle() } catch', "try { ensureStyle(); if (damSkinActive() === 'v4') damSkinEnsureCss() } catch")
 // Upstream welcome branch called a hook after its early return, causing React #310
 // on first replay. Keep the hook unconditional; all tour actions stay unchanged.

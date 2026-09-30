@@ -1,18 +1,27 @@
     var ITER5_STYLE_KEY = 'dsh-auto-memory.presentation.v1'
+    // ★2026-09-30（用户裁定）：下拉框同管**四款**——旧款（3.2.5 的「新款」，默认）
+    //   + 仪器 / 编辑 / 活水三套变体。旧款不属于本块的样式系统，
+    //   故它改变的是**挂载点分派**（damSkinStyleSet）而非样式变量；
+    //   三套变体则走本块的 ITER5_STYLE_KEY（两者互斥，切换时互相写对方）。
     var ITER5_STYLE_IDS = ['instrument', 'editorial', 'water']
+    var ITER5_ALL_SKINS = ['legacy', 'instrument', 'editorial', 'water']
     var iter5StyleListeners = new Set()
     var iter5StyleValue
-    function iter5NormalizeStyle(value) { return ITER5_STYLE_IDS.indexOf(value) >= 0 ? value : 'instrument' }
+    function iter5NormalizeStyle(value) { return ITER5_ALL_SKINS.indexOf(value) >= 0 ? value : 'legacy' }
     function iter5ReadStyle() {
       if (iter5StyleValue === undefined) {
-        try { iter5StyleValue = iter5NormalizeStyle(localStorage.getItem(ITER5_STYLE_KEY)) } catch (e) { iter5StyleValue = 'instrument' }
+        try { var rawStyle = localStorage.getItem(ITER5_STYLE_KEY); iter5StyleValue = rawStyle ? iter5NormalizeStyle(rawStyle) : 'legacy' } catch (e) { iter5StyleValue = 'legacy' }
       }
       return iter5StyleValue
     }
     function iter5SetStyle(value, persist) {
       var next = iter5NormalizeStyle(value)
       iter5StyleValue = next
-      if (persist !== false) { try { localStorage.setItem(ITER5_STYLE_KEY, next) } catch (e) {} }
+      if (persist !== false) {
+        try { localStorage.setItem(ITER5_STYLE_KEY, next) } catch (e) {}
+        // 两个开关互斥保持同步：选 legacy 则挂载点走旧块，否则走本块。
+        try { if (typeof damSkinStyleSet === 'function') damSkinStyleSet(next) } catch (e2) {}
+      }
       iter5StyleListeners.forEach(function (listener) { listener(next) })
     }
     function useIter5Style() {
@@ -26,11 +35,11 @@
       return pair[0]
     }
     function iter5StyleLabels() {
-      return locale === 'zh' ? ['界面皮肤', '仪器', '编辑', '活水'] : locale === 'ja' ? ['スキン', '計器', '編集', 'ウォーター'] : ['Interface skin', 'Instrument', 'Editorial', 'Water']
+      return locale === 'zh' ? ['界面皮肤', '新款（经典）', '仪器', '编辑', '活水'] : locale === 'ja' ? ['スキン', 'ニュー（クラシック）', '計器', '編集', 'ウォーター'] : ['Interface skin', 'New (classic)', 'Instrument', 'Editorial', 'Water']
     }
     function Iter5StylePicker() {
       var value = useIter5Style(), labels = iter5StyleLabels()
-      return h('select', { className: 'i5-style-picker', 'aria-label': labels[0], title: labels[0], value: value, onChange: function (e) { iter5SetStyle(e.target.value) } }, ITER5_STYLE_IDS.map(function (id, i) { return h('option', { key: id, value: id }, labels[i + 1]) }))
+      return h('select', { className: 'i5-style-picker', 'aria-label': labels[0], title: labels[0], value: value, onChange: function (e) { iter5SetStyle(e.target.value) } }, ITER5_ALL_SKINS.map(function (id, i) { return h('option', { key: id, value: id }, labels[i + 1]) }))
     }
 
     var ITER5_MODE_KEY = 'dsh-auto-memory.appearance.v1'

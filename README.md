@@ -466,6 +466,8 @@ pnpm approve-builds
 pnpm add @huggingface/transformers
 ```
 
+JS inference now runs in a separate child process: transformers, ONNX and sharp load there, isolating their native libraries from the DSH host. When upgrading from an affected version, fully quit and restart the DSH host; refreshing the webpage cannot unload a DLL already resident in the host. On Windows, if sending an image reports `session/agent-busy`, inspect `details.reason` for a sharp/libvips loading error before attributing it to a busy agent. A temporary workaround is to select the lexical tier and fully restart the host. Selecting the Python tier alone does not guarantee that JS is unused: existing reference retrieval paths may still use JS.
+
 Restart `dsh web` — the welcome tour's semantic-engine step auto-detects readiness (SHA256 verify + inference self-test).
 
 Three retrieval tiers, switchable in Settings → Semantic engine:/n/n- **Lexical (C1, 0GB)** — the always-on floor, BM25 over full text.

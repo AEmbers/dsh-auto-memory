@@ -65,3 +65,20 @@ jobs:
           echo "::error::全量 smoke 有 FAIL/TIMEOUT。上方 '--- FAIL: <套件名> ---' 段落给出该套件的输出尾部。"
           echo "本地复现：node tools/run-smoke.mjs --filter=<套件名关键字>"
           echo "被 --exclude 跳过的套件会在日志里以 'skip <文件> (--exclude=...)' 逐条列出：排除不等于放弃覆盖，理由必须留在日志里。"
+
+  js-semantic-windows:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Offline fake peer only: no dependency installation or model download.
+      - name: JS semantic process isolation and lifecycle
+        shell: pwsh
+        run: |
+          $env:HOME = Join-Path $env:RUNNER_TEMP "dsh-smoke-home"
+          $env:DSH_HOME = Join-Path $env:RUNNER_TEMP "dsh-smoke-state"
+          New-Item -ItemType Directory -Force $env:HOME, $env:DSH_HOME | Out-Null
+          node tests/smoke/smoke-test-js-semantic-process.mjs

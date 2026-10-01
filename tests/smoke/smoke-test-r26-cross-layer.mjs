@@ -158,7 +158,6 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //   ⑥ 前端三态以后端 state 为准 + mode-aware 文案（修「未安装、当前模式不受影响」在
 //      Python 档下的错误措辞）。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-
 // ★2026-09-30 基线演进 R61→R62（接续工作区漂移修复批，增量归因；用户报障「A区点击接续，新会话在B区」）：
 //   三条漂移通道全修：
 //   ① buildPrevSessionPack：want 显式给出但无持久化文件时，**不再静默改用 _lastAgent**（最近活跃
@@ -181,16 +180,53 @@ ok(damNoMixedEol(SRC), 'E2 纯 CRLF')
 //      形状 {enabled, stats: snapshot()} 不动）——三通路恒 0 + 空态文案的口径错位修正；
 //   守卫演进：recall-stats S4g2/S4g3 旧判据（「data.channels 恰好 1 次」「StatsTab 内 data.stats=0」）
 //   焊死的是 bug 本身，已带归因改写；p9 注入表 +5 绑定、新增 #147 行为段；l0-extract +5 例。
-// ★2026-09-30 基线演进 R63→R65（PR #150 皮肤 + PR #155 运行时修复，两批合并后重编）：
-//   ① #150：skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（路由按 ?deep=1 选暗色素材）；
-//   ② #155：#152 增量开关每轮取值 / #153 默认模型回退共用解析器 / #154 接续创建失败显式报错；
-//   ③ 上述 3.2.5 全部修复保留。
+// ★2026-09-30 基线演进 R63→R64（PR #150 三套皮肤移植批，增量归因）：
+//   本批=Minervaowl7 的三套蓝白皮肤（仪器/编辑/活水）移植到 3.2.5/S64 之上；index.js 侧唯一改动=
+//   skinAssetRelOfPre/skinAbsPathOfPre 增加 deep 参数（路由按 ?deep=1 选 fileDark 暗色素材）——与 3.2.5 的
+//   #147（stripOrphanAnchorsPre + MARKER_RE import）及接续修复正交，两者共存。
+//   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
+// ★2026-09-30 基线演进 R65→R66（D1 批：5 个团队键补入 DEFAULT_CONFIG，修「UI 渲染了但被写入门静默丢弃」）：
+//   放行内容 = 新增 teamServerUrl / teamId / teamMemberName / teamConflictPolicy（默认 ask）/ teamAuditEnabled 五键。
+//   为什么必须进白名单：POST /config 只接受 Object.keys(DEFAULT_CONFIG)，其余静默丢弃 ——
+//   这 5 键此前已被 renderTeamSettings 渲染成控件，用户改了界面翻面、配置永远写不进去且无报错。
+//   零行为变更之外的放行：不改任何既有默认值、不改读取语义，仅让既有控件真正可写。
+//   三面同步守卫 smoke-test-settings-parity 已加「UI 团队键 ⊆ DEFAULT_CONFIG」判据（含负路径）。
+// ★2026-09-30 基线演进 R64→R65（PR #155 运行时修复批，增量归因；与 PR #150 皮肤批合并后的基线）：
+//   ① #152 增量开关：semantic-js 每次重建起始读取 getter（旧实现构造时常量化 ⇒ 
+//      设置里关闭后不生效）；
+//   ② #153 默认模型回退：共用新版列表项/旧版 block 解析器，回退保留原实现名、成对替换 provider/model；
+//   ③ #154 接续创建：workspaceId → 源 cwd → 显式失败（不再无工作区创建并继续投料）。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
 //   语义保留：除本条与 E4 计数外，index.js 任何其他改动仍会被本锁抓住。
-eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '4BE9989C5B23B971', 'E3 ★宿主 lib/index.js 基线守恒（sha16 = R65 基线（PR #150 皮肤 + PR #155 运行时修复 两批合并）；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色素材）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器 + #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
-// R64 (LF-normalized hash): #153 shared profile/block model parser and paired fallback route; #154 source-workspace create guard.
+// ★2026-09-30 基线演进 R66→R67（F 批：语义唤回三闸门默认改开 + 设置面/皮肤三修，增量归因）：
+//   ① 用户裁定「L0 向量索引这些的语义唤回应当默认打开」⇒ DEFAULT_CONFIG 三键 false→true：
+//      activationInboxEnabled（唤回总闸，关着时 activation-host 三处早退、结果永不投递）、
+//      shadowRetrievalEnabled（影子检索）、contextBridgeEnabled（上下文桥）。
+//      存量用户迁移另有一次性升级器（只升一次，显式设过 false 者不动）。
+//   ② lib/semantic-js.js 与 lib/python-runtime.js 属 E 批（C2 的 devTreeRoot 多基探测 /
+//      C3 的探测超时归因 + 一次重试），不属本文件，故本基线只反映 ①。
+//      ★口径纠正：初版本条声称「存量用户迁移另有一次性升级器」——**该升级器并不存在**
+//      （全仓无 upgradeActivationDefaults* ）。实况：从未动过该键的用户盘上**没有这个键**，
+//      新默认直接生效；显式关过的用户盘上是 false，保持关。⇒ 本就无需迁移，属注释不实。
+// ★2026-09-30 基线再演 R67→R68（G 批 · 发射闸单钥匙化，增量归因）：
+//   用户裁定「另一把闸也要做好联动，用户确定要开自动唤回就一定能开，Python 和 js 都要」。
+//   实测根因：发射闸共**三处**读数、却只有**两把钥匙**——activationEmitMode（JS 判定臂
+//   context-host:495 + Python fv2 车道 worker:1261 都读它，有 UI 写入面）与
+//   activationPolicy.mode（Python **v1 通道** worker:956 单独读它）。后者在用户面**零写入点**
+//   （设置页/新手向导/semantic-emit 端点三处全只写前者）⇒ 用户把「记忆唤起」开成 active，
+//   v1 通道恒 shadow：判定照跑、shadow 行照写，但 activation_request 帧永不发出。
+//   ① index.js：semantic-emit 端点写入时把两键**对齐**（active⇒两把全开，其余档⇒两把全关），
+//      磁盘状态自洽；诊断块新增 activationPolicyModeLive 回显第二把闸，便于核对两闸一致。
+//   ② python/worker_semantic_v1.py（不属本文件，另由 G 批测试覆盖）：v1 通道判定改为
+//      「activationEmitMode==active 放行，或 activationPolicy.mode==active 显式放行」；
+//      并对同 observation 的双车道帧按 activationId **保序去重**（两车道 id 同源，会双帧）。
+//   ⚠️ 非引擎联动：JS 与 Python 两套语义引擎的选择逻辑完全不动（语义引擎铁律不变）。
+//   判据守恒：路由数 68 不变；配置键 143 不变（activationPolicy 属 embedding-config，不在 DEFAULT_CONFIG）；
+//   依赖面 {} 不变。本基线只反映 index.js 的 ①。
+//   判据守恒：路由数 68 不变、配置键 143 不变、依赖面 {} 不变；仅默认值与注释演进。
+eq(createHash('sha256').update(IX).digest('hex').slice(0, 16).toUpperCase(), '57DD707D681E5B86', 'E3 ★宿主 lib/index.js 基线守恒（R72 = R71 + 2026-10-01 接续开关默认开：DEFAULT_CONFIG.globalBriefEnabled false→true（用户裁定「把读取外部记忆的开关默认打开」）；前序 R71 = R70 + 2026-10-01 自写豁免接线 + 团队注入候选生产者：①_noteSelfWritePre 原为零调用点 ⇒ 挂到 4 个写盘原语（appendText/writeFullRaw/writeFullSingle/writeFull）⇒ 豁免真正生效；②_teamInjectCandidates 原只有 = [] 两次赋值、无生产者 ⇒ 把 pullOnce 的 appliedEntries 经 normalizeTeamSegmentsPre 喂入。前序 R70 = 记忆注入优化；原 R70 说明：（R70 + 2026-10-01 全局动态简报批：新增 lib/global-brief.js 纯模块 + 8 个 globalBrief* 配置键 + 精简版注入路径补 diag（用户要求可计量）+ 简报段并入注入主路径；前序 R70 = R69 + 记忆注入优化：精简版瘦身 + 完整版两档门槛 + 2 个配置键 + 2 层提示词；原 R69 说明：①规则编辑 GUI 路由按 expect 内容锚定防索引漂移 ②两处 _degradePre 死代码改接真实 _degradeSink ③sessions 兜底说明不再写死「39 个旧会话/descriptor v2」改为如实输出；归一化 LF 后计。前序 R68 = R67 + G 批发射闸单钥匙化；R63→R65 放行 = skinAssetRelOfPre/skinAbsPathOfPre 加 deep 参数（素材路由 ?deep=1 选暗色资源）+ #152 增量开关每轮取值 + #153 默认模型回退共用解析器（provider/实现名不再混用）+ #154 接续创建失败显式报错不丢源工作区 + 上述 3.2.5 全部修复保留，理由见上）')
 // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，见 E3 同批）。语义保留：仍锁路由数不漂移。
-eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 68, 'E4 ★路由数守恒 = 68（2026-09-28 皮肤库路由 +1；其余零新增）')
+eq(cnt(IX, "path: API[") + cnt(IX, 'path: API.'), 69, 'E4 ★路由数守恒 = 69（2026-09-28 皮肤库 +1；2026-10-01 /global-brief +1；其余零新增）')
 console.log('lib/client.js ' + Buffer.byteLength(SRC, 'utf8') + 'B / CRLF ' + (SRC.match(/\r\n/g) || []).length + ' / sha16 ' + createHash('sha256').update(SRC).digest('hex').slice(0, 16).toUpperCase())
 console.log('PASS ' + p + ' / FAIL ' + f)
 fails.forEach((x) => console.log('  FAIL: ' + x))

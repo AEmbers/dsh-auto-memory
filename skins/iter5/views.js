@@ -181,6 +181,12 @@ status[0]?h('p',{className:'i5-muted',role:'status'},status[0]):null,failure[0]?
       var source=sources.find(function(s){return s.id===selected[0]})||sources[0]
       var id=source&&source.id||''
       var detail=useIter5Data(function(){return id?apiGet(API.externalView,{source:id}):Promise.resolve(null)},[id,revision[0]])
+      // ★2026-10-01（用户裁定 B 方案）：全局简报状态 —— 与「外部来源」同页展示。
+      //   语义归位：简报 = 继承其他 Agent 的记忆，属「外部记忆」而非「长会话接续」。
+      //   形态：**一行汇总 + 抽屉展开**（展开后是逐条清单），故取数与渲染都放在本组件内。
+      var briefData=useIter5Data(function(){return apiGet(API.globalBrief)},[props.nonce,revision[0]])
+      var briefOpen=useState(false)
+      var brief=briefData.data||null
       var identity=iter5Identity(), alive=useRef(true)
       useEffect(function(){return function(){alive.current=false}},[])
       function ok(){return alive.current&&identity===iter5Identity()}
@@ -198,7 +204,34 @@ status[0]?h('p',{className:'i5-muted',role:'status'},status[0]):null,failure[0]?
         busy[1](true);search[1]('');error[1]('')
         apiPost(API.recall,{query:source.name||source.tool||''}).then(function(r){if(ok())search[1](r.result||L('没有找到相关片段','No matching passages'))}).catch(function(e){if(ok())error[1](e.message)}).finally(function(){if(alive.current)busy[1](false)})
       }
+      var briefChanged=brief&&brief.changed||[]
+      var briefCount=briefChanged.length
+      var briefWhen=brief&&brief.at?new Date(brief.at).toLocaleTimeString():''
+      var briefOn=brief&&brief.enabled===true
+      // 一行汇总：状态 + 计数 + 上次检查时间；点箭头抽屉展开（展开后是逐条清单 = A 形态）
+      var briefRow=h('div',{className:'i5-brief-row','data-dam-brief':''},
+        h('button',{className:'i5-brief-head',type:'button','data-dam-brief-toggle':'','aria-expanded':briefOpen[0]?'true':'false',onClick:function(){briefOpen[1](!briefOpen[0])}},
+          h(Iter5Icon,{name:briefCount?'note':'check'}),
+          h('div',{className:'i5-brief-title'},
+            h('strong',null,L('接续其他 Agent 记忆文档','Inherit other agents\' memory docs')),
+            h('small',null,
+              !briefOn?L('未开启：到设置里打开后才会检测','Off: enable it in settings to start watching')
+              :briefCount?L('检测到 ','Detected ')+briefCount+L(' 处变化',' changes')+(briefWhen?' · '+L('上次检查 ','last check ')+briefWhen:'')
+              :L('暂无变化','No changes yet')+(briefWhen?' · '+L('上次检查 ','last check ')+briefWhen:''))),
+          h('i',{className:'i5-brief-caret','data-open':briefOpen[0]?'true':'false'})),
+        // 详情（抽屉）：逐条列「路径 · 类型 · 来源」；未开启时给去设置的行动提示
+        briefOpen[0]?h('div',{className:'i5-brief-body','data-dam-brief-body':''},
+          !briefOn?h('p',{className:'i5-muted'},L('该功能已被关闭。可在「设置 → 存储与外部记忆 → 接续其他 Agent 记忆文档」重新开启；开启后这里会列出被检测到的文件变化。','This feature is off by default. Enable it under Settings → Storage → Inherit other agents\' memory docs; changes will then be listed here.'))
+          :briefChanged.length?h('ul',{className:'i5-brief-list'},
+            briefChanged.map(function(c,i){return h('li',{key:String(c.path||i),'data-dam-brief-item':''},
+              h('span',{className:'i5-brief-kind','data-kind':String(c.kind||'')},c.kind==='added'?L('新增','added'):c.kind==='removed'?L('移除','removed'):L('变更','changed')),
+              h('code',{className:'i5-brief-path'},String(c.path||'')),
+              c.source?h('span',{className:'i5-brief-src'},String(c.source)):null)}) )
+          :h('p',{className:'i5-muted'},L('自上次检查以来没有变化。','No changes since the last check.')),
+          h('p',{className:'i5-muted i5-brief-foot'},L('只报位置与时间，不摘录内容；模型按需读取绝对路径。','Reports locations and times only, never content; the model reads absolute paths on demand.')))
+        :null)
       return h('div',{className:'i5-external-view'},
+        briefRow,
         h('div',{className:'i5-info-callout'},h(Iter5Icon,{name:'handoff'}),h('div',null,h('h2',null,L('接入外部来源','Connect external sources')),h('p',null,L('查看已发现的工具记忆，按用户级或项目级接入。','Review discovered tool memories and import them to user or project memory.'))),h('button',{onClick:response.retry,disabled:busy[0]},L('重新扫描','Rescan'))),
         response.error?h(Iter5Error,{error:response.error,retry:response.retry}):null,
         message[0]?h('p',{className:'i5-success',role:'status'},message[0]):null,error[0]?h(Iter5Error,{error:error[0]}):null,

@@ -258,9 +258,11 @@
       function pageActions() { return h('div', { className: 'i5-page-actions' }, h('button', { 'aria-label': focus[0] ? L('退出专注查看', 'Exit focused view') : L('专注查看', 'Focused view'), 'aria-pressed': focus[0], onClick: function () { focus[1](!focus[0]) } }, h('svg', { width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.5,'aria-hidden':true },h('path',{d:focus[0]?'M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5':'M9 4H4v5M15 4h5v5M4 15v5h5M20 15v5h-5'}))), h('button', { 'aria-label': L('刷新当前页', 'Refresh current page'), onClick: function () { if (root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('刷新会放弃未保存修改，继续？', 'Discard changes and refresh?'))) return; if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']; refresh[1](refresh[0] + 1) } }, h(Iter5Icon,{name:'timeline'}))) }
       function railReadout(k, v) { return h('div', { className: 'i5-rs', key: k }, h('span', { className: 'i5-rs-k' }, k), h('span', { className: 'i5-rs-v i5-num' }, v)) }
       function exitClassic() {
-        if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定切回经典？', 'Discard unsaved changes and return to classic?'))) return
+        if (root.current && root.current.querySelector('[data-i5-dirty="true"]') && !window.confirm(L('有未保存的修改，确定切回旧款？', 'Discard unsaved changes and return to the classic new UI?'))) return
         if (page[0] === 'settings') delete iter5SettingsDrafts[iter5Identity() + '|workbench']
-        damSkinSet('classic'); props.onExit()
+        // ★2026-09-30（用户裁定）：三套新皮肤里的「返回」回**旧款**（3.2.5 的新款 UI），
+        //   而不是直接回经典；旧款里的「返回经典皮肤」保持原样。两者语义不同，不得合并。
+        iter5SetStyle('legacy'); props.onExit()
       }
       return h('div', { ref: root, 'data-iter5': '', 'data-native-workbench': '', 'data-i5-style': skinStyle, 'data-page': page[0], 'data-deep': deep ? 'true' : 'false', 'data-focus': String(focus[0]), role: focus[0] ? 'dialog' : undefined, 'aria-modal': focus[0] ? true : undefined, 'aria-label': focus[0] ? L('记忆工作台', 'Memory workbench') : undefined, onKeyDown: function (e) {
         if (!focus[0]) return

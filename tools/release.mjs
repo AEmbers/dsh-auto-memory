@@ -67,11 +67,25 @@ const SHIM_RE = (() => {
 //   4 份 client.js 全文）被拷进发布基座**，且 REL 的 .gitignore 同样只兜 `*.bak`/`*.bak-*`
 //   ⇒ 会以「新增未跟踪文件」身份被 `git add -A` 带进 GitHub。
 //   实测核对：`/\.bak/` 时 13 个漏网；`/bak/i` 时 0 个。备份一律含 bak ⇒ 以此为唯一口径最稳。
-copyDirExcluding(path.join(DEV, 'lib'), path.join(REL, 'lib'), /bak/i)
-// 垫片已拷入 ⇒ 删掉（copyDirExcluding 只支持扩展名黑名单，故拷后清理，语义等价且零风险）
+// ★2026-10-01 修（issue #166 · 发布卫生）：**口径由「枚举命名」升级为「结构性白名单」**。
+//   事故：3.2.6 的 npm 包内含 7 份 client.js 调试残留（.GOOD-1533 / .PRE-GEN-1556 / .badcss /
+//   .curtest / .headtest / .pregen-1522 / .scratch），约 14.97 MB。它们既不含 `bak`（旧口径），
+//   也匹配不到 package.json 的 `!**/*.bak*` ⇒ 一路进 REL、进 GitHub main、进 npm tarball。
+//   教训：**靠枚举后缀名防守，永远会漏掉下一个新命名**（这已是同类事故第 2 次：3.1.6 漏 m8b*bak）。
+//   新口径 = 白名单扩展名：lib/ 下只放行真源码形态；其余（含 `client.js.GOOD-1533` 这类
+//   「主名之后还有第二个点」的副本）一律删。判据一句话可述，不再需要维护命名清单。
+const DAM_LIB_KEEP_RE = /\.(?:js|mjs|cjs|json|md|txt|css)$/i
+copyDirExcluding(path.join(DEV, 'lib'), path.join(REL, 'lib'), /$^/)
+// 拷后按结构判定清理：①过渡垫片 ②非白名单扩展名 ③主名后带第二个点的副本（如 client.js.scratch）
+const DAM_LIB_DROPPED = []
 for (const f of readdirSync(path.join(REL, 'lib'))) {
-  if (SHIM_RE.test(f)) rmSync(path.join(REL, 'lib', f), { force: true })
+  const isRawCopy = /\.[^.]+\./.test(f)          // 形如 x.y.z ⇒ 调试副本/备份
+  if (SHIM_RE.test(f) || isRawCopy || !DAM_LIB_KEEP_RE.test(f)) {
+    rmSync(path.join(REL, 'lib', f), { recursive: true, force: true })
+    DAM_LIB_DROPPED.push(f)
+  }
 }
+if (DAM_LIB_DROPPED.length) console.log('[release] lib/ 排除残留 ' + DAM_LIB_DROPPED.length + ' 个: ' + DAM_LIB_DROPPED.slice(0, 8).join(', ') + (DAM_LIB_DROPPED.length > 8 ? ' …' : ''))
 copyDirExcluding(path.join(DEV, 'tests'), path.join(REL, 'tests'), /(node_modules|bak)/i)
 copyDirExcluding(path.join(DEV, 'python'), path.join(REL, 'python'), /(__pycache__|\.pyc|bench|bak)/i)
 // ★2026-09-28(3.2.0) 补 skins：宿主路由 skin-library-fetch 与前端「皮肤选择中心」的默认仓库
@@ -412,7 +426,11 @@ const relPkg = {
     //   与 package.json 的 files 同源，两处必须一致 —— 发布包由本文件的 files 决定，package.json 是给 npm 的声明。
     '!docs/ui-demo-*', '!docs/ui-demo', '!docs/ui-redesign-*', '!docs/ui-rebuild-handoff-*',
     '!docs/teamwork-impl/concept', '!docs/teamwork-impl/_shots', '!**/node_modules',
-    '!**/*.bak*', '!lib/*.m8b*bak*'],
+    '!**/*.bak*', '!lib/*.m8b*bak*',
+    // ★2026-10-01 修（issue #166）：**结构性排除** —— lib/ 下任何「主名后还有第二个点」的文件
+    //   （`client.js.GOOD-1533` / `.scratch` / `.badcss` …）都是调试副本，一律不进包。
+    //   与上面 `copyDirExcluding` 的白名单同源，双保险：源侧不拷 + npm 侧不选。
+    '!lib/*.*.*'],
   dsh: {
     bundle: { patch: './cordis.patch.yml' },
     client: {

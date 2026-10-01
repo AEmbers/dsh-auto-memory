@@ -64,7 +64,21 @@ console.log('PASS three-value state model: unset/v4/classic/garbage all resolve 
 // ---- 2) CSS 分派与组成（真执行 + 负路径）----
 assert.ok(source.includes('DAM_SKIN_V4_CSS'), 'baseline flavor must include the shell CSS constant')
 const flavorBlock = block('    function damSkinCssText() {', "      return '/* dam-skin:begin (v4) */\\n' + DAM_SKIN_V4_CSS")
-assert.ok(/flavor === 'classic'\)\s*return ''/.test(flavorBlock), 'classic flavor must return empty CSS (no injection)')
+// ★H35 判据更正（2026-10-01）：原判据锁字面 `return ''`，过粗。
+//   该断言真正要守的语义是「**经典页不被新皮肤页面样式表污染**」（F 批根因）。
+//   但 classic 档的**浮层**（shell.overlay）不走 page 表，而是 Iter5Surface 恒投的冻结表
+//   （L13316 `damSkinCssFlavor() === 'iter5' ? ITER5_CSS : LEGACY_ITER5_CSS`）——
+//   冻结表里 `[data-dam-theme] :is([data-dam-panel],[data-dam-tour],[data-dam-autocont])
+//   { background:var(--i5-surface)!important; backdrop-filter:none!important }` 会让浮层变蓝底并杀掉毛玻璃。
+//   故 classic 分支改为只返回**浮层玻璃覆盖段** damLegacyOverlayGlass()（不改任何 --i5-* 变量定义）。
+//   判据随之改为语义化：classic 不得注入三张**页面**样式表中的任何一张。
+const classicLine = flavorBlock.split('\n').filter((l) => l.includes("flavor === 'classic'"))[0]
+assert.ok(classicLine, 'classic branch line must exist')
+assert.ok(!classicLine.includes('DAM_SKIN_V4_CSS'), 'classic flavor must NOT inject the shell/page stylesheet')
+const classicNoLegacy = classicLine.split('LEGACY_ITER5_CSS').join('')
+assert.ok(!classicNoLegacy.includes('ITER5_CSS'), 'classic flavor must NOT inject the frozen baseline page stylesheet')
+assert.ok(!classicLine.includes('DAM_SKIN_V4_CSS') && !classicNoLegacy.includes('ITER5_CSS'), 'classic flavor must inject NO page stylesheet (page pollution guard)')
+assert.ok(classicLine.includes('damLegacyOverlayGlass'), 'classic flavor must carry the overlay glass compat segment (H35)')
 assert.ok(flavorBlock.includes('DAM_SKIN_V4_CSS'), 'legacy flavor must carry DAM_SKIN_V4_CSS (shell root rules live there)')
 assert.ok(flavorBlock.includes('LEGACY_ITER5_CSS'), 'legacy flavor must use the frozen baseline stylesheet')
 assert.ok(flavorBlock.includes('ITER5_CSS'), 'iter5 flavor must use the variants stylesheet')
@@ -91,7 +105,12 @@ console.log('PASS ensure rebuild: marker compare + stale removal + empty guard')
 
 // ---- 4) 挂载门（三值模型下必须放宽）----
 assert.ok(source.includes("if (damSkinActive() !== 'classic') {"), 'mount gate must admit iter5 (default) — otherwise skins vanish')
-assert.ok(source.includes("if (damSkinActive() !== 'classic') damSkinEnsureCss()"), 'apply-time injection gate must be widened too')
+// ★H35b 判据更正（2026-10-01）：原断言要求 apply 期门禁保留 `!== 'classic'`，方向反了。
+//   真语义：**classic 档也必须注入**——classic 的 damSkinCssText() 只返回浮层玻璃覆盖段
+//   （不注入任何页面样式表），若被门禁挡住，经典档浮层就永久停在扁平 i5 面色
+//   （用户实报「浮窗没变化」）。故断言 apply 期必须无档位条件地调用 damSkinEnsureCss()。
+assert.ok(source.includes('try { ensureStyle(); damSkinEnsureCss() }'), 'apply-time injection must NOT be gated on flavor (classic needs the overlay compat segment)')
+assert.ok(!source.includes("!== 'classic') damSkinEnsureCss()"), 'the old classic-excluding apply gate must be gone')
 assert.ok(!source.includes("if (damSkinActive() === 'v4') {\n        try { damSkinEnsureCss() }"), 'old narrow mount gate must be gone')
 console.log('PASS mount gates widened to !== classic (default state renders the skin shell)')
 

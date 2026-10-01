@@ -66,7 +66,9 @@ await t('#2-3 ★★ 顺序：**先写入笔记成功，再改状态**', () => {
     '★ 状态应用在笔记写入之后（写入失败就不该动状态 —— 防"新结论没进去、旧结论却被标废"）')
 })
 await t('#2-4 ★ 状态失败**不得影响**已成功的笔记写入', () => {
-  ok(/catch \(e\) \{ statusNote = /.test(CODE), '有 try/catch 兜住')
+  // ★2026-10-01 判据更新（移植上游 #162）：catch 块内先落诊断再赋值 statusNote，不再是单行写法。
+  //   判据从「字面单行」改为「语义等价」：catch 块内必须给 statusNote 赋兜底文案。
+  ok(/catch \(e\) \{[\s\S]{0,400}?statusNote = /.test(CODE), '有 try/catch 兜住(且给 statusNote 兜底)')
   ok(!/applyNoteStatusPre[\s\S]{0,400}throw /.test(CODE.slice(CODE.indexOf('await engine.applyNoteStatusPre('), CODE.indexOf('await engine.applyNoteStatusPre(') + 400)),
     '调用点附近不抛')
 })
@@ -94,7 +96,10 @@ await t('#3-3 ★ 留痕（不新建状态源）', () => {
 await t('#3-4 fail-soft：任何异常不抛出', () => {
   const i = CODE.indexOf('async applyNoteStatusPre(')
   const body = CODE.slice(i, i + 4000)
-  ok(/catch \(e\) \{[\s\S]{0,300}return '\\n\(状态写入失败/.test(body), '★ 兜底返回说明而非抛出')
+  // ★2026-10-01 判据更新（移植上游 #162）：catch 内新增 recordDiagnosticErrorPre 落诊断，
+  //   再依据 statusSaved 二分返回兜底文案；判据改为「catch 内最终返回兜底说明、且不抛」。
+  ok(/catch \(e\) \{[\s\S]{0,600}?return statusSaved[\s\S]{0,200}?状态写入失败/.test(body)
+    && !/catch \(e\) \{[\s\S]{0,600}?throw /.test(body), '★ 兜底返回说明而非抛出')
 })
 
 // ═══ 4. 读侧：★ 声明位置（本仓「标识符作用域」类缺陷） ═══

@@ -67,7 +67,7 @@ const classic = source
 //   (2) 附「向导 where ⇒ 设置页实名单」对照核验：11 个分区名逐条比对，本批后 4 种 where 取值中
 //       「语义记忆总开关」命中最多次（7 次），其余 3 种（记忆窗口 / 自动化 / 记忆中枢）为**批前既有**，未在本批范围内。
 //   守卫语义不变：生成块之外的任何**非意外**改动仍会被本锁抓住；本批期望值随之上移。
-assert.equal(createHash('sha256').update(classic).digest('hex'), '94835bf7825664cfea896ca63892fcdd4e5932ac63af86afac3c5f0f955a3b4b', 'Reviewed native-reference entry baseline stays unchanged outside generated skin (nine-step navigation and contextual panel)')
+assert.equal(createHash('sha256').update(classic).digest('hex'), '5dc5d5e0e9591b4a89e6e093d7546ef94bb25bd82ce28941fd4761366a38f65a', 'Reviewed native-reference entry baseline（R72 = R71 + 2026-10-01 ①接续开关默认开 + 欢迎向导开关 ②经典档接入 GlobalBriefRow 简报抽屉 ③damSharedSurfaceCss classic 分支归零修复；原 R71 = R70 + 2026-10-01 全局动态简报批（client.js 三面各加 8 个 globalBrief* 控件 + frozen 面补齐上批遗漏的 slimEveryRounds/fullEverySlims 两键）；原 R70 = R69 + #160/#162 修复：python 向导轮询/取消渲染、规则草稿与内容锚定、首屏 tour hero 挂载复原；生成块之外任何**非意外**改动仍会被本锁抓住）')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')
@@ -220,10 +220,18 @@ window['dsh-auto-memory.wizStatus']={loaded:true,ready:false,download:{phase:'id
 test.setDialog(null);test.DialogHost();const hiddenHooks=cursor
 cursor=0;test.setDialog({kind:'welcomeTour',manual:true});const tour=test.DialogHost()
 assert(tour,'Welcome tour renders')
-const nativeNav=nodes(tour,n=>n.props?.['data-native-tour-nav']==='')[0]
-assert(nativeNav,'Welcome provides the approved native step navigation')
-assert.equal(nodes(nativeNav,n=>n.type==='button').length,9,'All actual welcome steps remain reachable')
-assert.equal(nodes(nativeNav,n=>n.props?.['aria-current']==='step').length,1,'Exactly one step is current')
+// ★2026-10-01 判据升级（用户裁定「那就修守卫」）：原断言锚在**容器标识** data-native-tour-nav 上，
+//   而它要守的真实语义是「欢迎向导每一步都可达 + 当前步唯一」。H33 批按用户裁定恢复 3.2.5 观感、
+//   把步骤胶囊换成圆点条（data-dam-tour-dots）后**功能未变、容器名变了** ⇒ 锚点型断言转红。
+//   判据纪律：断言对象若是「某 class/属性名是否存在」即恒真守卫，不构成功能验收。
+//   此处改为**直接断言功能**，并接受两种容器名（旧 nav 条 / 新圆点条）：
+//   ① 步骤导航容器存在；② 步骤按钮数 = 实际步数；③ 每个步骤按钮都**真的可点**（有 onClick）；④ 当前步唯一。
+const navC=nodes(tour,n=>n.props?.['data-native-tour-nav']===''||n.props?.['data-dam-tour-dots']==='')[0]
+assert(navC,'Welcome provides step navigation (nav bar or dot rail)')
+const stepBtns=nodes(navC,n=>n.type==='button')
+assert.equal(stepBtns.length,9,'All actual welcome steps remain reachable')
+assert(stepBtns.every(n=>typeof n.props?.onClick==='function'),'Every welcome step is actually reachable (clickable)')
+assert.equal(stepBtns.filter(n=>n.props?.['aria-current']==='step').length,1,'Exactly one step is current')
 const welcomeToggles=window['dsh-auto-memory.TOUR_STEPS'].flatMap(step=>step.toggles||[])
 assert(welcomeToggles.some(t=>t.key==='workbenchEnabled'))
 assert(!welcomeToggles.some(t=>t.key==='workbenchRoot'),'Directory setting cannot be written as a boolean')
@@ -385,31 +393,16 @@ assert.equal(nodes(progress,n=>n.props?.['aria-valuenow']!==undefined).length,0,
 console.log('PASS summary retains all host work details and continuation uses indeterminate progress')
 
 // Git may check out skin sources as CRLF on Windows and LF on Linux.
-// Both must produce the same normalized bundle without doubled CR bytes.
-const fixture=mkdtempSync(path.join(tmpdir(),'iter5-generator-'))
-try {
-  // ★2026-09-30 双皮肤块：生成器从 skins/legacy/*.frozen 读旧款源，
-  //   fixture 也必须带上它（否则「生成器幂等」这条守卫在临时目录里失败）。
-  for(const dir of ['lib','tools','skins/iter5','skins/legacy'])mkdirSync(path.join(fixture,dir),{recursive:true})
-  writeFileSync(path.join(fixture,'skins/legacy/iter5-325.js.frozen'),readFileSync(new URL('../../skins/legacy/iter5-325.js.frozen',import.meta.url)))
-  writeFileSync(path.join(fixture,'tools/build-iter5-skin.mjs'),readFileSync(new URL('../../tools/build-iter5-skin.mjs',import.meta.url)))
-  for(const newline of ['\n','\r\n']) {
-    for(const name of ['settings-copy.js','style-choice.js','alternate-home.js','style-variants.css','ui.js','views.js','surfaces.js','native-panel.js','native-workbench.js','skin.css','native-tour.css','native-panel.css','native-settings.css','native-workbench.css','native-library.css','native-search.js','native-operations.css','native-skills.js','native-storage.js','native-team.js','native-map.js','native-messages.js','native-secondary.css']) {
-      const text=readFileSync(new URL('../../skins/iter5/'+name,import.meta.url),'utf8').replace(/\r\n/g,'\n')
-      writeFileSync(path.join(fixture,'skins/iter5',name),text.replace(/\n/g,newline))
-    }
-    writeFileSync(path.join(fixture,'lib/client.js'),source.replace(/\n/g,newline))
-    execFileSync(process.execPath,[path.join(fixture,'tools/build-iter5-skin.mjs')])
-    execFileSync(process.execPath,[path.join(fixture,'tools/build-iter5-skin.mjs'),'--check'])
-    const generated=readFileSync(path.join(fixture,'lib/client.js'),'utf8')
-    assert(!generated.includes('\r\r'),'No doubled carriage returns')
-    assert.equal(generated.replace(/\r\n/g,'\n'),source,'Line ending conversion does not alter bundle content')
-  }
-} finally {
-  assert(path.dirname(fixture)===path.resolve(tmpdir())&&path.basename(fixture).startsWith('iter5-generator-'))
-  rmSync(fixture,{recursive:true,force:true})
-}
-console.log('PASS generator is idempotent with LF and CRLF checkouts')
+// ★2026-10-01 移除（用户裁定「把那一个失败删掉，不然以后还会有误解」）：
+//   原「生成器幂等」段（实测约 26 行）在临时 fixture 里**真跑 tools/build-iter5-skin.mjs**，
+//   而该生成器当前**在真实 client.js 上会把整个生成块吞掉**——根因是它用非贪婪跨行正则
+//   /^([ \t]*)useEffect\(\)\{[\s\S]*?\n\1\}, \[\]\)$/gm 配对 useEffect 起止：
+//   它靠**缩进相同**猜嵌套，遇到 2477 行的块（内含同缩进 useEffect）就从块首一路吃到最远的
+//   `}, [])`，实测吞掉 523,664 字符（含整个生成块）⇒ 产物从 1.79M 缩到 1.50M、回归 2→11 红。
+//   ⇒ 该守卫在生成器修好前**恒为红**，留下的唯一作用是把「生成器坏了」这件事误报成
+//   「皮肤功能退化」，让后续排查走偏。故整段移除；待生成器改正则配对后由维护者按需恢复
+//   （判据：生成器能在当前 client.js 上幂等重跑，且 --check 通过）。
+//   注：生成器本身的另外两个缺陷已在本轮修复（计数被注释喂饱 / 摘块丢弃插入锚）。
 
 // Topic deduplication, readable labels and non-actionable topic semantics.
 const uniqueGraph = test.iter5WorkspaceLayout([{path:'/fixture',name:'Fixture',items:['Topic',' Topic ', 'Other']}], {})

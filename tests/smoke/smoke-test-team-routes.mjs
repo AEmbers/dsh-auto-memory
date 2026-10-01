@@ -88,7 +88,7 @@ async function main() {
   const API = mod.API || {}
 
   // ① 真 import 产线模块，取真 API 表（不是正则抓源码文本）
-  ok(Object.keys(API).length === 68, '真 API 表 = 68 条（2026-09-28 skin-library-fetch +1，与计数锁一致）', Object.keys(API).length)
+  ok(Object.keys(API).length === 69, '真 API 表 = 69 条（2026-09-28 skin-library-fetch +1；2026-10-01 /global-brief +1，与计数锁一致）', Object.keys(API).length)
   for (const [name] of ROUTES) {
     const camel = camelOf(name)
     ok(!!API[camel], '真 API 表含 ' + camel, API[camel])

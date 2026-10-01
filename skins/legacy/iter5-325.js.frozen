@@ -34,6 +34,17 @@
         if (v === 'light' || v === 'dark') localStorage.setItem(ITER5_THEME_KEY, v)
         else localStorage.removeItem(ITER5_THEME_KEY)
       } catch (e) {}
+      // ★H43（2026-10-01 用户真机实测复现后修）：本函数原来**只写 dam-skin-theme、不通知任何人**，
+      //   而模块级那份实现（iter5SetMode，写 dsh-auto-memory.appearance.v1）是另一份、不读本键，
+      //   也不在本函数的调用链上 ⇒ 点本页外观按钮后**只有本页变**，浮窗/设置区/会话页纹丝不动。
+      //   实测证据：点击后 themeKey dark→light、btn dark→light、pageDeep true→false，
+      //   而 modeKey 恒为 dark、html colorScheme 恒为 dark ⇒ 两个键分叉。
+      //   修法：写完后广播给模块级。作用域校验：本 IIFE 与模块级同处 factory 内，
+      //   模块级 function 声明可沿作用域链取到；调用发生在渲染/事件期 ⇒ 必然已初始化。
+      //   取值域映射：本页 auto|light|dark ⇄ 模块级 system|light|dark。
+      try {
+        if (typeof iter5SetMode === 'function') iter5SetMode(v === 'light' || v === 'dark' ? v : 'system')
+      } catch (eB) {}
     }
     function iter5ThemeCycle(v) { return v === 'auto' ? 'light' : v === 'light' ? 'dark' : 'auto' }
     function iter5ThemeLabel(v) { return v === 'light' ? L('亮色', 'Light') : v === 'dark' ? L('暗色', 'Dark') : L('跟随系统', 'Auto') }
@@ -42,6 +53,22 @@
     function useIter5Theme() {
       var pref = useState(iter5ThemeGet)
       var hostDeep = useDeepTheme()
+      // ★H43（2026-10-01）：补订阅。原实现只有 useState(初值)，**挂载后再不重读** ⇒
+      //   ①本页按钮改了不外传（见 iter5ThemeSet）②外部（模块级 picker / 别的标签页）改了本页不跟随。
+      //   两条订阅一起补，缺一即半修：
+      //     · iter5ModeListeners —— 同页：模块级 iter5SetMode 广播时反向采纳
+      //     · storage 事件       —— 跨文档：浏览器只在**其它文档**写入时派发
+      //   （同页 storage 不触发是规范行为，所以两个都要。）
+      useEffect(function () {
+        function sync() { pref[1](iter5ThemeGet()) }
+        window.addEventListener('storage', sync)
+        var reg = typeof iter5ModeListeners !== 'undefined' && iter5ModeListeners && typeof iter5ModeListeners.add === 'function'
+        if (reg) iter5ModeListeners.add(sync)
+        return function () {
+          window.removeEventListener('storage', sync)
+          if (reg) iter5ModeListeners.delete(sync)
+        }
+      }, [])
       var deep = pref[0] === 'auto' ? hostDeep : pref[0] === 'dark'
       return [pref[0], deep, function (next) { iter5ThemeSet(next); pref[1](next) }]
     }
@@ -550,6 +577,10 @@
       var source=sources.find(function(s){return s.id===selected[0]})||sources[0]
       var id=source&&source.id||''
       var detail=useIter5Data(function(){return id?apiGet(API.externalView,{source:id}):Promise.resolve(null)},[id,revision[0]])
+      // ★2026-10-01（用户裁定 B）：全局简报 —— 一行汇总 + 抽屉展开（展开为逐条清单）。
+      var briefData=useIter5Data(function(){return apiGet(API.globalBrief)},[props.nonce,revision[0]])
+      var briefOpen=useState(false)
+      var brief=briefData.data||null
       var identity=iter5Identity(), alive=useRef(true)
       useEffect(function(){return function(){alive.current=false}},[])
       function ok(){return alive.current&&identity===iter5Identity()}
@@ -567,7 +598,32 @@
         busy[1](true);search[1]('');error[1]('')
         apiPost(API.recall,{query:source.name||source.tool||''}).then(function(r){if(ok())search[1](r.result||L('没有找到相关片段','No matching passages'))}).catch(function(e){if(ok())error[1](e.message)}).finally(function(){if(alive.current)busy[1](false)})
       }
+      var briefChanged=brief&&brief.changed||[]
+      var briefCount=briefChanged.length
+      var briefWhen=brief&&brief.at?new Date(brief.at).toLocaleTimeString():''
+      var briefOn=brief&&brief.enabled===true
+      var briefRow=h('div',{className:'i5-brief-row','data-dam-brief':''},
+        h('button',{className:'i5-brief-head',type:'button','data-dam-brief-toggle':'','aria-expanded':briefOpen[0]?'true':'false',onClick:function(){briefOpen[1](!briefOpen[0])}},
+          h(Iter5Icon,{name:briefCount?'note':'check'}),
+          h('div',{className:'i5-brief-title'},
+            h('strong',null,L('接续其他 Agent 记忆文档','Inherit other agents\' memory docs')),
+            h('small',null,
+              !briefOn?L('未开启：到设置里打开后才会检测','Off: enable it in settings to start watching')
+              :briefCount?L('检测到 ','Detected ')+briefCount+L(' 处变化',' changes')+(briefWhen?' · '+L('上次检查 ','last check ')+briefWhen:'')
+              :L('暂无变化','No changes yet')+(briefWhen?' · '+L('上次检查 ','last check ')+briefWhen:''))),
+          h('i',{className:'i5-brief-caret','data-open':briefOpen[0]?'true':'false'})),
+        briefOpen[0]?h('div',{className:'i5-brief-body','data-dam-brief-body':''},
+          !briefOn?h('p',{className:'i5-muted'},L('该功能已被关闭。可在「设置 → 存储与外部记忆 → 接续其他 Agent 记忆文档」重新开启。','This feature is off by default. Enable it under Settings → Storage → Inherit other agents\' memory docs.'))
+          :briefChanged.length?h('ul',{className:'i5-brief-list'},
+            briefChanged.map(function(c,i){return h('li',{key:String(c.path||i),'data-dam-brief-item':''},
+              h('span',{className:'i5-brief-kind','data-kind':String(c.kind||'')},c.kind==='added'?L('新增','added'):c.kind==='removed'?L('移除','removed'):L('变更','changed')),
+              h('code',{className:'i5-brief-path'},String(c.path||'')),
+              c.source?h('span',{className:'i5-brief-src'},String(c.source)):null)}) )
+          :h('p',{className:'i5-muted'},L('自上次检查以来没有变化。','No changes since the last check.')),
+          h('p',{className:'i5-muted i5-brief-foot'},L('只报位置与时间，不摘录内容；模型按需读取绝对路径。','Reports locations and times only, never content.')))
+        :null)
       return h('div',{className:'i5-external-view'},
+        briefRow,
         h('div',{className:'i5-section-heading'},h('div',null,h('h2',null,L('外部记忆来源','External memory sources')),h('p',{className:'i5-muted'},L('将分散在工具中的积累，带回当前工作区。','Bring experience from your other tools into this workspace.'))),h('div',{className:'i5-button-group'},h('button',{onClick:response.retry,disabled:busy[0]},L('重新扫描','Rescan')),h('button',{className:'i5-primary-soft',disabled:busy[0]||!sources.length,onClick:function(){act(async function(){var rows=sources.filter(function(s){return s.kind!=='sessions'&&s.enabled!==false});for(var i=0;i<rows.length;i++){var r=await apiPost(API.externalImport,{source:rows[i].id,target:'project'});if(r&&(r.ok===false||r.error))throw Error(r.error||r.reason)}return{result:L('已接入来源数：','Imported sources: ')+rows.length}})}},L('接入全部可用来源','Import all available')))),
         response.error?h(Iter5Error,{error:response.error,retry:response.retry}):null,
         response.loading?h(Loading):sources.length?h('div',{className:'i5-source-grid'},sources.map(function(s,i){return h('section',{className:'i5-source-tile',key:s.id,'data-selected':String(id===s.id)},h('button',{className:'i5-source-select',onClick:function(){selected[1](s.id);search[1]('')}},h('span',{className:'i5-badge i5-badge-lg','data-hue':['blue','slate','orange','purple'][i%4]},String(s.tool||s.name||'M').slice(0,1).toUpperCase()),h('div',null,h('strong',null,s.tool||s.name),h('small',null,s.name)),h('span',{className:'i5-tag','data-connected':String(!!(s.importedUser||s.importedNotes))},s.importedUser||s.importedNotes?L('已接入','Imported'):L('已发现','Discovered'))),h('div',{className:'i5-source-bottom'},h('small',null,s.kind==='sessions'?String(s.fileCount===undefined?'—':s.fileCount)+L(' 个会话文件',' session files'):L('记忆文件','Memory file')),h('button',{className:'i5-source-toggle',role:'switch','aria-label':L('启用来源：','Enable source: ')+s.name,'aria-checked':s.enabled!==false,disabled:busy[0],onClick:function(){toggle(s)}},h('i'))))})):h(Iter5Empty,{slot:'empty.library',title:L('尚未发现外部记忆','No external memory discovered'),text:L('安装或使用支持的工具后，重新扫描即可查看可用来源。','Rescan after using a supported tool to discover its memory.')}),
@@ -1412,6 +1468,9 @@
           field(t('fDays'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1, max: 14, value: cfg.recentDaysInjected, onChange: function (e) { set('recentDaysInjected', Number(e.target.value) || 1) } }), t('fDaysHint')),
           field(t('fExtBudget'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 200, value: cfg.externalInjectionChars === undefined ? 1400 : cfg.externalInjectionChars, onChange: function (e) { set('externalInjectionChars', Number(e.target.value) || 1400) } }), t('fExtBudgetHint')),
           field(t('fSnapGap'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 50, value: cfg.snapshotMinGapRounds === undefined ? 5 : cfg.snapshotMinGapRounds, onChange: function (e) { set('snapshotMinGapRounds', Number(e.target.value) || 5) } }), t('fSnapGapHint')),
+          // ★2026-10-01（用户裁定）：精简版节奏两键 —— 与服务端 DEFAULT_CONFIG 的 slimEveryRounds/fullEverySlims 一一对应。
+          field(t('fSlimEvery'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1, max: 50, value: cfg.slimEveryRounds === undefined ? 3 : cfg.slimEveryRounds, onChange: function (e) { set('slimEveryRounds', normalizeGapRounds(e.target.value, 3)) } }), t('fSlimEveryHint')),
+          field(t('fFullEverySlims'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 1, max: 20, value: cfg.fullEverySlims === undefined ? 3 : cfg.fullEverySlims, onChange: function (e) { set('fullEverySlims', normalizeGapRounds(e.target.value, 3)) } }), t('fFullEverySlimsHint')),
           field(t('fReinjectOnCompact'), h('input', { type: 'checkbox', checked: cfg.snapshotReinjectOnCompact !== false, onChange: function (e) { set('snapshotReinjectOnCompact', e.target.checked) } }), t('fReinjectOnCompactHint')),
           // ★2026-09-30（C2 · 用户裁定：设置面必须全量，不得缺项）——注入预算/白板账本/水位四组键，
           //   此前只有宿主读、无 UI 入口（实测 client.js 零引用）：
@@ -1607,6 +1666,17 @@
             STYLE_IDS.map(function (id) { return h('option', { key: id, value: id }, t('style' + id.charAt(0).toUpperCase() + id.slice(1))) })), t('fStyleHint')),
           // 2026-09-22 补接线(设置页缺口审计 P1/P2):扫描上限与索引快照前端零命中。
           field(t('fWsDiscover'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 5, max: 2000, value: cfg.workspaceDiscoverMax === undefined ? 200 : cfg.workspaceDiscoverMax, onChange: function (e) { set('workspaceDiscoverMax', Math.max(5, Math.min(2000, Number(e.target.value) || 200))) } }), t('fWsDiscoverHint')),
+          field(t('fGlobalBrief'), h('input', { type: 'checkbox', 'data-dam-key': 'globalBriefEnabled', checked: cfg.globalBriefEnabled === true, onChange: function (e) { set('globalBriefEnabled', !!e.target.checked) } }), t('fGlobalBriefHint')),
+          // ★全局动态简报：四类细分开关（互相解耦——关掉哪一类只影响该类，不影响其余）
+          field(t('fGlobalBriefWatchMemory'), h('input', { type: 'checkbox', checked: cfg.globalBriefWatchMemory !== false, onChange: function (e) { set('globalBriefWatchMemory', !!e.target.checked) } }), t('fGlobalBriefWatchMemoryHint')),
+          field(t('fGlobalBriefWatchDocs'), h('input', { type: 'checkbox', checked: cfg.globalBriefWatchDocs !== false, onChange: function (e) { set('globalBriefWatchDocs', !!e.target.checked) } }), t('fGlobalBriefWatchDocsHint')),
+          field(t('fGlobalBriefWatchExternal'), h('input', { type: 'checkbox', checked: cfg.globalBriefWatchExternal !== false, onChange: function (e) { set('globalBriefWatchExternal', !!e.target.checked) } }), t('fGlobalBriefWatchExternalHint')),
+          field(t('fGlobalBriefWatchTeam'), h('input', { type: 'checkbox', checked: cfg.globalBriefWatchTeam !== false, onChange: function (e) { set('globalBriefWatchTeam', !!e.target.checked) } }), t('fGlobalBriefWatchTeamHint')),
+          field(t('fGlobalBriefChars'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, value: cfg.globalBriefChars === undefined ? 1200 : cfg.globalBriefChars, onChange: function (e) { set('globalBriefChars', Number(e.target.value) || 0) } }), t('fGlobalBriefCharsHint')),
+          field(t('fGlobalBriefInstruction'), h('select', { 'data-dam-slot': 'form', 'data-dam-input': '', value: cfg.globalBriefInstruction === 'none' ? 'none' : 'soft', onChange: function (e) { set('globalBriefInstruction', e.target.value === 'none' ? 'none' : 'soft') } }, [h('option', { value: 'soft' }, L('软指示（推荐）', 'Soft advisory')), h('option', { value: 'none' }, L('仅通知', 'Notify only'))]), t('fGlobalBriefInstructionHint')),
+          field(t('fGlobalBriefUnattended'), h('input', { type: 'checkbox', checked: cfg.globalBriefUnattended !== false, onChange: function (e) { set('globalBriefUnattended', !!e.target.checked) } }), t('fGlobalBriefUnattendedHint')),
+          // 读数行：把「最近一次检测」的状态/条数/时间做成即时可读的一行（展开详情在记忆面板「外部来源」页）。
+          h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, t('fGlobalBriefNow'), ' · ', t('fGlobalBriefNowHint')),
         ]),
         section('look', sectionLabels.look, [
           h('div', { 'data-dam-slot': 'hint', 'data-dam-hint': '' }, t('settingsHeader')),

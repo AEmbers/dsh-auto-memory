@@ -111,7 +111,8 @@ const turnStartEvent = (seq, turn, time) => ({ type: 'turn/start', seq, time: ti
 // ★ 记忆工作台（2026-09-24）：54 → 55 —— 新增 POST /workbench（工作台三重校验诊断/修复，无条件注册）。
     // ★G-F3/G-F5（2026-09-27）：65 → 66 —— 新增 /team-compliance（合规档位只读明示，无条件注册）。
     // ★2026-09-28 计数演进：67→68（新增 skin-library-fetch，用户点名「皮肤库机制」）。仍锁「不意外增加」。
-    if (h.registeredRoutes.length !== 68) throw new Error('route count drifted (expected 68, unconditional routes): ' + h.registeredRoutes.length)
+// ★2026-10-01 再演进：68→69（新增 /global-brief）。
+    if (h.registeredRoutes.length !== 69) throw new Error('route count drifted (expected 69, unconditional routes): ' + h.registeredRoutes.length)
     const cfg = await h.prime()
     // 2026-08-26 裁定:reasoningObserverEnabled/contextBridgeObserveChildSessions 默认 true
     // (开源模型为主,思维链/分支是主要观测面);其余实验开关仍默认 false

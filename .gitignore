@@ -53,3 +53,10 @@ artifacts/pr146-native-ui/host.pid
 # 躲过了 *.bak* 系列规则。故改为**结构性**规则：任何「主名之后还有第二个点」的
 # lib/ 文件都是副本/备份（如 client.js.scratch、index.js.GOOD-1533），一律不入库。
 lib/*.*.*
+
+# --- 2026-10-04 补漏（issue #211）：另两类未被 *.bak* 覆盖的备份后缀 ---
+#   .bakchk（检查点备份）与 .stage1（分阶段改名中间产物）都不含 "bak" 子串的一段，
+#   躲过上面的 *.bak-* / *.bak2-* 系列。此处按后缀直补；**不忽略 .frozen**——
+#   skins/legacy/iter5-325.js.frozen 是生成源，必须入库。
+*.bakchk
+*.stage1

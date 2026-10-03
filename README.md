@@ -91,6 +91,8 @@
   <a href="https://github.com/Minervaowl7"><strong>@Minervaowl7</strong></a>
 </h3>
 
+<p align="center"><sub><strong>Key contributor</strong> — built the entire frontend, and drove the critical vulnerability scan &amp; debugging work for this release.</sub></p>
+
 <p align="center">
   <a href="docs/skin-figures/skin-theme-compare.gif"><img width="720" alt="dark and light theme slider preview" src="docs/skin-figures/skin-theme-compare.gif"></a>
 </p>

@@ -89,6 +89,8 @@
   <a href="https://github.com/Minervaowl7"><strong>@Minervaowl7</strong></a> 完整开发
 </h3>
 
+<p align="center"><sub><strong>重要贡献者</strong> —— 负责了前端的构筑工作，以及本轮关键漏洞的扫描与调试工作。</sub></p>
+
 <p align="center">
   <a href="docs/skin-figures/skin-theme-compare.gif"><img width="720" alt="暗色与亮色主题滑动对比" src="docs/skin-figures/skin-theme-compare.gif"></a>
 </p>

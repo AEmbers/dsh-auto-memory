@@ -75,7 +75,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@a9i5k4/dsh-auto-memory"><img alt="立即下载" src="https://img.shields.io/badge/%E7%AB%8B%E5%8D%B3%E4%B8%8B%E8%BD%BD-npm%20install-C536BC?style=for-the-badge"></a>
+  <a href="https://www.npmjs.com/package/@a9i5k4/dsh-auto-memory"><img alt="立即下载" src="https://img.shields.io/badge/%E7%AB%8B%E5%8D%B3%E4%B8%8B%E8%BD%BD-npm%20install-4d6bfe?style=for-the-badge"></a>
   &nbsp;
   <code>pnpm add @a9i5k4/dsh-auto-memory@latest</code>
 </p>

@@ -1,11 +1,12 @@
 # These are supported funding model platforms.
 #
-# 显示规则（2026-10-04 修：上一版 dshapi 条目不显示的原因）：
-#   1. GitHub 只渲染白名单平台键（github/patreon/open_collective/ko_fi/tidelift/
-#      community_bridge/liberapay/issuehunt/otechie/lfx_crowdfunding/polar/
-#      buy_me_a_coffee/thanks_dev/custom），自定义键（如 dshapi:）会被静默忽略；
-#   2. URL 必须是 YAML 值——上一版把 ['https://...'] 写在了 # 注释里，值其实为空。
-#   ⇒ 中转站走 custom（最多 4 条，渲染为 ♥ 链接，按域名显示）；描述文字放 README 致谢区。
-
-github: [Aik358, Minervaowl7]
-custom: ['https://api.dshapi.icu/register?aff=HJU27P7JL39N']
+# 显示规则（2026-10-04 两修）：
+#   1. GitHub 只渲染白名单平台键（github/patreon/.../custom），自定义键（如 dshapi:）被静默忽略；
+#      URL 必须是 YAML 值，不能写在 # 注释里。
+#   2. github: 条目要求账号**已开通 GitHub Sponsors**——两个账号目前都未开通
+#      （/sponsors/<user> 302 到个人主页），故暂时以 custom 链接代替；
+#      任一账号开通后（github.com/sponsors → Get started），把其用户名移回下一行即出现正式按钮：
+# github: [Aik358, Minervaowl7]
+custom:
+  ['https://api.dshapi.icu/register?aff=HJU27P7JL39N',
+   'https://github.com/Minervaowl7']

@@ -120,7 +120,9 @@ const v4Settings = bodyOf(v4Face, 'function Iter5Settings(props) {')
 ok(!!classicSettings && !!frozenSettings && !!v4Settings, '表达式级：三面 Settings 函数体均可配平抽取')
 
 // (a) pyOk 真值表达式三面逐字一致
-const PYOK = "rt.state === 'ready' && rt.depsOk !== false"
+//   ★2026-10-03（G1-5/#197）：后端状态枚举已换血为 verified-ok/ready-unverified/…，前端旧白名单仍是
+//   rt.state === 'ready' ⇒ 真机 verified-ok 时读数行恒显「不可用」。三面同改并保留 'ready' 兼容旧缓存。
+const PYOK = "(rt.state === 'verified-ok' || rt.state === 'ready') && rt.depsOk !== false"
 ok(cnt(classicSettings, PYOK) === 1 && cnt(frozenSettings, PYOK) === 1 && cnt(v4Settings, PYOK) === 1,
   'pyOk 判定三面逐字一致：' + PYOK + (cnt(frozenSettings, PYOK) !== 1 ? ' ' + MIRROR_HINT : ''))
 
@@ -134,13 +136,10 @@ ok(missingV4.length === 0, '键集 frozen ⊇ v4（缺：' + JSON.stringify(miss
 
 // (c) 三面共有键的表达式比对 + 豁免
 // ★豁免表（自清算）：登记「已核实的既存漂移」并指向修复批次；三面一旦一致，本守卫会红并要求删除该条。
-const KNOWN_DRIFT = [
-  {
-    key: 'snapshotMinGapRounds',
-    reason: 'v3.2.6 做 #160-7（0 值不被吞）时只改了 classic 与 v4 两面，frozen 侧仍是旧口径。已记入 FRONTEND-FIX-PLAN-20261002 §G1-1（frozen:1470 需改 normalizeGapRounds(e.target.value, 5)）。修好后请删掉本条。',
-    expect: { classic: 'normalizeGapRounds(e.target.value, 5)', frozen: 'Number(e.target.value) || 5', v4: 'normalizeGapRounds(e.target.value, 5)' },
-  },
-]
+// ★2026-10-03（G1-1 收口）：原唯一豁免条目 snapshotMinGapRounds 已按 §G1-1 修复
+//   （frozen:1470 改 normalizeGapRounds(e.target.value, 5)），三面一致 ⇒ 按本套件自清算纪律删除豁免。
+//   保留空数组（而不是删掉常量）：下一处既存漂移仍走「登记 → 描述修复批次 → 修好后删条」的同一通道。
+const KNOWN_DRIFT = []
 const driftByKey = new Map(KNOWN_DRIFT.map((d) => [d.key, d]))
 const shared = [...kClassic.keys()].filter((k) => kFrozen.has(k) && kV4.has(k))
 let unknownDrift = 0
@@ -166,6 +165,44 @@ for (const key of shared) {
 ok(unknownDrift === 0, '三面共有的 ' + shared.length + ' 个 set 键中，未登记漂移 = 0')
 const usedExempt = KNOWN_DRIFT.filter((d) => shared.includes(d.key) && !(kClassic.get(d.key).join(' | ') === kFrozen.get(d.key).join(' | ') && kFrozen.get(d.key).join(' | ') === kV4.get(d.key).join(' | ')))
 ok(usedExempt.length === KNOWN_DRIFT.length, '全部豁免条目都仍在使用（现 ' + usedExempt.length + '/' + KNOWN_DRIFT.length + '）')
+
+// (c2) ★2026-10-03（G1-1 反复发守卫）：damSkinCssText 函数体内**不得有 function 定义**。
+//   v3.2.6 的 #160-7 修复把 normalizeGapRounds 插进了 damSkinCssText() 函数体内，而全部调用点
+//   （legacy 块 / v4 块 / 手写 SettingsPage / frozen）都在别的作用域 ⇒ 词法不可达，任一数字输入
+//   onChange 即 ReferenceError，值根本存不进去。判据：该函数体一旦再出现内嵌 function 声明即红。
+{
+  const body = bodyOf(classicFace, '    function damSkinCssText() {')
+  ok(!!body, 'G1-1：classic 面可配平抽取 damSkinCssText 函数体')
+  if (body) {
+    const inner = body.slice(body.indexOf('{') + 1, body.lastIndexOf('}'))
+    const defs = (inner.match(/(^|\n)\s*function\s+[A-Za-z_$][\w$]*\s*\(/g) || []).map((d) => d.trim())
+    // damLegacyOverlayGlass 是该函数体内的**既存**嵌套定义（H35 经典档浮层玻璃，先于本缺陷存在，
+    // 且在 classic 分支内被自身调用 ⇒ 词法可达）；判据只禁止**新增**嵌套定义，正是 G1-1 的致害形态。
+    const allowed = ['function damLegacyOverlayGlass(']
+    const bad = defs.filter((d) => allowed.indexOf(d) < 0)
+    ok(bad.length === 0, 'G1-1：damSkinCssText 函数体内无**新增** function 定义（既存允许 ' + allowed.length + ' 项；越界 ' + bad.length + ' 处：' + JSON.stringify(bad.slice(0, 4)) + '）')
+    ok(defs.indexOf('function normalizeGapRounds(') < 0, 'G1-1：normalizeGapRounds 未被挪回 damSkinCssText 函数体内（正是 v3.2.6 的致害位置）')
+  }
+  // 定义/调用点计数守恒（实测口径，与方案 §G1-1 的预估数不同，见下）：
+  //   · 定义恰 1 处，且必须在工厂层（damSkinCssText 之前），否则三处调用点词法不可达；
+  //   · client 内三面带共 9 个调用点 = classic 手写 3 + legacy 生成块 3 + v4 生成块 3；
+  //   · frozen 源 3 个调用点（fSnapGap/slimEvery/fullEverySlims），镜像进 legacy 生成块。
+  //   ★与方案 §G1-1 的「1 定义 + 10 调用（8 client + 2 frozen）」差异：方案写定时 frozen 侧 fSnapGap
+  //     还是旧口径（2 个调用）、client 侧 fSnapGap 也还是 Number(v)||5；本批修好 fSnapGap 后三面各 +1，
+  //     故选「定义 1 + 调用 12（client 9 + frozen 3）」这一实测数并写进入口，避免锁成过期常量。
+  const defN = cnt(norm(readFileSync(CLIENT, 'utf8')), 'function normalizeGapRounds(value, fallback) {')
+  ok(defN === 1, 'G1-1：normalizeGapRounds 定义恰 1 处（实际 ' + defN + '）')
+  const defAt = norm(readFileSync(CLIENT, 'utf8')).indexOf('function normalizeGapRounds(value, fallback) {')
+  const cssTextAt = norm(readFileSync(CLIENT, 'utf8')).indexOf('function damSkinCssText() {')
+  ok(defAt > 0 && defAt < cssTextAt, 'G1-1：定义在 damSkinCssText 之前的工厂层（def@' + defAt + ' < cssText@' + cssTextAt + '）')
+  const clientAll = norm(readFileSync(CLIENT, 'utf8'))
+  const callN = cnt(clientAll, 'normalizeGapRounds(') - defN
+  ok(callN === 9, 'G1-1：client 侧调用点 9 处 = classic 3 + legacy 块 3 + v4 块 3（实际 ' + callN + '）')
+  const legacyCallN = cnt(L.slice(legacyBegin, legacyEnd + 1).join('\n'), 'normalizeGapRounds(')
+  ok(legacyCallN === 3, 'G1-1：legacy 生成块 3 处调用（实际 ' + legacyCallN + '）')
+  const fCallN = cnt(frozen, 'normalizeGapRounds(')
+  ok(fCallN === 3, 'G1-1：frozen 源 3 处调用（fSnapGap + slimEvery + fullEverySlims，实际 ' + fCallN + '）')
+}
 
 // (d) 组件切片锚：三处关键锚串在生成器与经典面同源
 // 每条的期望命中数按实际切片语句数给出（Storage 同时是 skills 的终锚 ⇒ 2）。

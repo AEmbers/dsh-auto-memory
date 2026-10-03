@@ -452,8 +452,10 @@ skills = replaceOnce(skills, "return h('div', { 'data-dam-slot': 'timeline', 'da
         h(Iter5SkillBrowser, { active: activeList, pipeline: pipeline, rows: rows }))`)
 let stats = client.slice(client.indexOf('function StatsTab() {'), client.indexOf('function WorkspaceTab() {'))
 stats = replaceOnce(stats, 'function StatsTab()', 'function Iter5Stats()')
-stats = replaceOnce(stats, "return h('div', null,\n    h(Card, { title: t('statsTitle') },", "return h('div', { className: 'i5-native-stats' },\n    h(Iter5StatsOverview, null,")
-stats = replaceOnce(stats, "h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4 } },", "h('div', { className: 'i5-native-stat-metrics' },")
+// ★2026-10-03（G3 · StatsTab 缩进统一）：StatsTab 函数体整体 +2 空格后，本变换点的实参缩进随之改变
+//   （JS 允许两种写法，但内容锚必须与源逐字一致）。判据不变：仍是「唯一的 stats 返回值重写」。
+stats = replaceOnce(stats, "  return h('div', null,\n      h(Card, { title: t('statsTitle') },", "  return h('div', { className: 'i5-native-stats' },\n      h(Iter5StatsOverview, null,")
+stats = replaceOnce(stats, "h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4 } },", "h('div', { className: 'i5-native-stat-metrics' },") // 该串缩进未变（嵌套位置不变）
 stats = replaceOnce(stats, "return h(Card, { title: m.name },", "return h(Iter5Card, { title: m.name, icon: id === 'model' ? 'search' : id === 'inject' ? 'library' : 'recall', className: 'i5-native-stat-card', 'data-chan': id },")
 stats = replaceOnce(stats, "      h('div', { style: { opacity: .72, fontSize: '12px', marginBottom: 2 } }, m.hint),", "      h('div', { className: 'i5-native-stat-hint' }, m.hint),")
 // Zero-event channels used to repeat statsNoInject in all three cards; their own hint now carries the empty state.
@@ -483,7 +485,14 @@ const seam = '    // ===================== dam-skin:end (v4) ===================
 client = replaceOnce(client, seam, generated + seam)
 // Only the opt-in skin mount and its stylesheet gain the new implementation.
 
-client = replaceMigrated(client, "h(DamSkinV4Page, { nonce: nonce, onExit:", "h(Iter5Page, { nonce: nonce, onExit:", 'G0-2/mount:386 死壳挂载点 DamSkinV4Page 改 Iter5Page', 'h(Iter5Page, { nonce: nonce, onExit:')
+// ★2026-10-03（G3 · 死壳摘除，用户裁定）：原变换点 :386 把挂载点上的 DamSkinV4Page 改名为 Iter5Page。
+//   死壳族（DamSkinV4Page/Screen/Home/Welcome/Settings + DAM_SKIN_V4_PAGES/HOSTED）已于本批从
+//   client.js 摘除 ⇒ 该变换点**退化为断言**：断言源里已无 DamSkinV4Page 引用。
+//   R2 语义不变：若有人把死壳引用改回来，这里立刻硬停（而不是静默改写）。
+{
+  const deadShellRefs = g2Count(client, 'DamSkinV4Page')
+  if (deadShellRefs !== 0) throw g2Miss('G3/dead-shell:386 死壳引用回归', 0, deadShellRefs)
+}
 // ★2026-09-30 双皮肤块：插入 legacy 块 + 挂载点双分派 + 样式旋钮
 {
   const newBlockAnchor = '    // ITER5-GENERATED:BEGIN'

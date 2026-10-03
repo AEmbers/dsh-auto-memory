@@ -112,16 +112,6 @@ and always one click away. All 24 real-host screenshots live in the
 <a href="docs/SKIN-GUIDE.md"><strong>Skin guide</strong></a>.
 </sub></p>
 
-### 🏆 Sponsors · 赞助商
-
-| Logo | 简介 |
-|---|---|
-| <img width="72" alt="dshapi" src="docs/sponsors/dshapi.png"> | **dshapi · API 中转站** —— 为本项目的开发、回归测试，以及 M 系列语义引擎的选型与激活策略研究提供模型端点。没有这些额度，那些基准实验根本跑不起来。<br>[立即注册 →](https://api.dshapi.icu/register?aff=HJU27P7JL39N) |
-
-<!-- 追加赞助商行模板（logo 文件放 docs/sponsors/ 后取消注释并填空）：
-| <img width="72" alt="名称" src="docs/sponsors/logo文件名.png"> | **名称** —— 简介文字。<br>[链接文字 →](URL) |
--->
-
 > [!NOTE]
 > **🧭 Getting ready for the official long-term memory**
 > Adaptation and pre-research for DeepSeek Harness's official long-term memory system are underway — when it ships, this plugin will offer **semantic recall** and **cross-window continuation** for official memories from day one. Everything here is a toggle: with ample stability and flexibility built in, the plugin will auto-adapt to and flexibly complement the official memory stack. Your memory stays seamless — no migration needed.
@@ -688,6 +678,16 @@ Papers were authored by the autonomous engineering agent (ZCode / GLM); all conc
 ## Community
 
 **Feedback & chat:** join the community QQ group — [Join the dsh-auto-memory group](https://qm.qq.com/q/v7Asxn6vPa) — for bug reports, usage tips, and quick responses faster than GitHub issues.
+
+### 🏆 Sponsors · 赞助商
+
+| Logo | 简介 |
+|---|---|
+| <img width="72" alt="dshapi" src="docs/sponsors/dshapi.png"> | **dshapi · API 中转站** —— 为本项目的开发、回归测试，以及 M 系列语义引擎的选型与激活策略研究提供模型端点。没有这些额度，那些基准实验根本跑不起来。<br>[立即注册 →](https://api.dshapi.icu/register?aff=HJU27P7JL39N) |
+
+<!-- 追加赞助商行模板（logo 文件放 docs/sponsors/ 后取消注释并填空）：
+| <img width="72" alt="名称" src="docs/sponsors/logo文件名.png"> | **名称** —— 简介文字。<br>[链接文字 →](URL) |
+-->
 
 Community contributors:
 

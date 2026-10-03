@@ -108,16 +108,6 @@
 <a href="docs/SKIN-GUIDE.md"><strong>皮肤白皮书</strong></a>。
 </sub></p>
 
-### 🏆 赞助商 · Sponsors
-
-| Logo | 简介 |
-|---|---|
-| <img width="72" alt="dshapi" src="docs/sponsors/dshapi.png"> | **dshapi · API 中转站** —— 为本项目的开发、回归测试，以及 M 系列语义引擎的选型与激活策略研究提供模型端点。没有这些额度，那些基准实验根本跑不起来。<br>[立即注册 →](https://api.dshapi.icu/register?aff=HJU27P7JL39N) |
-
-<!-- 追加赞助商行模板（logo 文件放 docs/sponsors/ 后取消注释并填空）：
-| <img width="72" alt="名称" src="docs/sponsors/logo文件名.png"> | **名称** —— 简介文字。<br>[链接文字 →](URL) |
--->
-
 > [!NOTE]
 > **🧭 为官方长期记忆做好准备**
 > 针对官方长期记忆系统的适配与预研正在进行中——正式上线后，本插件将**第一时间**提供与之配套的**语义唤回**与**跨窗口接续**。本插件一切皆开关，稳定性与灵活性充足：届时将自动适配、灵活辅助官方长期记忆体系，你的记忆无缝延续，无需任何迁移。
@@ -684,6 +674,16 @@ DeepSeek Harness (Node, 127.0.0.1:3080)
 ## 社区致谢
 
 **反馈与交流：**欢迎加入 QQ 交流群——[点击加入 dsh-auto-memory 交流群](https://qm.qq.com/q/v7Asxn6vPa)——问题反馈、使用技巧交流，响应比 issue 更快。
+
+### 🏆 赞助商 · Sponsors
+
+| Logo | 简介 |
+|---|---|
+| <img width="72" alt="dshapi" src="docs/sponsors/dshapi.png"> | **dshapi · API 中转站** —— 为本项目的开发、回归测试，以及 M 系列语义引擎的选型与激活策略研究提供模型端点。没有这些额度，那些基准实验根本跑不起来。<br>[立即注册 →](https://api.dshapi.icu/register?aff=HJU27P7JL39N) |
+
+<!-- 追加赞助商行模板（logo 文件放 docs/sponsors/ 后取消注释并填空）：
+| <img width="72" alt="名称" src="docs/sponsors/logo文件名.png"> | **名称** —— 简介文字。<br>[链接文字 →](URL) |
+-->
 
 社区贡献者：
 

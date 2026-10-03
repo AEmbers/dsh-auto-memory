@@ -578,7 +578,7 @@
       var id=source&&source.id||''
       var detail=useIter5Data(function(){return id?apiGet(API.externalView,{source:id}):Promise.resolve(null)},[id,revision[0]])
       // ★2026-10-01（用户裁定 B）：全局简报 —— 一行汇总 + 抽屉展开（展开为逐条清单）。
-      var briefData=useIter5Data(function(){return apiGet(API.globalBrief)},[props.nonce,revision[0]])
+      var briefData=useIter5Data(function(){return apiGet(API.globalBrief, { sessionId: currentSessionIdClient() })},[props.nonce,revision[0]])
       var briefOpen=useState(false)
       var brief=briefData.data||null
       var identity=iter5Identity(), alive=useRef(true)
@@ -1488,7 +1488,7 @@
             h('option', { value: 'auto' }, L('auto 自动校准（推荐）', 'auto (calibrated)')),
             h('option', { value: 'fixed' }, L('fixed 固定阈值（旧行为）', 'fixed threshold (legacy)'))), t('fWaterModeHint')),
           field(t('fCompactionRatio'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0.1, max: 1, step: 0.05, value: cfg.officialCompactionRatio === undefined ? 0.8 : cfg.officialCompactionRatio, onChange: function (e) { set('officialCompactionRatio', Math.max(0.1, Number(e.target.value) || 0.8)) } }), t('fCompactionRatioHint')),
-          field(t('fOfficialHeadroom'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 1000000, step: 1024, value: cfg.officialHeadroomTokens === undefined ? 65536 : cfg.officialHeadroomTokens, onChange: function (e) { set('officialHeadroomTokens', Math.max(0, Number(e.target.value) || 65536)) } }), t('fOfficialHeadroomHint')),
+          field(t('fOfficialHeadroom'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0, max: 1000000, step: 1024, value: cfg.officialHeadroomTokens === undefined ? 65536 : cfg.officialHeadroomTokens, onChange: function (e) { set('officialHeadroomTokens', (String(e.target.value).trim() !== '' && Number.isFinite(Number(e.target.value)) ? Math.max(0, Number(e.target.value)) : 65536)) } }), t('fOfficialHeadroomHint')),
           field(t('fAutoMargin'), h('input', { 'data-dam-slot': 'form', 'data-dam-input': '', type: 'number', min: 0.1, max: 1, step: 0.05, value: cfg.waterLevelAutoMargin === undefined ? 0.9 : cfg.waterLevelAutoMargin, onChange: function (e) { set('waterLevelAutoMargin', Math.max(0.1, Number(e.target.value) || 0.9)) } }), t('fAutoMarginHint')),
           field(t('fPromptCustom'), h('button', { 'data-dam-slot': 'actions', 'data-dam-btn': '', onClick: function () { setPromptEditOpen(!promptEditOpen) } }, (promptEditOpen ? (L('收起', 'Collapse')) : (L('编辑 prompt 层', 'Edit prompt layers')))), t('fPromptCustomHint')),
           promptEditOpen ? [
@@ -1868,10 +1868,10 @@
         if (migBusy) return
         if (!migPack) { setMigErr(t('migPickPack')); return }
         setMigBusy('preview'); setMigErr(''); setMigNote(''); setMigPlan(null); setMigResult(null)
-        apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined }).then(function (j) {
+        apiPost(API.migrateInspect, { packPath: migPack, targetWs: currentWs() || undefined, onConflict: migConflict }).then(function (j) {
           setMigBusy('')
           if (!j || j.ok === false) { migFail(t('migPreview'), j, null); return }
-          var p = j.plan || {}
+          var p = Object.assign({}, j.plan || {}, { previewToken: j.previewToken })
           setMigPlan(p)
           setMigNote(t('migPreview') + ' ✓ ' + (p.pathChanged ? t('migPathChanged') : t('migSamePath')) +
             (j.sourceMissing ? (L(' · ⚠ 源工作区已不存在', ' · warning: source workspace missing')) : ''))
@@ -1881,7 +1881,7 @@
         if (migBusy) return
         if (!migPack) { setMigErr(t('migPickPack')); return }
         setMigBusy('apply'); setMigErr(''); setMigNote('')
-        apiPost(API.migrateImport, { packPath: migPack, targetWs: currentWs() || undefined, onConflict: migConflict }).then(function (j) {
+        apiPost(API.migrateImport, { packPath: migPack, targetWs: currentWs() || undefined, onConflict: migConflict, previewToken: migPlan && migPlan.previewToken }).then(function (j) {
           setMigBusy('')
           if (!j || j.ok === false) { migFail(t('migApply'), j, null); return }
           setMigResult(j)

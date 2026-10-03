@@ -73,7 +73,8 @@ const classic = source
 //   pending 时回退最近日志日并整篇覆盖 reflections/<date>.md）⇒ 打开调试中心即产生真实写入。
 //   本批收敛为**单次只读 GET API.debug**，并把探测表从 11 端点缩到 1（诊断覆盖变窄，可接受）。
 //   守卫语义不变：生成块之外的任何**非意外**改动仍会被本锁抓住；本批期望值随之上移。
-assert.equal(createHash('sha256').update(classic).digest('hex'), 'cc7d7ee76b5df33f14d9729f43e2bbb975c93ea93886196131c081bc12a1cd30', 'Reviewed native-reference entry baseline（R73 = R72 + 2026-10-02 审计修复批 A+B（增量归因：手写区 DebugCenter 收敛为只读 GET + 团队层接 4 条专用路由（API 表新增 5 键）+ TeamTab 挂载补回调 + L3 段共享订阅轮询）；原 R72 = R71 + 2026-10-01 ①接续开关默认开 + 欢迎向导开关 ②经典档接入 GlobalBriefRow 简报抽屉 ③damSharedSurfaceCss classic 分支归零修复；原 R71 = R70 + 2026-10-01 全局动态简报批（client.js 三面各加 8 个 globalBrief* 控件 + frozen 面补齐上批遗漏的 slimEveryRounds/fullEverySlims 两键）；原 R70 = R69 + #160/#162 修复：python 向导轮询/取消渲染、规则草稿与内容锚定、首屏 tour hero 挂载复原；生成块之外任何**非意外**改动仍会被本锁抓住）')
+// 2026-10-03 批次 C（审计修复 #186..#204 + R01/R02）：默认关闭/改写的共享入口有意演进，行为由 audit-* 套件覆盖；固化哈希按最终字节重钉。
+assert.equal(createHash('sha256').update(classic).digest('hex'), '6eb9f0a1221fd0632cabd103727cf6c5fdec4b73f1169c2fc172a88809f8f6ca', 'Reviewed native-reference entry baseline（R73 = R72 + 2026-10-02 审计修复批 A+B（增量归因：手写区 DebugCenter 收敛为只读 GET + 团队层接 4 条专用路由（API 表新增 5 键）+ TeamTab 挂载补回调 + L3 段共享订阅轮询）；原 R72 = R71 + 2026-10-01 ①接续开关默认开 + 欢迎向导开关 ②经典档接入 GlobalBriefRow 简报抽屉 ③damSharedSurfaceCss classic 分支归零修复；原 R71 = R70 + 2026-10-01 全局动态简报批（client.js 三面各加 8 个 globalBrief* 控件 + frozen 面补齐上批遗漏的 slimEveryRounds/fullEverySlims 两键）；原 R70 = R69 + #160/#162 修复：python 向导轮询/取消渲染、规则草稿与内容锚定、首屏 tour hero 挂载复原；生成块之外任何**非意外**改动仍会被本锁抓住）')
 console.log('PASS reviewed shared-entry source baseline preserved')
 
 const css = readFileSync(new URL('../../skins/iter5/skin.css', import.meta.url), 'utf8')

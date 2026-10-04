@@ -1,7 +1,7 @@
 {
   "name": "@a9i5k4/dsh-auto-memory",
   "description": "Proactive associative memory for DSH: zero-prompt recall injected before the model speaks, three-layer auto-consolidation, skill crystallization, and Astra-style context management - handoff ledgers, PLAN whiteboard, water-level sensing. Local-first, model-agnostic, zero deps. 主动联想记忆+Astra 式上下文管理:自动唤回/自动沉淀/技能固化/交接账本与白板跨窗口续命/水位感知。",
-  "version": "3.2.8",
+  "version": "3.2.9",
   "type": "module",
   "main": "lib/index.js",
   "icon": "./icon.svg",
@@ -32,13 +32,20 @@
     "client": {
       "inject": [
         "@deepseek-ai/dsh-api-remotes",
-        "@deepseek-ai/dsh-client-runtime",
         "@deepseek-ai/dsh-client-connection",
         "@deepseek-ai/dsh-client-ui-slots",
         "@deepseek-ai/dsh-client-ui-settings",
         "@deepseek-ai/dsh-client-ui-sidebar"
       ],
       "platform": "web"
+    },
+    "compatibility": {
+      "dsh": ">=0.2.0-rc.1",
+      "dshReleases": {
+        "0.2.0-rc.1": "compatible",
+        "0.2.0-rc.2": "compatible",
+        "0.2.1-alpha.1": "compatible"
+      }
     }
   },
   "keywords": [
@@ -53,10 +60,13 @@
     "url": "git+https://github.com/Aik358/dsh-auto-memory.git"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1"
+    "@deepseek-ai/cordis": "*"
   },
   "optionalDependencies": {
     "@huggingface/transformers": "^3.7.6"
   },
-  "license": "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "engines": {
+    "dsh": ">=0.2.0-rc.1"
+  }
 }

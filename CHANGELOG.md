@@ -4,6 +4,19 @@ All notable changes to dsh-auto-memory.
 
 ---
 
+## [3.2.9] - 2026-10-04
+
+### Changed
+
+- `dsh.compatibility` added: `dsh: ">=0.2.0-rc.1"`, `dshReleases` covering `0.2.0-rc.1` / `0.2.0-rc.2` / `0.2.1-alpha.1`.
+- `engines.dsh` added: `">=0.2.0-rc.1"` (`engines.node` untouched).
+- `dsh.client.inject`: dropped `@deepseek-ai/dsh-client-runtime`.
+- `peerDependencies["@deepseek-ai/cordis"]`: `^4.0.1` → `*` — the caret range cannot reach `4.0.4` (0.2.0-rc.2 core) or `4.0.5-alpha.1` (0.2.1-alpha.1 core).
+
+For the Desktop-host transition window: the currently shipped Desktop application bundles the **0.2.0-rc.2** core and cannot be upgraded from a profile (the core comes from `app.asar`), so the compatibility window deliberately spans both `0.2.0-rc.2` and `0.2.1-alpha.1` instead of pinning only the newer release.
+
+Verified installed, booted, and mounted on both cores (`C:\Sophia\_compat021` = 0.2.1-alpha.1, `C:\Sophia\_compat020` = 0.2.0-rc.2). No plugin behaviour was changed.
+
 ## [3.2.8] — 2026-10-04 · 社区审计 40+ 项全量闭环 + 生成器两条铁律 + 团队端到端接线
 
 > **一条主线**：社区贡献者（Minervaowl7 等，AI 辅助）对本仓做了一次全量审计（39 项 issue + 4 条 PR），逐条核查后 36 项确认成立并全部修复入库；同时给前端生成器立了两条铁律（**R1 源产物一致才放行 / R2 失配即停机**），终结了 3.2.5→3.2.6 期间"生成器覆盖修复"的事故模式。回归 **266 套件全绿**。
